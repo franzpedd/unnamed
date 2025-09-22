@@ -1,0 +1,24 @@
+#pragma once
+
+#include "Core/Defines.h"
+#include <memory>
+#include <memm/memm.h>
+
+namespace Cosmos
+{
+	template<typename T>
+	using Unique = std::unique_ptr<T>;
+	template<typename T, typename ... Args>
+	COSMOS_API constexpr Unique<T> CreateUnique(Args&& ... args)
+	{
+		return std::make_unique<T>(std::forward<Args>(args)...);
+	}
+
+	template<typename T>
+	using Shared = std::shared_ptr<T>;
+	template<typename T, typename ... Args>
+	COSMOS_API constexpr Shared<T> CreateShared(Args&& ... args)
+	{
+		return std::make_shared<T>(std::forward<Args>(args)...);
+	}
+}
