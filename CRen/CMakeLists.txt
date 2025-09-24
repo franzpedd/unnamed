@@ -27,7 +27,6 @@ set(SOURCES
     # memm
     Thirdparty/memm/memm.h Thirdparty/memm/memm.c
     # ctoolbox
-    Thirdparty/ctoolbox/carray.h Thirdparty/ctoolbox/carray.c
     Thirdparty/ctoolbox/chashtable.h Thirdparty/ctoolbox/chashtable.c
     # stb
     Thirdparty/stb/stb_image_write.h Thirdparty/stb/stb_image.h Thirdparty/stb/stb_impl.c
