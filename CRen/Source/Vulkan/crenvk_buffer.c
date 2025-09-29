@@ -1,7 +1,7 @@
-#include "vulkan/crenvk_buffer.h"
+#include "Vulkan/crenvk_buffer.h"
 
 #include "cren_error.h"
-#include "vulkan/crenvk_core.h"
+#include "Vulkan/crenvk_core.h"
 #include <memm/memm.h>
 #include <string.h>
 

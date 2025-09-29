@@ -16,6 +16,9 @@ cmake_minimum_required(VERSION 3.22.1)
 project(CRen LANGUAGES C)
 include(FetchContent)
 
+option(USE_X11 "Enable Linux X11 support" OFF)
+option(USE_WAYLAND "Enable Wayland support" OFF)
+
 set(CMAKE_C_STANDARD 11) 
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/Bin)
@@ -56,13 +59,25 @@ set(SOURCES
 )
 group_sources(${SOURCES})
 
-add_library(CRen STATIC ${SOURCES})
+add_library(CRen SHARED ${SOURCES})
 target_include_directories(CRen PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Source)
 target_include_directories(CRen PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Thirdparty)
 
 target_compile_definitions(CRen PRIVATE CREN_BUILD_WITH_VULKAN=1)
-#target_compile_definitions(CRen PRIVATE CREN_LINUX_X11=1)
-#target_compile_definitions(CRen PRIVATE CREN_LINUX_WAYLAND=1)
+
+if(USE_X11 AND USE_WAYLAND)
+    message(FATAL_ERROR "X11 and Wayland cannot both be enabled. Choose one.")
+endif()
+
+if(USE_X11)
+    target_compile_definitions(CRen PRIVATE CREN_LINUX_X11=1)
+    message(STATUS "CRen will use X11")
+elseif(USE_WAYLAND)
+    target_compile_definitions(CRen PRIVATE CREN_LINUX_WAYLAND=1)
+    message(STATUS "CRen will use Wayland")
+else()
+    message(STATUS "No X11 nor Wayland system selected (use -DUSE_X11=ON or -DUSE_WAYLAND=ON)")
+endif()
 
 set_target_properties(CRen PROPERTIES FOLDER "CRen")
 set_target_properties(CRen PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "$<TARGET_FILE_DIR:CRen>")

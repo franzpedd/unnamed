@@ -36,196 +36,85 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL internal_crenvk_debug_callback(VkDebugUtil
     return VK_TRUE;
 }
 
-/// @brief outputs into the console all instance extensions available
-static void internal_crenvk_print_available_instance_extensions()
-{
-    uint32_t extensionCount = 0;
-
-    VkResult result = vkEnumerateInstanceExtensionProperties(NULL, &extensionCount, NULL);
-    CREN_ASSERT(result == VK_SUCCESS, "Failed to get instance extension count");
-
-    VkExtensionProperties* extensions = (VkExtensionProperties*)malloc(extensionCount * sizeof(VkExtensionProperties));
-    CREN_ASSERT(result == VK_SUCCESS, "Failed to allocate memory for extensions");
-
-    result = vkEnumerateInstanceExtensionProperties(NULL, &extensionCount, extensions);
-    CREN_ASSERT(result == VK_SUCCESS, "Failed to enumerate instance extensions");
-
-    CREN_LOG(CRenLogSeverity_Info, "Available Vulkan Instance Extensions (%d):", extensionCount);
-    for (uint32_t i = 0; i < extensionCount; i++) {
-        CREN_LOG(CRenLogSeverity_Info, "- %s (version %u)", extensions[i].extensionName, extensions[i].specVersion);
-    }
-
-    free(extensions);
-}
-
-/// @brief prints the contents of an carray treating them as strings
-static void internal_crenvk_print_cren_array_strings(const darray* array)
-{
-    CREN_LOG(CRenLogSeverity_Info, "Required Instances Extensions: ");
-    for (size_t i = 0; i < darray_size(array); ++i) {
-        const char* extName;
-        if (darray_get(array, i, &extName) == CTOOLBOX_SUCCESS) {
-            if (extName) {
-                CREN_LOG(CRenLogSeverity_Info, "- %s", extName);
-            }
-        }
-    }
-}
-
-/// @brief pushes the expected instance extensions into a carray object for latter checkage
-static darray* cren_get_required_instance_extensions(int validations)
-{
-    darray* extensions = darray_init(sizeof(const char*), 8);
-    if (!extensions) return NULL;
-
-    /// macro for helping if statements
-    #define PUSH_EXTENSION(ext) do { const char* _ext = ext; darray_push_back(extensions, &_ext); } while(0);
-
-    CRen_Platform backend = cren_detect_platform();
-    switch (backend)
-    {
-        case CREN_PLATFORM_MACOS:
-        {
-            PUSH_EXTENSION(VK_KHR_SURFACE_EXTENSION_NAME);
-            PUSH_EXTENSION("VK_EXT_metal_surface");
-            PUSH_EXTENSION(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
-        }
-
-        case CREN_PLATFORM_IOS:
-        {
-            PUSH_EXTENSION(VK_KHR_SURFACE_EXTENSION_NAME);
-            PUSH_EXTENSION("VK_EXT_metal_surface");
-            PUSH_EXTENSION(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
-            break;
-        }
-
-        case CREN_PLATFORM_WAYLAND:
-        {
-            PUSH_EXTENSION(VK_KHR_SURFACE_EXTENSION_NAME);
-            PUSH_EXTENSION("VK_KHR_wayland_surface");
-            break;
-        }
-
-        case CREN_PLATFORM_X11:
-        {
-            PUSH_EXTENSION(VK_KHR_SURFACE_EXTENSION_NAME);
-            PUSH_EXTENSION("VK_KHR_xlib_surface");
-            break;
-        }
-
-        case CREN_PLATFORM_ANDROID:
-        {
-            PUSH_EXTENSION(VK_KHR_SURFACE_EXTENSION_NAME);
-            PUSH_EXTENSION("VK_KHR_android_surface");
-            break;
-        }
-
-        case CREN_PLATFORM_WINDOWS:
-        {
-            PUSH_EXTENSION(VK_KHR_SURFACE_EXTENSION_NAME);
-            PUSH_EXTENSION("VK_KHR_win32_surface");
-            break;
-        }
-    }
-
-    PUSH_EXTENSION(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
-
-    if (validations) {
-        PUSH_EXTENSION(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-        PUSH_EXTENSION(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
-    }
-
-    #undef PUSH_EXTENSION
-    return extensions;
-}
-
-/// @brief converts the renderer api into the expected number for vulkan
-static unsigned int internal_crenvk_encodeversion(CRen_Renderer api)
-{
-    unsigned int variant, major, minor, patch;
-    switch (api)
-    {
-        case CREN_RENDERER_API_VULKAN_1_0: return VK_MAKE_API_VERSION(0, 1, 0, 0);
-        case CREN_RENDERER_API_VULKAN_1_1: return VK_MAKE_API_VERSION(0, 1, 1, 0);
-        case CREN_RENDERER_API_VULKAN_1_2: return VK_MAKE_API_VERSION(0, 1, 2, 0);
-        case CREN_RENDERER_API_VULKAN_1_3: return VK_MAKE_API_VERSION(0, 1, 3, 0);
-    }
-    return VK_MAKE_API_VERSION(0, 1, 0, 0); // default 1.0.0
-}
-
-void crenvk_instance_create(vkInstance* instance, const char* appName, unsigned int appVersion, CRen_Renderer apiVersion, bool validations)
+void crenvk_instance_create(CRenContext* context, vkInstance* instance, const char* appName, unsigned int appVersion, CRen_Renderer api, bool validations, CRenCallback_GetVulkanRequiredInstanceExtensions callback)
 {
     if (!instance) return;
-
-    // log usefull info about extensions and layers
+    
+    uint32_t count = 0;
+    const char* const* extensions = callback(context, &count);
+    instance->instance = VK_NULL_HANDLE;
+    instance->debugger = VK_NULL_HANDLE;
     instance->validationsEnabled = validations;
-    darray* extensions = cren_get_required_instance_extensions(validations);
-    internal_crenvk_print_cren_array_strings(extensions);
-    internal_crenvk_print_available_instance_extensions();
 
-    // instance config
-    VkApplicationInfo appInfo = { 0 };
+    CREN_LOG(CRenLogSeverity_Trace, "Requesting %u instance extensions:", count);
+    for (uint32_t i = 0; i < count; i++) {
+        CREN_LOG(CRenLogSeverity_Trace, "  [%u] %s", i, extensions[i]);
+    }
+
+    // application info - fully initialized
+    VkApplicationInfo appInfo = {0};
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     appInfo.pApplicationName = appName;
     appInfo.applicationVersion = appVersion;
     appInfo.pEngineName = "CRen";
     appInfo.engineVersion = appVersion;
-    appInfo.apiVersion = internal_crenvk_encodeversion(apiVersion);
+    appInfo.apiVersion = crenvk_encodeversion(api);
+    appInfo.pNext = NULL;
 
-    CRen_Platform platform = cren_detect_platform();
-    bool portability = (platform == CREN_PLATFORM_IOS || platform == CREN_PLATFORM_MACOS) ? true : false;
-
-    VkInstanceCreateInfo instanceCI = { 0 };
+    // instance create info - fully initialized
+    VkInstanceCreateInfo instanceCI = {0};
     instanceCI.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     instanceCI.pApplicationInfo = &appInfo;
-    instanceCI.enabledExtensionCount = (uint32_t)darray_size(extensions);
-    instanceCI.ppEnabledExtensionNames = (const char* const*)darray_const_data(extensions);
-    if (portability) instanceCI.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
+    instanceCI.enabledExtensionCount = count;
+    instanceCI.ppEnabledExtensionNames = extensions;
+    instanceCI.flags = 0;
+    instanceCI.pNext = NULL;
+    instanceCI.enabledLayerCount = 0;
+    instanceCI.ppEnabledLayerNames = NULL;
+    
+    CRen_Platform platform = cren_detect_platform();
+    if (platform == CREN_PLATFORM_IOS || platform == CREN_PLATFORM_MACOS) instanceCI.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
 
-    // validation debugger
-    VkDebugUtilsMessengerCreateInfoEXT debugUtilsCI = { 0 };
+    // debug utils - persistent through function scope
+    VkDebugUtilsMessengerCreateInfoEXT debugUtilsCI = {0};
+    
     if (instance->validationsEnabled) {
         const char* validationList = "VK_LAYER_KHRONOS_validation";
         instanceCI.enabledLayerCount = 1U;
         instanceCI.ppEnabledLayerNames = &validationList;
 
-        debugUtilsCI = (VkDebugUtilsMessengerCreateInfoEXT){ 0 };
         debugUtilsCI.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-        debugUtilsCI.pNext = NULL;
-        debugUtilsCI.flags = 0;
         debugUtilsCI.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
         debugUtilsCI.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
         debugUtilsCI.pfnUserCallback = internal_crenvk_debug_callback;
         debugUtilsCI.pUserData = NULL;
 
-        instanceCI.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&debugUtilsCI;
-    }
-
-    else {
-        instanceCI.pNext = NULL;
-        instanceCI.enabledLayerCount = 0;
-        instanceCI.ppEnabledLayerNames = NULL;
+        instanceCI.pNext = &debugUtilsCI;
     }
 
     // create instance
-    CREN_ASSERT(vkCreateInstance(&instanceCI, NULL, &instance->instance) == VK_SUCCESS, "Failed to create Vulkan Instance");
-
-    // create debugger
-    if (instance->validationsEnabled) {
-        debugUtilsCI = (VkDebugUtilsMessengerCreateInfoEXT){ 0 };
-        debugUtilsCI.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-        debugUtilsCI.pNext = NULL;
-        debugUtilsCI.flags = 0;
-        debugUtilsCI.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-        debugUtilsCI.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-        debugUtilsCI.pfnUserCallback = internal_crenvk_debug_callback;
-        debugUtilsCI.pUserData = NULL;
-        PFN_vkCreateDebugUtilsMessengerEXT func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance->instance, "vkCreateDebugUtilsMessengerEXT");
-        CREN_ASSERT(func(instance->instance, &debugUtilsCI, NULL, &instance->debugger) == VK_SUCCESS, "Failed to create Vulkan Debug Messenger");
+    VkResult result = vkCreateInstance(&instanceCI, NULL, &instance->instance);
+    if (result != VK_SUCCESS) {
+        CREN_LOG(CRenLogSeverity_Error, "Failed to create Vulkan Instance: %d", result);
+        return;
     }
 
-    darray_destroy(extensions);
-    return;
+    //create debug messenger
+    if (instance->validationsEnabled) {
+        PFN_vkCreateDebugUtilsMessengerEXT createDebugFunc = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance->instance, "vkCreateDebugUtilsMessengerEXT");
+        
+        if (createDebugFunc) {
+            result = createDebugFunc(instance->instance, &debugUtilsCI, NULL, &instance->debugger);
+            if (result != VK_SUCCESS) {
+                CREN_LOG(CRenLogSeverity_Warn, "Failed to create Vulkan Debug Messenger: %d", result);
+                instance->debugger = VK_NULL_HANDLE;
+            }
+        } else {
+            CREN_LOG(CRenLogSeverity_Warn, "vkCreateDebugUtilsMessengerEXT not available");
+        }
+    }
+
+    CREN_LOG(CRenLogSeverity_Trace, "Vulkan instance created successfully");
 }
 
 void crenvk_instance_destroy(vkInstance* instance)
@@ -242,6 +131,19 @@ void crenvk_instance_destroy(vkInstance* instance)
     if (instance->instance != VK_NULL_HANDLE) {
         vkDestroyInstance(instance->instance, NULL);
     }
+}
+
+CREN_API unsigned int crenvk_encodeversion(CRen_Renderer api)
+{
+    unsigned int variant, major, minor, patch;
+    switch (api)
+    {
+        case CREN_RENDERER_API_VULKAN_1_0: return VK_MAKE_API_VERSION(0, 1, 0, 0);
+        case CREN_RENDERER_API_VULKAN_1_1: return VK_MAKE_API_VERSION(0, 1, 1, 0);
+        case CREN_RENDERER_API_VULKAN_1_2: return VK_MAKE_API_VERSION(0, 1, 2, 0);
+        case CREN_RENDERER_API_VULKAN_1_3: return VK_MAKE_API_VERSION(0, 1, 3, 0);
+    }
+    return VK_MAKE_API_VERSION(0, 1, 0, 0); // default 1.0.0
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -276,7 +178,8 @@ static int internal_crenvk_check_device_extension_support(VkPhysicalDevice devic
 }
 
 /// @brief chooses the most suitable GPU available, not supporting multiple gpus
-static VkPhysicalDevice internal_crenvk_choose_physical_device(VkInstance instance, VkSurfaceKHR surface) {
+static VkPhysicalDevice internal_crenvk_choose_physical_device(VkInstance instance, VkSurfaceKHR surface)
+{
     // selecting most suitable physical device
     unsigned int gpus = 0;
     vkEnumeratePhysicalDevices(instance, &gpus, NULL);
@@ -323,7 +226,7 @@ static VkPhysicalDevice internal_crenvk_choose_physical_device(VkInstance instan
 }
 
 /// @brief creates the logical device
-static void internal_crenvk_create_logical_device(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, VkDevice* device, VkQueue* graphicsQueue, VkQueue* presentQueue, VkQueue* computeQueue, int validations)
+static void internal_crenvk_create_logical_device(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, VkDevice* device, VkQueue* graphicsQueue, VkQueue* presentQueue, VkQueue* computeQueue, int* graphicsIndex, int* presentIndex, int* computeIndex, bool validations)
 {
     const char* validationLayers[] = { "VK_LAYER_KHRONOS_validation" }; // must be the same as instance, wich it is
     unsigned int validationLayerCount = 1;
@@ -337,7 +240,7 @@ static void internal_crenvk_create_logical_device(VkPhysicalDevice physicalDevic
     if (indices.graphicFamily != -1) queueFamilyIndices[queueCount++] = indices.graphicFamily;
     if (indices.presentFamily != -1 && indices.presentFamily != indices.graphicFamily)  queueFamilyIndices[queueCount++] = indices.presentFamily;
     if (indices.computeFamily != -1 && indices.computeFamily != indices.graphicFamily && indices.computeFamily != indices.presentFamily) queueFamilyIndices[queueCount++] = indices.computeFamily;
-
+    
     // create queue create info for each unique queue family
     VkDeviceQueueCreateInfo* queueCreateInfos = (VkDeviceQueueCreateInfo*)malloc(sizeof(VkDeviceQueueCreateInfo) * queueCount);
     for (unsigned int i = 0; i < queueCount; i++) {
@@ -382,7 +285,7 @@ static void internal_crenvk_create_logical_device(VkPhysicalDevice physicalDevic
         deviceCI.enabledLayerCount = 0;
         deviceCI.ppEnabledLayerNames = NULL;
     }
-
+    
     // create the device
     CREN_ASSERT(vkCreateDevice(physicalDevice, &deviceCI, NULL, device) == VK_SUCCESS, "Failed to create vulkan logical device");
 
@@ -390,26 +293,28 @@ static void internal_crenvk_create_logical_device(VkPhysicalDevice physicalDevic
     vkGetDeviceQueue(*device, indices.graphicFamily, 0, graphicsQueue);
     vkGetDeviceQueue(*device, indices.presentFamily, 0, presentQueue);
     vkGetDeviceQueue(*device, indices.computeFamily, 0, computeQueue);
+    *graphicsIndex = indices.graphicFamily;
+    *presentIndex = indices.presentFamily;
+    *computeIndex = indices.computeFamily;
 
     free(queueCreateInfos);
 }
 
-void crenvk_device_create(vkDevice* device, VkInstance instance, void* nativeWindow, void* optionalHandle, int validations)
+void crenvk_device_create(vkDevice* device, VkInstance instance, bool validations)
 {
-    CREN_ASSERT(cren_surface_create(instance, &device->surface, nativeWindow, optionalHandle) == true, "Failed to create a window surface for vulkan renderer");
-
     device->physicalDevice = internal_crenvk_choose_physical_device(instance, device->surface);
     CREN_ASSERT(device->physicalDevice != NULL, "An unfit physical device was choosen, please report about it");
 
     vkGetPhysicalDeviceMemoryProperties(device->physicalDevice, &device->physicalDeviceMemoryProperties);
     vkGetPhysicalDeviceProperties(device->physicalDevice, &device->physicalDeviceProperties);
     vkGetPhysicalDeviceFeatures(device->physicalDevice, &device->physicalDeviceFeatures);
-
+    
     // create logical device
-    internal_crenvk_create_logical_device(device->physicalDevice, device->surface, &device->device, &device->graphicsQueue, &device->presentQueue, &device->computeQueue, validations);
+    internal_crenvk_create_logical_device(device->physicalDevice, device->surface, &device->device, &device->graphicsQueue, &device->presentQueue, &device->computeQueue, &device->graphicsQueueIndex, &device->presentQueueIndex, &device->computeQueueIndex, validations);
 }
 
-void crenvk_device_destroy(vkDevice* device, VkInstance instance) {
+void crenvk_device_destroy(vkDevice* device, VkInstance instance)
+{
     if (instance == VK_NULL_HANDLE || !device) return;
 
     if (device->device) vkDestroyDevice(device->device, NULL);
@@ -418,10 +323,10 @@ void crenvk_device_destroy(vkDevice* device, VkInstance instance) {
 
 vkQueueFamilyIndices crenvk_device_find_queue_families(VkPhysicalDevice device, VkSurfaceKHR surface)
 {
-    vkQueueFamilyIndices indices = { 0 };
-    indices.graphicFamily = -1;
-    indices.presentFamily = -1;
-    indices.computeFamily = -1;
+    vkQueueFamilyIndices indices = {0};
+    indices.graphicFamily = UINT32_MAX;
+    indices.presentFamily = UINT32_MAX;
+    indices.computeFamily = UINT32_MAX;
 
     unsigned int queue_family_count = 0;
     vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, NULL);
@@ -894,10 +799,12 @@ void crenvk_device_insert_image_memory_barrier(VkCommandBuffer cmdBuffer, VkImag
 /// @brief queries information for the swapchain, like available surface formats and etc.
 static vkSwapchainDetails internal_crenvk_query_swapchain_details(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface)
 {
-    vkSwapchainDetails details = { 0 };
+    CREN_LOG(CRenLogSeverity_Trace, "Querying swapchain details for device: %p, surface: %p", (void*)physicalDevice, (void*)surface);
+    
+    vkSwapchainDetails details = { 0 };   
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &details.capabilities);
-
     vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &details.surfaceFormatCount, NULL);
+    
     if (details.surfaceFormatCount != 0) {
         details.surfaceFormats = (VkSurfaceFormatKHR*)malloc(details.surfaceFormatCount * sizeof(VkSurfaceFormatKHR));
 

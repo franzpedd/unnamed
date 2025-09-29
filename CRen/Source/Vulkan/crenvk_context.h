@@ -31,10 +31,10 @@ typedef struct
 /// @brief initializes the vulkan context
 CREN_API CRenVulkanBackend crenvk_initialize
 (
+	CRenContext* context,
 	unsigned int width,
 	unsigned int height,
-	void* window,
-	void* optionalHandle,
+	const CRenCallbacks* callbacks,
 	const char* appName,
 	const char* rootPath,
 	unsigned int appVersion,

@@ -21,7 +21,10 @@ namespace Cosmos
 
         /// @brief returns the cren context 
         inline CRenContext* GetCRenContext() { return mContext; }
-
+        
+        /// @brief returns the renderer api used
+        inline CRen_RendererAPI GetAPI() { return mAPI; }
+        
     public:
 
         /// @brief updates the renderer, sending frame data to the gpu at a fixed period
@@ -59,5 +62,6 @@ namespace Cosmos
 
         Application* mApp = nullptr;
         CRenContext* mContext = nullptr;
+        CRen_RendererAPI mAPI;
     };
 }

@@ -35,6 +35,17 @@ typedef void (*CRenCallback_ImageCount)(CRenContext* context, uint32_t count);
 /// @param commandbuffer vulkan command object raw-ptr
 typedef void (*CRenCallback_DrawUIRawData)(CRenContext* context, void* commandbuffer);
 
+/// @brief set-up a callback that requests needed instance extensions for vulkan context creation
+/// @param context cren context
+/// @param count output instances count
+/// @return the list of required extensions
+typedef const char* const* (*CRenCallback_GetVulkanRequiredInstanceExtensions)(CRenContext* context, uint32_t* count);
+
+/// @brief set-up the callback that will create a vulkan surface, this is to facilitate the usage of SDL/GLFW and custom windowing systems
+/// @param instance opaque vulkan instance
+/// @param surface opaque vulkan surface
+typedef void (*CRenCallback_CreateVulkanSurfaceCallback)(CRenContext* context, void* instance, void* surface);
+
 /// @brief all callbacks necessary bundled-up into a struct for easy usage
 typedef struct CRenCallbacks
 {
@@ -43,6 +54,8 @@ typedef struct CRenCallbacks
 	CRenCallback_Resize resize;
 	CRenCallback_ImageCount imageCount;
 	CRenCallback_DrawUIRawData drawUIRawData;
+	CRenCallback_GetVulkanRequiredInstanceExtensions getVulkanRequiredInstanceExtensions;
+	CRenCallback_CreateVulkanSurfaceCallback createVulkanSurfaceCallback;
 } CRenCallbacks;
 
 #ifdef __cplusplus 

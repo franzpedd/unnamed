@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/input.h"
+#include "Core/Input.h"
 #include <vecmath/vecmath.h>
 
 #define IMGUI_DEFINE_MATH_OPERATORS

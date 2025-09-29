@@ -26,7 +26,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/Bin)
 # ------------------------------------------------------------------------------------------------------------- project
 set(SOURCES
     # imguizmo
-    Thirdparty/imguizmo/imguizmo.h thirdparty/imguizmo/imguizmo.cpp
+    Thirdparty/imguizmo/imguizmo.h Thirdparty/imguizmo/imguizmo.cpp
     # imgui
     Thirdparty/imgui/imconfig.h
     Thirdparty/imgui/imgui_demo.cpp

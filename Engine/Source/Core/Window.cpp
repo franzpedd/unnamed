@@ -4,7 +4,9 @@
 #include <cren.h>
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_video.h>
+#include <SDL3/SDL_vulkan.h>
 #include <backends/imgui_impl_sdl3.h>
+#include "Window.h"
 
 namespace Cosmos
 {
@@ -170,40 +172,17 @@ namespace Cosmos
 		return keyboardState[key] == 1;
 	}
 
-	void* Window::GetNativeWindow()
-	{
-		CRen_Platform platform = cren_detect_platform();
+    const char *const* Window::GetRequiredExtensions(unsigned int* count)
+    {
+		return SDL_Vulkan_GetInstanceExtensions(count);
+    }
 
-		switch (platform)
-		{
-			case CREN_PLATFORM_UNKNOWN: { break; }
-			case CREN_PLATFORM_UNKNOWN_APPLE: { break; }
-			case CREN_PLATFORM_MACOS: { break; }
-			case CREN_PLATFORM_IOS: { break; }
-			case CREN_PLATFORM_X11: { break; }
-			case CREN_PLATFORM_WAYLAND: { break; }
-			case CREN_PLATFORM_ANDROID: return SDL_GetPointerProperty(SDL_GetWindowProperties((SDL_Window*)mNativeWindow), SDL_PROP_WINDOW_ANDROID_WINDOW_POINTER, NULL);
-			case CREN_PLATFORM_WINDOWS: return SDL_GetPointerProperty(SDL_GetWindowProperties((SDL_Window*)mNativeWindow), SDL_PROP_WINDOW_WIN32_HWND_POINTER, NULL);
-			default: { break; }
+    void Window::CreateSurface(void *instance, void *surface)
+    {
+		if (!SDL_Vulkan_CreateSurface(mNativeWindow, (VkInstance)instance, nullptr, (VkSurfaceKHR*)surface)) {
+			CREN_LOG(CRenLogSeverity_Fatal, "Failed to create Vulkan Surface trought SDL");
 		}
-		CREN_LOG(CRenLogSeverity_Fatal, "Must check wich native window we're looking");
-		return nullptr;
-	}
-
-	void* Window::GetNativeOptionalHandle()
-	{
-		CRen_Platform platform = cren_detect_platform();
-
-		switch (platform) 
-		{
-			case CREN_PLATFORM_X11: return SDL_GetPointerProperty(SDL_GetWindowProperties((SDL_Window*)mNativeWindow), SDL_PROP_WINDOW_X11_DISPLAY_POINTER, NULL);
-			case CREN_PLATFORM_WAYLAND: return SDL_GetPointerProperty(SDL_GetWindowProperties((SDL_Window*)mNativeWindow), SDL_PROP_WINDOW_WAYLAND_SURFACE_POINTER, NULL);
-			case CREN_PLATFORM_WINDOWS: return nullptr; // windows doesn't needs this
-			default: { break; }
-		}
-		CREN_LOG(CRenLogSeverity_Fatal, "Must check wich ptr we're looking");
-		return nullptr;
-	}
+    }
 
 	float Window::GetRefreshRate()
 	{

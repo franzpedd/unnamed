@@ -1,6 +1,8 @@
 #include "Core/Renderer.h"
 #include "Core/Application.h"
 
+#include <functional>
+
 namespace Cosmos
 {
     Renderer::Renderer(Application* app, const char* appName, unsigned int appVersion, bool customViewport, bool validations, bool vsync, const char* assetsPath, CRen_RendererAPI api, CRen_MSAA msaa)
@@ -18,8 +20,6 @@ namespace Cosmos
         ci.validations = validations;
         ci.vsync = vsync;
         ci.customViewport = customViewport;
-        ci.window = mApp->GetWindowRef()->GetNativeWindow(); // opaque pointer to underneath window
-        ci.optionalHandle = mApp->GetWindowRef()->GetNativeOptionalHandle(); // opque pointer to underneath X11 Surface/Wayland Display
 
         mContext = cren_initialize(ci);
         CREN_ASSERT(mContext != nullptr, "Failed to create CRen Context");
@@ -46,6 +46,32 @@ namespace Cosmos
             Renderer& rendererClass = *(Renderer*)cren_get_user_pointer(context);
             rendererClass.OnRenderCallback(stage, timestep);
             });
+
+        cren_set_get_vulkan_instance_required_extensions_callback(mContext, [](CRenContext* context, uint32_t* count) -> const char* const* {
+            Renderer& rendererClass = *(Renderer*)cren_get_user_pointer(context);
+            
+            static std::vector<const char*> extensions;
+            extensions.clear();
+        
+            uint32_t baseCount = 0;
+            const char* const* baseExtensions = rendererClass.mApp->GetWindowRef()->GetRequiredExtensions(&baseCount);
+            
+            for (uint32_t i = 0; i < baseCount; i++) extensions.push_back(baseExtensions[i]);
+            
+            if (cren_are_validations_enabled(context)) extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+
+            *count = extensions.size();
+            return extensions.data();
+            });
+
+
+        cren_set_create_vulkan_surface_callback(mContext, [](CRenContext* context, void* instance, void* surface) {
+            Renderer& rendererClass = *(Renderer*)cren_get_user_pointer(context);
+            rendererClass.mApp->GetWindowRef()->CreateSurface(instance, surface);
+            });
+        
+        // initialize the renderer
+        cren_create_renderer(mContext);
     }
 
     Renderer::~Renderer()

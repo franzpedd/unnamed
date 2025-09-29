@@ -7,13 +7,15 @@
 
 #ifdef CREN_BUILD_WITH_VULKAN
 
-CREN_API CRenVulkanBackend crenvk_initialize(unsigned int width, unsigned int height, void* window, void* optionalHandle, const char* appName, const char* rootPath, unsigned int appVersion, CRen_Renderer api, CRen_MSAA msaa, bool vsync, bool validations, bool customViewport)
+CREN_API CRenVulkanBackend crenvk_initialize(CRenContext* context, unsigned int width, unsigned int height, const CRenCallbacks* callbacks, const char* appName, const char* rootPath, unsigned int appVersion, CRen_Renderer api, CRen_MSAA msaa, bool vsync, bool validations, bool customViewport)
 {
     VkResult res = VK_SUCCESS;
     ctoolbox_result toolboxres = CTOOLBOX_SUCCESS;
     CRenVulkanBackend backend = { 0 };
-    crenvk_instance_create(&backend.instance, appName, appVersion, api, validations);
-    crenvk_device_create(&backend.device, backend.instance.instance, window, optionalHandle, validations);
+    crenvk_instance_create(context, &backend.instance, appName, appVersion, api, validations, callbacks->getVulkanRequiredInstanceExtensions);
+	
+	callbacks->createVulkanSurfaceCallback(context, backend.instance.instance, &backend.device.surface);
+    crenvk_device_create(&backend.device, backend.instance.instance, validations);
     crenvk_swapchain_create(&backend.swapchain, backend.device.device, backend.device.physicalDevice, backend.device.surface, width, height, vsync);
 
     // default renderphase
@@ -233,8 +235,8 @@ CREN_API void crenvk_render(void* context, CRenVulkanBackend* backend, float tim
 
 		CRenCallback_ImageCount fnImageCount = (CRenCallback_ImageCount)callbacks->imageCount;
 		CRenCallback_Resize fnResize = (CRenCallback_Resize)callbacks->resize;
-		if (callbacks->resize != NULL) fnResize(context, framebufferSize.xy.x, framebufferSize.xy.y);
-		if (callbacks->imageCount != NULL) fnImageCount(context, backend->swapchain.swapchainImageCount);
+		if (callbacks->resize != NULL) fnResize(ctx, framebufferSize.xy.x, framebufferSize.xy.y);
+		if (callbacks->imageCount != NULL) fnImageCount(ctx, backend->swapchain.swapchainImageCount);
 	}
 
 	else if (res != VK_SUCCESS) {

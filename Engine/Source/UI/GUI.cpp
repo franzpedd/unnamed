@@ -1,4 +1,4 @@
-#include "UI/Gui.h"
+#include "UI/GUI.h"
 #include "UI/Icons.h"
 #include "Core/Application.h"
 
@@ -37,6 +37,13 @@ namespace Cosmos
 		return ret ? 0 : 1; // ret ? VK_SUCCESS : VK_NOT_READY 
 	}
 
+	static void Internal_ImGui_ReturnVulkanError(VkResult err)
+	{
+		if(err != VK_SUCCESS) {
+			CREN_LOG(CRenLogSeverity_Error, "ImGui internal error: Result %d", err);
+		}
+	}
+
 	static ImFont* sIconFA = nullptr;
 	static ImFont* sIconLC = nullptr;
 	static ImFont* sRobotoMono = nullptr;
@@ -67,22 +74,6 @@ namespace Cosmos
 		ImGui::StyleColorsDark();
 		SetStyle();
 
-		// create descriptor pool
-		VkDescriptorPoolSize poolSizes[] =
-		{
-			{ VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
-			{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
-			{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },
-			{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000 },
-			{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000 },
-			{ VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000 },
-			{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000 },
-			{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000 },
-			{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 },
-			{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 },
-			{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 }
-		};
-
 		CRenContext* renderer = mApp->GetRendererRef()->GetCRenContext();
 
 		// sdl and vulkan initialization
@@ -91,21 +82,37 @@ namespace Cosmos
 
 		ImGui::SetCurrentContext((ImGuiContext*)mContext);
 		ImGui_ImplSDL3_InitForVulkan(mApp->GetWindowRef()->GetAPIWindow());
+		
+		CRenVulkanBackend* vkBackend = (CRenVulkanBackend*)cren_get_vulkan_backend(mApp->GetRendererRef()->GetCRenContext());
 
-		CRenVulkanBackend vkBackend = cren_get_vkbackend();
+		ImGui_ImplVulkan_PipelineInfo mainPipe = { 0 };
+		mainPipe.RenderPass = vkBackend->uiRenderphase->renderpass->renderPass;
+		mainPipe.Subpass = 0;
+		mainPipe.MSAASamples = vkBackend->uiRenderphase->renderpass->msaa;
+		//mainPipe.PipelineRenderingCreateInfo; // not applicable
+		mainPipe.SwapChainImageUsage = 0;
 
-		ImGui_ImplVulkan_InitInfo initInfo = {};
-		initInfo.Instance = renderer->backend.instance.instance;
-		initInfo.PhysicalDevice = renderer->backend.device.physicalDevice;
-		initInfo.Device = renderer->backend.device.device;
-		initInfo.Queue = renderer->backend.device.graphicsQueue;
-		initInfo.DescriptorPool = renderer->backend.uiRenderphase->descPool;
-		initInfo.MinImageCount = renderer->backend.swapchain.swapchainImageCount;
-		initInfo.ImageCount = renderer->backend.swapchain.swapchainImageCount;
-		initInfo.MSAASamples = renderer->backend.uiRenderphase->renderpass->msaa;
-		initInfo.Allocator = nullptr;
-		initInfo.RenderPass = renderer->backend.uiRenderphase->renderpass->renderPass;
-		ImGui_ImplVulkan_Init(&initInfo);
+		ImGui_ImplVulkan_InitInfo appInfo = { 0 };
+		appInfo.ApiVersion = crenvk_encodeversion(mApp->GetRendererRef()->GetAPI());
+		appInfo.Instance = vkBackend->instance.instance;
+		appInfo.PhysicalDevice = vkBackend->device.physicalDevice;
+		appInfo.Device = vkBackend->device.device;
+		appInfo.QueueFamily = vkBackend->device.graphicsQueueIndex;
+		appInfo.Queue = vkBackend->device.graphicsQueue;
+		appInfo.DescriptorPool = vkBackend->uiRenderphase->descPool;
+		//appInfo.DescriptorPoolSize = 0; // optional
+		appInfo.MinImageCount = vkBackend->swapchain.swapchainImageCount;
+		appInfo.ImageCount = vkBackend->swapchain.swapchainImageCount;
+		appInfo.PipelineCache = VK_NULL_HANDLE;
+		appInfo.PipelineInfoMain = mainPipe;
+		appInfo.PipelineInfoForViewports = mainPipe; // we're managing our own viewport implementation
+		appInfo.UseDynamicRendering = false;
+		appInfo.Allocator = NULL;
+		appInfo.CheckVkResultFn = Internal_ImGui_ReturnVulkanError;
+		appInfo.MinAllocationSize = 1024 * 1024;
+		//appInfo.CustomShaderVertCreateInfo; // customize vertex shader
+		//appInfo.CustomShaderFragCreateInfo; // customize fragment shader
+		ImGui_ImplVulkan_Init(&appInfo);
 		
 		// fonts
 		constexpr const ImWchar iconRanges1[] = { ICON_MIN_FA, ICON_MAX_FA, 0 };

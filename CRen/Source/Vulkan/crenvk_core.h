@@ -4,6 +4,7 @@
 
 #include "cren_defines.h"
 #include "cren_types.h"
+#include "cren_callbacks.h"
 #include <vulkan/vulkan.h>
 
 #ifdef __cplusplus 
@@ -22,10 +23,13 @@ typedef struct vkInstance
 } vkInstance;
 
 /// @brief creates and populates a vulkan instance
-CREN_API void crenvk_instance_create(vkInstance* instance, const char* appName, unsigned int appVersion, CRen_Renderer api, bool validations);
+CREN_API void crenvk_instance_create(CRenContext* context, vkInstance* instance, const char* appName, unsigned int appVersion, CRen_Renderer api, bool validations, CRenCallback_GetVulkanRequiredInstanceExtensions callback);
 
 /// @brief free used resources by the vulkan instance
 CREN_API void crenvk_instance_destroy(vkInstance* instance);
+
+/// @brief converts the renderer api into the expected number for vulkan
+CREN_API unsigned int crenvk_encodeversion(CRen_Renderer api);
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Device
@@ -33,12 +37,12 @@ CREN_API void crenvk_instance_destroy(vkInstance* instance);
 
 /// @brief cren vulkan queues info
 typedef struct vkQueueFamilyIndices {
-    int graphicFamily;
-    int presentFamily;
-    int computeFamily;
-    int graphicFound;
-    int presentFound;
-    int computeFound;
+    uint32_t graphicFamily;
+    uint32_t presentFamily;
+    uint32_t computeFamily;
+    bool graphicFound;
+    bool presentFound;
+    bool computeFound;
 } vkQueueFamilyIndices;
 
 /// @brief cren vulkan device
@@ -50,12 +54,15 @@ typedef struct vkDevice {
     VkPhysicalDeviceMemoryProperties physicalDeviceMemoryProperties;
     VkDevice device;
     VkQueue graphicsQueue;
+    int graphicsQueueIndex;
     VkQueue presentQueue;
+    int presentQueueIndex;
     VkQueue computeQueue;
+    int computeQueueIndex;
 } vkDevice;
 
 /// @brief Creates and populates the cren vulkan device
-CREN_API void crenvk_device_create(vkDevice* device, VkInstance instance, void* nativeWindow, void* optionalHandle, int validations);
+CREN_API void crenvk_device_create(vkDevice* device, VkInstance instance, bool validations);
 
 /// @brief Releases all resources used by the cren vulkan device
 CREN_API void crenvk_device_destroy(vkDevice* device, VkInstance instance);

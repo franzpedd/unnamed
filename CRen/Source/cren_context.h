@@ -24,14 +24,16 @@ typedef struct CRenCreateInfo
 	bool validations;
 	bool vsync;
 	bool customViewport;
-	void* window; // opaque pointer to underneath window
-	void* optionalHandle; // wayland's surface OR x11 display, NULL otherwise
 } CRenCreateInfo;
 
 /// @brief creates the cren context, initializing the library
 /// @param createInfo the address of a create info specification
 /// @return the cren context or NULL if failed
 CREN_API CRenContext* cren_initialize(CRenCreateInfo createInfo);
+
+/// @brief creates the renderer underneath the library, this is a separate function in order to callbacks to be properly assigned
+/// @param context cren context
+CREN_API void cren_create_renderer(CRenContext* context);
 
 /// @brief shutsdown and free used resources
 /// @param context cren context
@@ -63,6 +65,11 @@ CREN_API void cren_restore(CRenContext* context);
 
 /// @brief returns the cren main camera, we're only using one right now
 CREN_API CRenCamera* cren_get_camera(CRenContext* context);
+
+/// @brief returns if validation errors are enabled
+/// @param context cren context
+/// @return true if enabled, false otherwise
+CREN_API bool cren_are_validations_enabled(CRenContext* context);
 
 /// @brief returns the curernt status of vertical syncronization
 /// param@ context cren context
@@ -121,6 +128,16 @@ CREN_API void cren_set_ui_image_count_callback(CRenContext* context, CRenCallbac
 /// @param context cren context memory address
 /// @param callback callback to redirect the code to
 CREN_API void cren_set_draw_ui_raw_data_callback(CRenContext* context, CRenCallback_DrawUIRawData callback);
+
+/// @brief allows the application to request the neccessary instance extensions from other library
+/// @param context cren context memory address
+/// @param callback callback to redirect the code to
+CREN_API void cren_set_get_vulkan_instance_required_extensions_callback(CRenContext* context, CRenCallback_GetVulkanRequiredInstanceExtensions callback);
+
+/// @brief allows the application to create the vulkan surface outside the library scope, allowing using custom windowing manager
+/// @param context cren context memory address
+/// @param callback callback to redirect the code to
+CREN_API void cren_set_create_vulkan_surface_callback(CRenContext* context, CRenCallback_CreateVulkanSurfaceCallback callback);
 
 #ifdef __cplusplus 
 }

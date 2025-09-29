@@ -49,11 +49,11 @@ namespace Cosmos
 		/// @brief returns if a key is currently pressed
 		bool IsKeyDown(Input::Keycode key);
 
-		/// @brief returns the native os window object
-		void* GetNativeWindow();
+		/// @brief returns the required extensions by the windowing system
+		const char* const* GetRequiredExtensions(unsigned int* count);
 
-		/// @brief returns the native os surface/display (this is used only under linux distributions)
-		void* GetNativeOptionalHandle();
+		/// @brief creates the vulkan surface, populates it and returns it to the renderer
+		void CreateSurface(void* instance, void* surface);
 
 		/// @brief returns the monitor window is currently in refresh-rate, usefull for frame cap and resource management
 		float GetRefreshRate();

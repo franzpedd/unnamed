@@ -61,7 +61,7 @@ void cren_camera_update(CRenCamera* camera, float timestep)
 	float pitch = to_fradians(camera->rotation.xyz.x);
 	camera->frontPosition.xyz.x = f_cos(yaw) * f_cos(pitch);
 	camera->frontPosition.xyz.y = f_sin(pitch);
-	camera->frontPosition.xyz.z = f_sin(yaw) * cos(pitch);
+	camera->frontPosition.xyz.z = f_sin(yaw) * f_cos(pitch);
 	camera->frontPosition = float3_normalize(&camera->frontPosition);
 
 	// calculate movement speed and right vector

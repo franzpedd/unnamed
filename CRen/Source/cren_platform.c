@@ -6,26 +6,6 @@
 #include <stdio.h>
 #include <string.h>
 
-/// @brief vulkan support detection
-#if defined(CREN_BUILD_WITH_VULKAN)
-    #if defined(_WIN32) || defined(_WIN64)
-        #define VK_USE_PLATFORM_WIN32_KHR
-    #elif defined(__APPLE__) && defined(__MACH__)
-        #define VK_USE_PLATFORM_METAL_EXT
-    #elif defined(__ANDROID__)
-        #define VK_USE_PLATFORM_ANDROID_KHR
-    elif defined(__linux__)
-        #if defined(CREN_LINUX_X11)
-            #define VK_USE_PLATFORM_X11
-        #elif defined(CREN_LINUX_WAYLAND)
-            #define VK_USE_PLATFORM_WAYLAND
-        #endif
-    #else
-        #error "Unsupported platform"
-    #endif
-    #include <vulkan/vulkan.h>
-#endif
-
 /// @brief object and functions definitions
 #if defined(_WIN32) || defined(_WIN64)
     #define WIN32_LEAN_AND_MEAN
@@ -157,53 +137,6 @@ CREN_API CRen_Platform cren_detect_platform()
     #else
         return CREN_PLATFORM_UNKNOWN;
     #endif
-}
-
-CREN_API bool cren_surface_create(void* instance, void* surface, void* nativeWindow, void* optionalHandle)
-{
-    #ifdef CREN_BUILD_WITH_VULKAN
-    VkResult result = VK_ERROR_EXTENSION_NOT_PRESENT;
-    VkInstance vkInstance = (VkInstance)instance;
-    VkSurfaceKHR* vkSurface = (VkSurfaceKHR*)surface;
-
-    #if defined(__linux__) && defined(CREN_LINUX_WAYLAND)
-        VkWaylandSurfaceCreateInfoKHR createInfo = { 0 };
-        createInfo.sType = VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR;
-        createInfo.display = (struct wl_display*)nativeWindow;
-        createInfo.surface = (struct wl_surface*)optionalHandle;
-        PFN_vkCreateWaylandSurfaceKHR fn = (PFN_vkCreateWaylandSurfaceKHR)vkGetInstanceProcAddr(vkInstance, "vkCreateWaylandSurfaceKHR");
-        if (fn) result = fn(vkInstance, &createInfo, NULL, vkSurface);
-    #elif defined(__linux__) && defined(CREN_LINUX_X11)
-        VkXlibSurfaceCreateInfoKHR createInfo = { 0 };
-        createInfo.sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;
-        createInfo.dpy = (Display*)optionalHandle;
-        createInfo.window = (Window)nativeWindow;
-        PFN_vkCreateXlibSurfaceKHR fn = (PFN_vkCreateXlibSurfaceKHR)vkGetInstanceProcAddr(vkInstance, "vkCreateXlibSurfaceKHR");
-        if (fn) result = fn(vkInstance, &createInfo, NULL, vkSurface);
-    #elif defined(__linux__) && defined(__ANDROID__)
-        VkAndroidSurfaceCreateInfoKHR createInfo = { 0 };
-        createInfo.sType = VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR;
-        createInfo.window = (ANativeWindow*)nativeWindow;
-        PFN_vkCreateAndroidSurfaceKHR fn = (PFN_vkCreateAndroidSurfaceKHR)vkGetInstanceProcAddr(vkInstance, "vkCreateAndroidSurfaceKHR");
-        if (fn) result = fn(vkInstance, &createInfo, NULL, vkSurface);
-    #elif defined(__APPLE__) && defined(__MACH__)
-        VkMetalSurfaceCreateInfoEXT createInfo = { 0 };
-        createInfo.sType = VK_STRUCTURE_TYPE_METAL_SURFACE_CREATE_INFO_EXT;
-        createInfo.pLayer = (CAMetalLayer*)nativeWindow;
-        PFN_vkCreateMetalSurfaceEXT fn = (PFN_vkCreateMetalSurfaceEXT)vkGetInstanceProcAddr(vkInstance, "vkCreateMetalSurfaceEXT");
-        if (fn) result = fn(vkInstance, &createInfo, NULL, vkSurface);
-    #elif defined(_WIN32) || defined(_WIN64)
-        VkWin32SurfaceCreateInfoKHR createInfo = { 0 };
-        createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-        createInfo.hinstance = GetModuleHandle(NULL);
-        createInfo.hwnd = (HWND)nativeWindow;
-        PFN_vkCreateWin32SurfaceKHR fn = (PFN_vkCreateWin32SurfaceKHR)vkGetInstanceProcAddr(vkInstance, "vkCreateWin32SurfaceKHR");
-        if (fn) result = fn(vkInstance, &createInfo, NULL, vkSurface);
-    #else
-        return false;
-    #endif
-        return result == VK_SUCCESS;
-    #endif // CREN_BUILD_WITH_VULKAN
 }
 
 CREN_API void cren_get_path(const char* subpath, const char* assetsRoot, int removeExtension, char* output, unsigned long long outputSize)

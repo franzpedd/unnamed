@@ -39,21 +39,24 @@ CREN_API CRenContext* cren_initialize(CRenCreateInfo createInfo)
 	context->usingCustomViewport = createInfo.customViewport;
 	context->usingVSync = createInfo.vsync;
 
-	#ifdef CREN_BUILD_WITH_VULKAN
+	context->camera = cren_camera_create(CREN_CAMERA_TYPE_FREE_LOOK, (float)createInfo.width / (float)createInfo.height, createInfo.api);
+
+	return context;
+}
+
+CREN_API void cren_create_renderer(CRenContext* context)
+{
+    #ifdef CREN_BUILD_WITH_VULKAN
 	context->backend = crenvk_initialize
 	(
-		createInfo.width, createInfo.height, createInfo.window, createInfo.optionalHandle,
-		createInfo.appName, createInfo.assetsPath,
-		createInfo.appVersion, createInfo.api, createInfo.msaa,
-		createInfo.vsync, createInfo.validations, createInfo.customViewport
+		context, context->createInfo.width, context->createInfo.height, &context->callbacks,
+		context->createInfo.appName, context->createInfo.assetsPath,
+		context->createInfo.appVersion, context->createInfo.api, context->createInfo.msaa,
+		context->createInfo.vsync, context->createInfo.validations, context->createInfo.customViewport
 	);
 	#else
 	#error "Unsupported Renderer Backend"
 	#endif
-
-	context->camera = cren_camera_create(CREN_CAMERA_TYPE_FREE_LOOK, (float)createInfo.width / (float)createInfo.height, createInfo.api);
-
-	return context;
 }
 
 CREN_API void cren_shutdown(CRenContext* context)
@@ -107,6 +110,12 @@ CREN_API CRenCamera* cren_get_camera(CRenContext* context)
 {
 	if (!context) return NULL;
 	return &context->camera;
+}
+
+CREN_API bool cren_are_validations_enabled(CRenContext *context)
+{
+    if (!context) return false;
+	return context->createInfo.validations;
 }
 
 bool cren_using_vsync(CRenContext* context)
@@ -182,4 +191,14 @@ CREN_API void cren_set_ui_image_count_callback(CRenContext* context, CRenCallbac
 CREN_API void cren_set_draw_ui_raw_data_callback(CRenContext* context, CRenCallback_DrawUIRawData callback)
 {
     context->callbacks.drawUIRawData = callback;
+}
+
+CREN_API void cren_set_get_vulkan_instance_required_extensions_callback(CRenContext* context, CRenCallback_GetVulkanRequiredInstanceExtensions callback)
+{
+    context->callbacks.getVulkanRequiredInstanceExtensions = callback;
+}
+
+CREN_API void cren_set_create_vulkan_surface_callback(CRenContext *context, CRenCallback_CreateVulkanSurfaceCallback callback)
+{
+    context->callbacks.createVulkanSurfaceCallback = callback;
 }

@@ -1,8 +1,5 @@
 # ignore everything in build except the data
 Build/*
-!Build/Bin/
-Build/Bin/Debug
-Build/Bin/Release
 !Build/Bin/data/
 
 # ignore specific paths
