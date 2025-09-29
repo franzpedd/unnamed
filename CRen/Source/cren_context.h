@@ -2,8 +2,10 @@
 #define CREN_CONTEXT_INCLUDED
 
 #include "cren_defines.h"
+#include "cren_camera.h"
 #include "cren_types.h"
 #include "cren_callbacks.h"
+#include <vecmath/vecmath.h>
 
 #ifdef __cplusplus 
 extern "C" {
@@ -23,6 +25,7 @@ typedef struct CRenCreateInfo
 	bool vsync;
 	bool customViewport;
 	void* window; // opaque pointer to underneath window
+	void* optionalHandle; // wayland's surface OR x11 display, NULL otherwise
 } CRenCreateInfo;
 
 /// @brief creates the cren context, initializing the library
@@ -34,13 +37,57 @@ CREN_API CRenContext* cren_initialize(CRenCreateInfo createInfo);
 /// @param context cren context
 CREN_API void cren_shutdown(CRenContext* context);
 
+/// @brief updates the renderer frame, sending useful information to the gpu
+/// @param context cren context memory address
+/// @param timestep interpolation step, time betweent last and current frame
+CREN_API void cren_update(CRenContext* context, float timestep);
+
+/// @brief performs the frame rendering, setting-up all resources required for drawing the current frame and presenting the previously rendered
+/// @param context cren context memory address
+/// @param timestep interpolation step, time betweent last and current frame
+CREN_API void cren_render(CRenContext* context, float timestep);
+
+/// @brief resizes the renderer, call this on every window resize event
+/// @param context cren context memory address
+/// @param width new width
+/// @param height new height
+CREN_API void cren_resize(CRenContext* context, int width, int height);
+
+/// @brief minimizes the renderer, stopping rendering without staling it
+/// @param context cren context memory address
+CREN_API void cren_minimize(CRenContext* context);
+
+/// @brief restores the renderer to it's last known size, resuming the rendering process
+/// @param context cren context memory address
+CREN_API void cren_restore(CRenContext* context);
+
+/// @brief returns the cren main camera, we're only using one right now
+CREN_API CRenCamera* cren_get_camera(CRenContext* context);
+
 /// @brief returns the curernt status of vertical syncronization
 /// param@ context cren context
 /// @return 0 = off; 1 = on
-CREN_API bool cren_get_vsync(CRenContext* context);
+CREN_API bool cren_using_vsync(CRenContext* context);
+
+/// @brief returns if scene is being rendered on a separate viewport
+/// param@ context cren context
+/// @return 0 = off; 1 = on
+CREN_API bool cren_using_custom_viewport(CRenContext* context);
 
 /// @brief returns the underneath vulkan backend, must be casted as CRenVulkanBackend*
 CREN_API void* cren_get_vulkan_backend(CRenContext* context);
+
+/// @brief returns the mouse position, this must be previously set to be correct
+CREN_API float2 cren_get_mousepos(CRenContext* context);
+
+/// @brief setsthe mouse position, this must be properly configured
+CREN_API void cren_set_mousepos(CRenContext* context, const float2 pos);
+
+/// @brief returns the current framebuffer size
+CREN_API float2 cren_get_framebuffer_size(CRenContext* context);
+
+/// @brief set's the new framebuffer size (changes the current size wich will be noticded uppon render function and resized)
+CREN_API void cren_set_framebuffer_size(CRenContext* context, const float2 size);
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Callbacks
@@ -78,5 +125,6 @@ CREN_API void cren_set_draw_ui_raw_data_callback(CRenContext* context, CRenCallb
 #ifdef __cplusplus 
 }
 #endif
+
 
 #endif // CREN_CONTEXT_INCLUDED

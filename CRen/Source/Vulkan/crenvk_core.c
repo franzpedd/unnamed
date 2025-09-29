@@ -3,7 +3,8 @@
 #include "cren_platform.h"
 
 #include <memm/memm.h>
-#include <ctoolbox/carray.h>
+#include <ctoolbox/darray.h>
+#include <vecmath/vecmath.h>
 #include <string.h>
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -58,78 +59,83 @@ static void internal_crenvk_print_available_instance_extensions()
 }
 
 /// @brief prints the contents of an carray treating them as strings
-static void internal_crenvk_print_cren_array_strings(const carray* array)
+static void internal_crenvk_print_cren_array_strings(const darray* array)
 {
     CREN_LOG(CRenLogSeverity_Info, "Required Instances Extensions: ");
-    for (unsigned long long i = 0; i < carray_size(array); ++i) {
-        const char* str = (const char*)carray_at(array, i);
-        if (str) {
-            CREN_LOG(CRenLogSeverity_Info, "- %s", str);
+    for (size_t i = 0; i < darray_size(array); ++i) {
+        const char* extName;
+        if (darray_get(array, i, &extName) == CTOOLBOX_SUCCESS) {
+            if (extName) {
+                CREN_LOG(CRenLogSeverity_Info, "- %s", extName);
+            }
         }
     }
 }
 
 /// @brief pushes the expected instance extensions into a carray object for latter checkage
-static carray* cren_get_required_instance_extensions(int validations)
+static darray* cren_get_required_instance_extensions(int validations)
 {
-    carray* extensions = carray_create(6);
+    darray* extensions = darray_init(sizeof(const char*), 8);
     if (!extensions) return NULL;
+
+    /// macro for helping if statements
+    #define PUSH_EXTENSION(ext) do { const char* _ext = ext; darray_push_back(extensions, &_ext); } while(0);
 
     CRen_Platform backend = cren_detect_platform();
     switch (backend)
     {
         case CREN_PLATFORM_MACOS:
         {
-            carray_push_back(extensions, VK_KHR_SURFACE_EXTENSION_NAME);
-            carray_push_back(extensions, "VK_EXT_metal_surface");
-            carray_push_back(extensions, VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
-            break;
+            PUSH_EXTENSION(VK_KHR_SURFACE_EXTENSION_NAME);
+            PUSH_EXTENSION("VK_EXT_metal_surface");
+            PUSH_EXTENSION(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
         }
 
         case CREN_PLATFORM_IOS:
         {
-            carray_push_back(extensions, VK_KHR_SURFACE_EXTENSION_NAME);
-            carray_push_back(extensions, "VK_EXT_metal_surface");
-            carray_push_back(extensions, VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
+            PUSH_EXTENSION(VK_KHR_SURFACE_EXTENSION_NAME);
+            PUSH_EXTENSION("VK_EXT_metal_surface");
+            PUSH_EXTENSION(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
             break;
         }
 
         case CREN_PLATFORM_WAYLAND:
         {
-            carray_push_back(extensions, VK_KHR_SURFACE_EXTENSION_NAME);
-            carray_push_back(extensions, "VK_KHR_wayland_surface");
+            PUSH_EXTENSION(VK_KHR_SURFACE_EXTENSION_NAME);
+            PUSH_EXTENSION("VK_KHR_wayland_surface");
             break;
         }
 
         case CREN_PLATFORM_X11:
         {
-            carray_push_back(extensions, VK_KHR_SURFACE_EXTENSION_NAME);
-            carray_push_back(extensions, "VK_KHR_xlib_surface");
+            PUSH_EXTENSION(VK_KHR_SURFACE_EXTENSION_NAME);
+            PUSH_EXTENSION("VK_KHR_xlib_surface");
             break;
         }
 
         case CREN_PLATFORM_ANDROID:
         {
-            carray_push_back(extensions, VK_KHR_SURFACE_EXTENSION_NAME);
-            carray_push_back(extensions, "VK_KHR_android_surface");
+            PUSH_EXTENSION(VK_KHR_SURFACE_EXTENSION_NAME);
+            PUSH_EXTENSION("VK_KHR_android_surface");
             break;
         }
 
         case CREN_PLATFORM_WINDOWS:
         {
-            carray_push_back(extensions, VK_KHR_SURFACE_EXTENSION_NAME);
-            carray_push_back(extensions, "VK_KHR_win32_surface");
+            PUSH_EXTENSION(VK_KHR_SURFACE_EXTENSION_NAME);
+            PUSH_EXTENSION("VK_KHR_win32_surface");
             break;
         }
     }
 
-    carray_push_back(extensions, VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
+    PUSH_EXTENSION(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
 
     if (validations) {
-        carray_push_back(extensions, VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-        carray_push_back(extensions, VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
+        PUSH_EXTENSION(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+        PUSH_EXTENSION(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
     }
 
+    #undef PUSH_EXTENSION
     return extensions;
 }
 
@@ -153,7 +159,7 @@ void crenvk_instance_create(vkInstance* instance, const char* appName, unsigned 
 
     // log usefull info about extensions and layers
     instance->validationsEnabled = validations;
-    carray* extensions = cren_get_required_instance_extensions(validations);
+    darray* extensions = cren_get_required_instance_extensions(validations);
     internal_crenvk_print_cren_array_strings(extensions);
     internal_crenvk_print_available_instance_extensions();
 
@@ -172,8 +178,8 @@ void crenvk_instance_create(vkInstance* instance, const char* appName, unsigned 
     VkInstanceCreateInfo instanceCI = { 0 };
     instanceCI.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     instanceCI.pApplicationInfo = &appInfo;
-    instanceCI.enabledExtensionCount = (uint32_t)carray_size(extensions);
-    instanceCI.ppEnabledExtensionNames = (const char* const*)carray_data(extensions);
+    instanceCI.enabledExtensionCount = (uint32_t)darray_size(extensions);
+    instanceCI.ppEnabledExtensionNames = (const char* const*)darray_const_data(extensions);
     if (portability) instanceCI.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
 
     // validation debugger
@@ -218,7 +224,7 @@ void crenvk_instance_create(vkInstance* instance, const char* appName, unsigned 
         CREN_ASSERT(func(instance->instance, &debugUtilsCI, NULL, &instance->debugger) == VK_SUCCESS, "Failed to create Vulkan Debug Messenger");
     }
 
-    carray_destroy(extensions);
+    darray_destroy(extensions);
     return;
 }
 
@@ -248,7 +254,7 @@ static int internal_crenvk_check_device_extension_support(VkPhysicalDevice devic
     unsigned int available_extension_count;
     vkEnumerateDeviceExtensionProperties(device, NULL, &available_extension_count, NULL);
 
-    VkExtensionProperties* available_extensions = (VkExtensionProperties*)malloc(available_extension_count * sizeof(VkExtensionProperties), 1);
+    VkExtensionProperties* available_extensions = (VkExtensionProperties*)malloc(available_extension_count * sizeof(VkExtensionProperties));
     vkEnumerateDeviceExtensionProperties(device, NULL, &available_extension_count, available_extensions);
 
     for (unsigned int i = 0; i < extension_count; i++) {
@@ -275,7 +281,7 @@ static VkPhysicalDevice internal_crenvk_choose_physical_device(VkInstance instan
     unsigned int gpus = 0;
     vkEnumeratePhysicalDevices(instance, &gpus, NULL);
 
-    VkPhysicalDevice* devices = (VkPhysicalDevice*)malloc(gpus * sizeof(VkPhysicalDevice), 1);
+    VkPhysicalDevice* devices = (VkPhysicalDevice*)malloc(gpus * sizeof(VkPhysicalDevice));
     vkEnumeratePhysicalDevices(instance, &gpus, devices);
 
     VkPhysicalDevice choosenOne = VK_NULL_HANDLE;
@@ -333,7 +339,7 @@ static void internal_crenvk_create_logical_device(VkPhysicalDevice physicalDevic
     if (indices.computeFamily != -1 && indices.computeFamily != indices.graphicFamily && indices.computeFamily != indices.presentFamily) queueFamilyIndices[queueCount++] = indices.computeFamily;
 
     // create queue create info for each unique queue family
-    VkDeviceQueueCreateInfo* queueCreateInfos = (VkDeviceQueueCreateInfo*)crenmemory_allocate(sizeof(VkDeviceQueueCreateInfo) * queueCount, 1);
+    VkDeviceQueueCreateInfo* queueCreateInfos = (VkDeviceQueueCreateInfo*)malloc(sizeof(VkDeviceQueueCreateInfo) * queueCount);
     for (unsigned int i = 0; i < queueCount; i++) {
         queueCreateInfos[i].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
         queueCreateInfos[i].pNext = NULL;
@@ -343,9 +349,8 @@ static void internal_crenvk_create_logical_device(VkPhysicalDevice physicalDevic
         queueCreateInfos[i].flags = 0;
     }
 
-    // extensions
-    CREN_LOG(CRenLogSeverity_Todo, "Use platform_detect here");
-    #if defined(PLATFORM_APPLE) && (VK_HEADER_VERSION >= 216)
+    // handle apple extension
+    #if defined(__APPLE__) && defined(__MACH__) && (VK_HEADER_VERSION >= 216)
     const char* extensions[] = { VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME };
     unsigned int extensionCount = 2;
     #else
@@ -355,11 +360,6 @@ static void internal_crenvk_create_logical_device(VkPhysicalDevice physicalDevic
 
     // required features
     VkPhysicalDeviceFeatures deviceFeatures = { 0 };
-    #ifndef PLATFORM_ANDROID
-    deviceFeatures.shaderInt64 = VK_TRUE;
-    #else
-    CREN_LOG(CRenLogSeverity_Info, "Android device does not support 64 integers on shaders");
-    #endif
     deviceFeatures.samplerAnisotropy = VK_TRUE;
 
     // device create info
@@ -394,9 +394,9 @@ static void internal_crenvk_create_logical_device(VkPhysicalDevice physicalDevic
     free(queueCreateInfos);
 }
 
-void crenvk_device_create(vkDevice* device, VkInstance instance, void* nativeWindow, int validations)
+void crenvk_device_create(vkDevice* device, VkInstance instance, void* nativeWindow, void* optionalHandle, int validations)
 {
-    CREN_ASSERT(cren_surface_create(instance, &device->surface, nativeWindow) == 1, "Failed to create a window surface for vulkan renderer");
+    CREN_ASSERT(cren_surface_create(instance, &device->surface, nativeWindow, optionalHandle) == true, "Failed to create a window surface for vulkan renderer");
 
     device->physicalDevice = internal_crenvk_choose_physical_device(instance, device->surface);
     CREN_ASSERT(device->physicalDevice != NULL, "An unfit physical device was choosen, please report about it");
@@ -426,7 +426,7 @@ vkQueueFamilyIndices crenvk_device_find_queue_families(VkPhysicalDevice device, 
     unsigned int queue_family_count = 0;
     vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, NULL);
 
-    VkQueueFamilyProperties* queue_families = (VkQueueFamilyProperties*)malloc(queue_family_count * sizeof(VkQueueFamilyProperties), 1);
+    VkQueueFamilyProperties* queue_families = (VkQueueFamilyProperties*)malloc(queue_family_count * sizeof(VkQueueFamilyProperties));
     vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, queue_families);
 
     for (unsigned int i = 0; i < queue_family_count; i++) {
@@ -502,7 +502,7 @@ VkResult crenvk_device_create_buffer(VkDevice device, VkPhysicalDevice physicalD
         void* mapped;
         res = vkMapMemory(device, *memory, 0, size, 0, &mapped);
         if (res == VK_SUCCESS) {
-            crenmemory_copy(mapped, data, size);
+            memcpy(mapped, data, size);
             vkUnmapMemory(device, *memory);
         }
 
@@ -885,4 +885,176 @@ void crenvk_device_insert_image_memory_barrier(VkCommandBuffer cmdBuffer, VkImag
     imageMemoryBarrier.subresourceRange = subresourceRange;
 
     vkCmdPipelineBarrier(cmdBuffer, srcStageMask, dstStageMask, 0, 0, NULL, 0, NULL, 1, &imageMemoryBarrier);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Swapchain
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/// @brief queries information for the swapchain, like available surface formats and etc.
+static vkSwapchainDetails internal_crenvk_query_swapchain_details(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface)
+{
+    vkSwapchainDetails details = { 0 };
+    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &details.capabilities);
+
+    vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &details.surfaceFormatCount, NULL);
+    if (details.surfaceFormatCount != 0) {
+        details.surfaceFormats = (VkSurfaceFormatKHR*)malloc(details.surfaceFormatCount * sizeof(VkSurfaceFormatKHR));
+
+        if (details.surfaceFormats) {
+            vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &details.surfaceFormatCount, details.surfaceFormats);
+        }
+    }
+
+    vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &details.presentModeCount, NULL);
+
+    if (details.presentModeCount != 0) {
+        details.presentModes = (VkPresentModeKHR*)malloc(details.presentModeCount * sizeof(VkPresentModeKHR));
+        if (details.presentModes) {
+            vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &details.presentModeCount, details.presentModes);
+        }
+    }
+
+    return details;
+}
+
+/// @brief chooses the swapchain surface format, opting with the most widely supported (VK_FORMAT_B8G8R8A8_UNORM & VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
+static VkSurfaceFormatKHR internal_crenvk_choose_swapchain_surface_format(VkSurfaceFormatKHR* formats, unsigned int quantity)
+{
+    for (unsigned int i = 0; i < quantity; i++) {
+        if (formats[i].format == VK_FORMAT_B8G8R8A8_UNORM && formats[i].colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) return formats[i];
+    }
+
+    return formats[0];
+}
+
+/// @brief chooses the most suitable presentation mode for the swapchain
+static VkPresentModeKHR internal_crenvk_choose_swapchain_present_mode(VkPresentModeKHR* modes, uint32_t quantity, bool vsync)
+{
+    // handle edge cases and vsync request
+    if (modes == NULL || quantity == 0 || vsync)  return VK_PRESENT_MODE_FIFO_KHR; // fallback to FIFO
+
+    // search for the best non-VSync mode
+    int immediateModeAvailable = 0;
+    for (unsigned int i = 0; i < quantity; i++) {
+        if (modes[i] == VK_PRESENT_MODE_MAILBOX_KHR)  return VK_PRESENT_MODE_MAILBOX_KHR; // prefer MAILBOX (multiple buffering) if available
+        if (modes[i] == VK_PRESENT_MODE_IMMEDIATE_KHR) immediateModeAvailable = 1; // mark IMMEDIATE mode as available for fallback
+    }
+
+    // fallback to IMMEDIATE if available
+    if (immediateModeAvailable) return VK_PRESENT_MODE_IMMEDIATE_KHR;
+
+    // fallback to FIFO (always supported)
+    return VK_PRESENT_MODE_FIFO_KHR;
+}
+
+/// @brief clamps the swapchain extent between the surface capabilities and returns it as the swapchain extent
+static VkExtent2D internal_crenvk_choose_swapchain_extent(const VkSurfaceCapabilitiesKHR* capabilities, unsigned int width, unsigned int height)
+{
+    if (capabilities->currentExtent.width != UINT32_MAX) return capabilities->currentExtent;
+
+    VkExtent2D actualExtent = { width, height };
+    actualExtent.width = (uint32_t)f_clamp((const uint32_t)actualExtent.width, (const uint32_t)capabilities->minImageExtent.width, (const uint32_t)capabilities->maxImageExtent.width);
+    actualExtent.height = (uint32_t)f_clamp((const uint32_t)actualExtent.height, (const uint32_t)capabilities->minImageExtent.height, (const uint32_t)capabilities->maxImageExtent.height);
+
+    return actualExtent;
+}
+
+void crenvk_swapchain_create(vkSwapchain* swapchain, VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, uint32_t width, uint32_t height, bool vsync)
+{
+    vkSwapchainDetails details = internal_crenvk_query_swapchain_details(physicalDevice, surface);
+    swapchain->swapchainFormat = internal_crenvk_choose_swapchain_surface_format(details.surfaceFormats, details.surfaceFormatCount);
+    swapchain->swapchainPresentMode = internal_crenvk_choose_swapchain_present_mode(details.presentModes, details.presentModeCount, vsync);
+    swapchain->swapchainExtent = internal_crenvk_choose_swapchain_extent(&details.capabilities, width, height);
+
+    // images in the swapchain
+    swapchain->swapchainImageCount = details.capabilities.minImageCount + 1;
+    if (details.capabilities.maxImageCount > 0 && swapchain->swapchainImageCount > details.capabilities.maxImageCount) swapchain->swapchainImageCount = details.capabilities.maxImageCount;
+
+    // create swapchain
+    vkQueueFamilyIndices indices = crenvk_device_find_queue_families(physicalDevice, surface);
+    int queueFamilyIndices[] = { indices.graphicFamily, indices.presentFamily, indices.computeFamily };
+    VkSwapchainCreateInfoKHR swapchainCI = { 0 };
+    swapchainCI.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+    swapchainCI.pNext = NULL;
+    swapchainCI.flags = 0;
+    swapchainCI.surface = surface;
+    swapchainCI.minImageCount = swapchain->swapchainImageCount;
+    swapchainCI.imageFormat = swapchain->swapchainFormat.format;
+    swapchainCI.imageColorSpace = swapchain->swapchainFormat.colorSpace;
+    swapchainCI.imageExtent = swapchain->swapchainExtent;
+    swapchainCI.imageArrayLayers = 1;
+    swapchainCI.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+    swapchainCI.imageUsage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT; // allow copying swapchain images
+    swapchainCI.preTransform = details.capabilities.currentTransform;
+    swapchainCI.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+    swapchainCI.presentMode = swapchain->swapchainPresentMode;
+    swapchainCI.clipped = VK_TRUE;
+
+    if (indices.graphicFamily != indices.presentFamily) {
+        swapchainCI.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+        swapchainCI.queueFamilyIndexCount = 2;
+        swapchainCI.pQueueFamilyIndices = (unsigned int*)queueFamilyIndices;
+    }
+
+    else {
+        swapchainCI.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    }
+
+    CREN_ASSERT(vkCreateSwapchainKHR(device, &swapchainCI, NULL, &swapchain->swapchain) == VK_SUCCESS, "Failed to create swapchain");
+
+    vkGetSwapchainImagesKHR(device, swapchain->swapchain, &swapchain->swapchainImageCount, NULL);
+    swapchain->swapchainImages = (VkImage*)malloc(swapchain->swapchainImageCount * sizeof(VkImage));
+    swapchain->swapchainImageViews = (VkImageView*)malloc(sizeof(VkImageView) * swapchain->swapchainImageCount);
+    vkGetSwapchainImagesKHR(device, swapchain->swapchain, &swapchain->swapchainImageCount, swapchain->swapchainImages);
+
+    // create image views
+    for (unsigned int i = 0; i < swapchain->swapchainImageCount; i++) {
+        crenvk_device_create_image_view(device, swapchain->swapchainImages[i], swapchain->swapchainFormat.format, VK_IMAGE_ASPECT_COLOR_BIT, 1, 1, VK_IMAGE_VIEW_TYPE_2D, NULL, &swapchain->swapchainImageViews[i]);
+    }
+
+    // syncronization objects
+    VkSemaphoreCreateInfo semaphoreCI = { 0 };
+    semaphoreCI.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+    semaphoreCI.pNext = NULL;
+    semaphoreCI.flags = 0;
+
+    VkFenceCreateInfo fenceCI = { 0 };
+    fenceCI.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+    fenceCI.pNext = NULL;
+    fenceCI.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+    swapchain->imageAvailableSemaphores = (VkSemaphore*)malloc(sizeof(VkSemaphore) * swapchain->swapchainImageCount);
+    swapchain->finishedRenderingSemaphores = (VkSemaphore*)malloc(sizeof(VkSemaphore) * swapchain->swapchainImageCount);
+    swapchain->framesInFlightFences = (VkFence*)malloc(sizeof(VkFence) * swapchain->swapchainImageCount);
+
+    swapchain->swapchainSyncCount = swapchain->swapchainImageCount;
+    for (size_t i = 0; i < swapchain->swapchainSyncCount; i++) {
+        CREN_ASSERT(vkCreateSemaphore(device, &semaphoreCI, NULL, &swapchain->imageAvailableSemaphores[i]) == VK_SUCCESS, "Failed to create image available semaphore");
+        CREN_ASSERT(vkCreateSemaphore(device, &semaphoreCI, NULL, &swapchain->finishedRenderingSemaphores[i]) == VK_SUCCESS, "Failed to create rendering finished semaphore");
+        CREN_ASSERT(vkCreateFence(device, &fenceCI, NULL, &swapchain->framesInFlightFences[i]) == VK_SUCCESS, "Failed to create syncronizer fence");
+    }
+
+    // free details
+    free(details.presentModes);
+    free(details.surfaceFormats);
+}
+
+void crenvk_swapchain_destroy(vkSwapchain* swapchain, VkDevice device)
+{
+    for (unsigned int i = 0; i < swapchain->swapchainSyncCount; i++) {
+        if (swapchain->imageAvailableSemaphores[i]) vkDestroySemaphore(device, swapchain->imageAvailableSemaphores[i], NULL);
+        if (swapchain->finishedRenderingSemaphores[i]) vkDestroySemaphore(device, swapchain->finishedRenderingSemaphores[i], NULL);
+        if (swapchain->framesInFlightFences[i]) vkDestroyFence(device, swapchain->framesInFlightFences[i], NULL);
+    }
+    free(swapchain->imageAvailableSemaphores);
+    free(swapchain->finishedRenderingSemaphores);
+    free(swapchain->framesInFlightFences);
+
+    for (unsigned int i = 0; i < swapchain->swapchainImageCount; i++) vkDestroyImageView(device, swapchain->swapchainImageViews[i], NULL);
+
+    free(swapchain->swapchainImageViews);
+    free(swapchain->swapchainImages); // swapchain images are vkDestroyed internally
+
+    vkDestroySwapchainKHR(device, swapchain->swapchain, NULL);
 }

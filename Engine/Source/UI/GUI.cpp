@@ -92,18 +92,20 @@ namespace Cosmos
 		ImGui::SetCurrentContext((ImGuiContext*)mContext);
 		ImGui_ImplSDL3_InitForVulkan(mApp->GetWindowRef()->GetAPIWindow());
 
-		//ImGui_ImplVulkan_InitInfo initInfo = {};
-		//initInfo.Instance = renderer->backend.instance.instance;
-		//initInfo.PhysicalDevice = renderer->backend.device.physicalDevice;
-		//initInfo.Device = renderer->backend.device.device;
-		//initInfo.Queue = renderer->backend.device.graphicsQueue;
-		//initInfo.DescriptorPool = renderer->backend.uiRenderphase->descPool;
-		//initInfo.MinImageCount = renderer->backend.swapchain.swapchainImageCount;
-		//initInfo.ImageCount = renderer->backend.swapchain.swapchainImageCount;
-		//initInfo.MSAASamples = renderer->backend.uiRenderphase->renderpass->msaa;
-		//initInfo.Allocator = nullptr;
-		//initInfo.RenderPass = renderer->backend.uiRenderphase->renderpass->renderPass;
-		//ImGui_ImplVulkan_Init(&initInfo);
+		CRenVulkanBackend vkBackend = cren_get_vkbackend();
+
+		ImGui_ImplVulkan_InitInfo initInfo = {};
+		initInfo.Instance = renderer->backend.instance.instance;
+		initInfo.PhysicalDevice = renderer->backend.device.physicalDevice;
+		initInfo.Device = renderer->backend.device.device;
+		initInfo.Queue = renderer->backend.device.graphicsQueue;
+		initInfo.DescriptorPool = renderer->backend.uiRenderphase->descPool;
+		initInfo.MinImageCount = renderer->backend.swapchain.swapchainImageCount;
+		initInfo.ImageCount = renderer->backend.swapchain.swapchainImageCount;
+		initInfo.MSAASamples = renderer->backend.uiRenderphase->renderpass->msaa;
+		initInfo.Allocator = nullptr;
+		initInfo.RenderPass = renderer->backend.uiRenderphase->renderpass->renderPass;
+		ImGui_ImplVulkan_Init(&initInfo);
 		
 		// fonts
 		constexpr const ImWchar iconRanges1[] = { ICON_MIN_FA, ICON_MAX_FA, 0 };

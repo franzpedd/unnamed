@@ -16,13 +16,13 @@ typedef enum CRen_RendererAPI
 /// @brief how many samples per pixel the images has
 typedef enum CRen_MSAA
 {
-	CREN_MSAA_X1,
-	CREN_MSAA_X2,
-	CREN_MSAA_X4,
-	CREN_MSAA_X8,
-	CREN_MSAA_X16,
-	CREN_MSAA_X32,
-	CREN_MSAA_X64
+	CREN_MSAA_X1 = 0x00000001,
+	CREN_MSAA_X2 = 0x00000002,
+	CREN_MSAA_X4 = 0x00000004,
+	CREN_MSAA_X8 = 0x00000008,
+	CREN_MSAA_X16 = 0x00000010,
+	CREN_MSAA_X32 = 0x00000020,
+	CREN_MSAA_X64 = 0x00000040
 } CRen_MSAA;
 
 /// @brief right now there's only two stages

@@ -25,10 +25,10 @@ namespace Cosmos
     public:
 
         /// @brief updates the renderer, sending frame data to the gpu at a fixed period
-        void OnUpdate(double timestep);
+        void OnUpdate(float timestep);
 
         /// @brief draw stuff
-        void OnRender(double timestep);
+        void OnRender(float timestep);
 
     public:
 
@@ -43,6 +43,9 @@ namespace Cosmos
 
         /// @brief returns if vsync is currently on
         bool GetVSync();
+
+        /// @brief returns the main cren camera
+        CRenCamera* GetMainCamera();
 
     protected:
 

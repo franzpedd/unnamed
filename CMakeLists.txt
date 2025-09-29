@@ -11,7 +11,6 @@ project(Solution VERSION 1.0 LANGUAGES C)
 
 include(Thirdparty/CMakeLists.txt)
 add_subdirectory(CRen)
-add_subdirectory(CRen/Thirdparty/ctoolbox)
 
 if(BUILD_PROJECTS)
     add_subdirectory(Engine)

@@ -4,6 +4,7 @@
 #include "Core/Input.h"
 #include "Core/Renderer.h"
 #include "Core/Window.h"
+#include "UI/GUI.h"
 #include "Util/Memory.h"
 
 namespace Cosmos
@@ -57,6 +58,9 @@ namespace Cosmos
 		/// @brief returns a refenrece to the renderer class
 		inline Unique<Renderer>& GetRendererRef() { return mRenderer; }
 
+		/// @brief returns a reference to the gui class
+		inline Unique<GUI>& GetGUIRef() { return mGUI; }
+
 		/// @brief sets the time between loop itarations, this comes from window refresh rate and changes when SDL_EVENT_WINDOW_DISPLAY_CHANGED happens
 		inline void SetTargetFrameTime(double targetFPS, double frameTimer) { mTargetFPS = targetFPS; mTargetFrameTime = frameTimer; }
 
@@ -105,6 +109,7 @@ namespace Cosmos
 		ApplicationCreateInfo mApplicationCreateInfo;
 		Unique<Window> mWindow;
 		Unique<Renderer> mRenderer;
+		Unique<GUI> mGUI;
 
 		double mTimeStep = 0.0;
 		double mAverageFPS = 0;

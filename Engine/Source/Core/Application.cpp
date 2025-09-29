@@ -11,7 +11,8 @@ namespace Cosmos
 	{
         mWindow = CreateUnique<Window>(this, ci.appName, ci.width, ci.height, ci.fullscreen, ci.assetsPath);
         mRenderer = CreateUnique<Renderer>(this, ci.appName, COSMOS_MAKE_VERSION(0, 1, 0, 0), ci.customViewport, ci.validations, ci.vsync, ci.assetsPath, ci.renderer, ci.msaa);
-	}
+        mGUI = CreateUnique<GUI>(this);
+    }
 
 	Application::~Application()
 	{
@@ -46,6 +47,7 @@ namespace Cosmos
 
             // update window events
             mWindow->OnUpdate();
+            mGUI->OnUpdate();
 
             // accumulate time for fixed updates
             accumulator += mTimeStep;
@@ -104,106 +106,94 @@ namespace Cosmos
     void Application::OnMinimize()
     {
         mRenderer->Minimize();
-        //mGUI.OnMinimize();
+        mGUI->OnMinimize();
     }
 
     void Application::OnRestore(int width, int height)
     {
         mRenderer->Restore();
-        //mGUI.OnRestore(width, height);
+        mGUI->OnRestore(width, height);
     }
 
     void Application::OnResize(int width, int height)
     {
-        //if (!mGUI.WantToCaptureMouse()) {
-        //    mRenderer.Resize(width, height);
-        //    mGUI.OnResize(width, height);
-        //}
+        if (!mGUI->WantToCaptureMouse()) {
+            mRenderer->Resize(width, height);
+            mGUI->OnResize(width, height);
+        }
     }
 
     void Application::OnKeyPress(Input::Keycode keycode, Input::Keymod mod, bool held)
     {
-        //mGUI.OnKeyPress(keycode, mod, held);
-        //
-        //// camera
-        //CRenCamera& cam = mRenderer.GetContext()->camera;
-        //if (cam.shouldMove) {
-        //    if (keycode == Input::KEYCODE_W) cam.movingForward = 1;
-        //    if (keycode == Input::KEYCODE_S) cam.movingBackward = 1;
-        //    if (keycode == Input::KEYCODE_A) cam.movingLeft = 1;
-        //    if (keycode == Input::KEYCODE_D) cam.movingRight = 1;
-        //    if (keycode == Input::KEYCODE_LSHIFT) cam.modifierPressed = 1;
-        //}
+        mGUI->OnKeyPress(keycode, mod, held);
+        
+        // camera
+        CRenCamera* cam = mRenderer->GetMainCamera();
+        if (cam->shouldMove) {
+            if (keycode == Input::KEYCODE_W) cam->movingForward = true;
+            if (keycode == Input::KEYCODE_S) cam->movingBackward = true;
+            if (keycode == Input::KEYCODE_A) cam->movingLeft = true;
+            if (keycode == Input::KEYCODE_D) cam->movingRight = true;
+            if (keycode == Input::KEYCODE_LSHIFT) cam->modifierPressed = true;
+        }
     }
 
     void Application::OnKeyRelease(Input::Keycode keycode)
     {
-        //mGUI.OnKeyRelease(keycode);
-        //
-        //// camera
-        //CRenCamera& cam = mRenderer.GetContext()->camera;
-        //if (cam.shouldMove) {
-        //    if (keycode == Input::KEYCODE_W) cam.movingForward = 0;
-        //    if (keycode == Input::KEYCODE_S) cam.movingBackward = 0;
-        //    if (keycode == Input::KEYCODE_A) cam.movingLeft = 0;
-        //    if (keycode == Input::KEYCODE_D) cam.movingRight = 0;
-        //    if (keycode == Input::KEYCODE_LSHIFT) cam.modifierPressed = 0;
-        //}
+        mGUI->OnKeyRelease(keycode);
+        
+        // camera
+        CRenCamera* cam = mRenderer->GetMainCamera();
+        if (cam->shouldMove) {
+            if (keycode == Input::KEYCODE_W) cam->movingForward = false;
+            if (keycode == Input::KEYCODE_S) cam->movingBackward = false;
+            if (keycode == Input::KEYCODE_A) cam->movingLeft = false;
+            if (keycode == Input::KEYCODE_D) cam->movingRight = false;
+            if (keycode == Input::KEYCODE_LSHIFT) cam->modifierPressed = false;
+        }
     }
 
     void Application::OnButtonPress(Input::Buttoncode buttoncode, Input::Keymod mod)
     {
-        //mGUI.OnButtonPress(buttoncode, mod);
+        mGUI->OnButtonPress(buttoncode, mod);
     }
 
     void Application::OnButtonRelease(Input::Buttoncode buttoncode)
     {
-        //mGUI.OnButtonRelease(buttoncode);
+        mGUI->OnButtonRelease(buttoncode);
     }
 
     void Application::OnMouseScroll(double xoffset, double yoffset)
     {
-        //mGUI.OnMouseScroll(xoffset, yoffset);
+        mGUI->OnMouseScroll(xoffset, yoffset);
     }
 
     void Application::OnMouseMove(double xpos, double ypos)
     {
-        //mGUI.OnMouseMove(xpos, ypos);
-        //
-        //// camera
-        //CRenCamera& cam = mRenderer.GetContext()->camera;
-        //if (cam.shouldMove) {
-        //
-        //    // avoid scene flip
-        //    if (cam.rotation.x >= 89.0f) cam.rotation.x = 89.0f;
-        //    if (cam.rotation.x <= -89.0f) cam.rotation.x = -89.0f;
-        //
-        //    // reset rotation on 360 degrees
-        //    if (cam.rotation.x >= 360.0f) cam.rotation.x = 0.0f;
-        //    if (cam.rotation.x <= -360.0f) cam.rotation.x = 0.0f;
-        //    if (cam.rotation.y >= 360.0f) cam.rotation.y = 0.0f;
-        //    if (cam.rotation.y <= -360.0f) cam.rotation.y = 0.0f;
-        //
-        //    float rotationspeed = 1.0f;
-        //    float3 rot = { float(-ypos) * rotationspeed * 0.5f , float(xpos) * rotationspeed * 0.5f, 0.0f };
-        //    cren_camera_rotate(&cam, rot);
-        //}
-        //
-        //// mouse position
-        //float2 mousePos = { 0.0f, 0.0f };
-        //if (mAppCreateInfo.requestViewport) {
-        //    CRenContext* context = mRenderer.GetContext();
-        //    mousePos = mWindow.GetViewportCursorPosition(context->viewportPos, context->viewportSize);
-        //}
-        //
-        //else {
-        //    CRenContext* context = mRenderer.GetContext();
-        //    mousePos = mWindow.GetCursorPosition();
-        //}
+        mGUI->OnMouseMove(xpos, ypos);
+        
+        // camera
+        CRenCamera* cam = mRenderer->GetMainCamera();
+        if (cam->shouldMove) {
+        
+            // avoid scene flip
+            if (cam->rotation.xyz.x >= 89.0f) cam->rotation.xyz.x = 89.0f;
+            if (cam->rotation.xyz.x <= -89.0f) cam->rotation.xyz.x = -89.0f;
+        
+            // reset rotation on 360 degrees
+            if (cam->rotation.xyz.x >= 360.0f) cam->rotation.xyz.x = 0.0f;
+            if (cam->rotation.xyz.x <= -360.0f) cam->rotation.xyz.x = 0.0f;
+            if (cam->rotation.xyz.y >= 360.0f) cam->rotation.xyz.y = 0.0f;
+            if (cam->rotation.xyz.y <= -360.0f) cam->rotation.xyz.y = 0.0f;
+        
+            float rotationspeed = 1.0f;
+            float3 rot = { float(-ypos) * rotationspeed * 0.5f , float(xpos) * rotationspeed * 0.5f, 0.0f };
+            cren_camera_rotate(cam, rot);
+        }
     }
 
     void Application::OnDPIChange(float scale)
     {
-        //mGUI.OnDPIChange(scale);
+        mGUI->OnDPIChange(scale);
     }
 }

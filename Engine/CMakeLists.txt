@@ -74,7 +74,7 @@ set_target_properties(Engine PROPERTIES FOLDER "Projects")
 # ------------------------------------------------------------------------------------------------------------- dependencies
 find_package(Vulkan REQUIRED)
 
-target_link_libraries(Engine PRIVATE CRen)
+target_link_libraries(Engine PRIVATE CRen ctoolbox)
 target_link_libraries(Engine PRIVATE SDL3::SDL3)
 target_link_libraries(Engine PRIVATE Vulkan::Vulkan)
 

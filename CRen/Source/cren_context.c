@@ -1,6 +1,5 @@
 #include "cren_context.h"
 
-#include "cren_camera.h"
 #include "cren_error.h"
 #include "Vulkan/crenvk_context.h"
 #include <memm/memm.h>
@@ -13,15 +12,16 @@ struct CRenContext
 
     // hints
     bool currentlyMinimized;
-    bool usingCustomViewport;
+	bool usingCustomViewport;
+	bool usingVSync;
     bool mustResize;
 
     // callbacks
-    void* userPointer;
-    CRenCallback_Render render;
-    CRenCallback_Resize resize;
-    CRenCallback_ImageCount imageCount;
-    CRenCallback_DrawUIRawData drawUIRawData;
+	CRenCallbacks callbacks;
+
+	// useful info
+	float2 framebufferSize;
+	float2 mousePos;
 
     // backend renderer api
     #ifdef CREN_BUILD_WITH_VULKAN
@@ -29,7 +29,7 @@ struct CRenContext
     #endif
 };
 
-CRenContext* cren_initialize(CRenCreateInfo createInfo)
+CREN_API CRenContext* cren_initialize(CRenCreateInfo createInfo)
 {
 	memm_init();
 
@@ -37,14 +37,15 @@ CRenContext* cren_initialize(CRenCreateInfo createInfo)
 	CREN_ASSERT(context != NULL, "Failed to allocate memory for CRen");
 	context->createInfo = createInfo;
 	context->usingCustomViewport = createInfo.customViewport;
+	context->usingVSync = createInfo.vsync;
 
 	#ifdef CREN_BUILD_WITH_VULKAN
 	context->backend = crenvk_initialize
 	(
-		createInfo.width, createInfo.height, createInfo.window,
+		createInfo.width, createInfo.height, createInfo.window, createInfo.optionalHandle,
 		createInfo.appName, createInfo.assetsPath,
-		createInfo.appVersion, createInfo.api,
-		createInfo.vsync, createInfo.msaa, createInfo.validations, createInfo.customViewport
+		createInfo.appVersion, createInfo.api, createInfo.msaa,
+		createInfo.vsync, createInfo.validations, createInfo.customViewport
 	);
 	#else
 	#error "Unsupported Renderer Backend"
@@ -55,59 +56,130 @@ CRenContext* cren_initialize(CRenCreateInfo createInfo)
 	return context;
 }
 
-void cren_shutdown(CRenContext* context)
+CREN_API void cren_shutdown(CRenContext* context)
 {
 	char leaksMessage[2028];
 	if (memm_get_leaks_string(leaksMessage, sizeof(leaksMessage)) > 0) {
-		CREN_LOG(CRenLogSeverity_Error, "There were leaks detected uppon shutdown. Details:\n %s", leaksMessage);
+		CREN_LOG(CRenLogSeverity_Error, "There were leaks detected uppon CRen shutdown. Details:\n %s", leaksMessage);
 	}
-
+	
+	#ifdef CREN_BUILD_WITH_VULKAN
+	if (context) crenvk_terminate(&context->backend);
+	#endif
 	memm_shutdown();
 }
 
-bool cren_get_vsync(CRenContext* context)
+CREN_API void cren_update(CRenContext* context, float timestep)
 {
-	// WARN: if I ever develop a way to change vsync on the go, this variable needs to be update
-	return context->createInfo.vsync;
+	cren_camera_update(&context->camera, timestep);
 }
 
-void* cren_get_vulkan_backend(CRenContext* context)
+CREN_API void cren_render(CRenContext* context, float timestep)
+{
+	#ifdef CREN_BUILD_WITH_VULKAN
+	if (!context->currentlyMinimized) {
+		crenvk_update(&context->backend, timestep, &context->camera);
+		crenvk_render(context, &context->backend, timestep, &context->callbacks, &context->camera, &context->mustResize);
+	}
+	#else
+	#error "Undefined backend"
+	#endif
+}
+
+CREN_API void cren_resize(CRenContext* context, int width, int height)
+{
+	context->framebufferSize.xy.x = width;
+	context->framebufferSize.xy.y  = height;
+	context->mustResize = 1; // vulkan will pickup the change automatically
+}
+
+CREN_API void cren_minimize(CRenContext* context)
+{
+	context->currentlyMinimized = 1; // vulkan will pickup the change automatically
+}
+
+CREN_API void cren_restore(CRenContext* context)
+{
+	context->currentlyMinimized = 0; // vulkan will pickup the change automatically
+}
+
+CREN_API CRenCamera* cren_get_camera(CRenContext* context)
+{
+	if (!context) return NULL;
+	return &context->camera;
+}
+
+bool cren_using_vsync(CRenContext* context)
+{
+	return context->usingVSync;
+}
+
+CREN_API bool cren_using_custom_viewport(CRenContext* context)
+{
+	return context->usingCustomViewport;
+}
+
+CREN_API void* cren_get_vulkan_backend(CRenContext* context)
 {
 	if (!context) return NULL;
 	return &context->backend;
 }
 
+CREN_API float2 cren_get_mousepos(CRenContext* context)
+{
+	if (!context) return (float2) {.xy.x = 0.0f, .xy.y = 0.0f };
+	return context->mousePos;
+}
+
+CREN_API void cren_set_mousepos(CRenContext* context, const float2 pos)
+{
+	if (!context) return;
+	context->mousePos = pos;
+}
+
+CREN_API float2 cren_get_framebuffer_size(CRenContext* context)
+{
+	if (!context) return (float2) { .xy.x = 0.0f, .xy.y = 0.0f };
+	return context->framebufferSize;
+}
+
+CREN_API void cren_set_framebuffer_size(CRenContext* context, const float2 size)
+{
+	if (!context) return;
+	context->framebufferSize = size;
+	context->mustResize = true;
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Callbacks
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void cren_set_user_pointer(CRenContext* context, void* pointer)
+CREN_API void cren_set_user_pointer(CRenContext* context, void* pointer)
 {
-    context->userPointer = pointer;
+    context->callbacks.userPtr = pointer;
 }
 
-void* cren_get_user_pointer(CRenContext* context)
+CREN_API void* cren_get_user_pointer(CRenContext* context)
 {
-    return context->userPointer;
+    return context->callbacks.userPtr;
 }
 
-void cren_set_render_callback(CRenContext* context, CRenCallback_Render callback)
+CREN_API void cren_set_render_callback(CRenContext* context, CRenCallback_Render callback)
 {
-    context->render = callback;
+    context->callbacks.render = callback;
 }
 
-void cren_set_resize_callback(CRenContext* context, CRenCallback_Resize callback)
+CREN_API void cren_set_resize_callback(CRenContext* context, CRenCallback_Resize callback)
 {
-    context->resize = callback;
+    context->callbacks.resize = callback;
 }
 
-void cren_set_ui_image_count_callback(CRenContext* context, CRenCallback_ImageCount callback)
+CREN_API void cren_set_ui_image_count_callback(CRenContext* context, CRenCallback_ImageCount callback)
 {
-    context->imageCount = callback;
+    context->callbacks.imageCount = callback;
 }
 
-void cren_set_draw_ui_raw_data_callback(CRenContext* context, CRenCallback_DrawUIRawData callback)
+CREN_API void cren_set_draw_ui_raw_data_callback(CRenContext* context, CRenCallback_DrawUIRawData callback)
 {
-    context->drawUIRawData = callback;
+    context->callbacks.drawUIRawData = callback;
 }

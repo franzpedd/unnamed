@@ -19,6 +19,7 @@ namespace Cosmos
         ci.vsync = vsync;
         ci.customViewport = customViewport;
         ci.window = mApp->GetWindowRef()->GetNativeWindow(); // opaque pointer to underneath window
+        ci.optionalHandle = mApp->GetWindowRef()->GetNativeOptionalHandle(); // opque pointer to underneath X11 Surface/Wayland Display
 
         mContext = cren_initialize(ci);
         CREN_ASSERT(mContext != nullptr, "Failed to create CRen Context");
@@ -41,7 +42,7 @@ namespace Cosmos
             rendererClass.OnResizeCallback(width, height);
             });
 
-        cren_set_render_callback(mContext, [](CRenContext* context, CRen_RenderStage stage, double timestep) {
+        cren_set_render_callback(mContext, [](CRenContext* context, CRen_RenderStage stage, float timestep) {
             Renderer& rendererClass = *(Renderer*)cren_get_user_pointer(context);
             rendererClass.OnRenderCallback(stage, timestep);
             });
@@ -52,34 +53,39 @@ namespace Cosmos
         cren_shutdown(mContext);
     }
 
-    void Renderer::OnUpdate(double timestep)
+    void Renderer::OnUpdate(float timestep)
     {
-        //cren_update(mContext, timestep);
+        cren_update(mContext, timestep);
     }
 
-    void Renderer::OnRender(double timestep)
+    void Renderer::OnRender(float timestep)
     {
-        //cren_render(mContext, timestep);
+        cren_render(mContext, timestep);
     }
 
     void Renderer::Minimize()
     {
-        //cren_minimize(mContext);
+        cren_minimize(mContext);
     }
 
     void Renderer::Restore()
     {
-        //cren_restore(mContext);
+        cren_restore(mContext);
     }
 
     void Renderer::Resize(int width, int height)
     {
-        //cren_resize(mContext, width, height);
+        cren_resize(mContext, width, height);
     }
 
     bool Renderer::GetVSync()
     {
-        return cren_get_vsync(mContext);
+        return cren_using_vsync(mContext);
+    }
+
+    CRenCamera* Renderer::GetMainCamera()
+    {
+        return cren_get_camera(mContext);
     }
 
     void Renderer::OnRenderCallback(int stage, double timestep)

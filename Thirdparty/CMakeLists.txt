@@ -19,6 +19,10 @@ if(NOT EXISTS ${CTOOLBOX_DIR})
     execute_process(COMMAND ${GIT_EXECUTABLE} clone https://github.com/franzpedd/ctoolbox.git ${CTOOLBOX_DIR})
 endif()
 
+set(CMAKE_FOLDER "Thirdparty/ctoolbox") 
+    add_subdirectory(${CMAKE_SOURCE_DIR}/CRen/Thirdparty/ctoolbox)
+unset(CMAKE_FOLDER)
+
 # ------------------------------------------------------------------------------------------------------------- thirdparty dependency: Dear ImGui
 set(IMGUI_DIR ${CMAKE_SOURCE_DIR}/Engine/Thirdparty/imgui)
 if(NOT EXISTS ${IMGUI_DIR})
@@ -35,3 +39,4 @@ endif()
 set(CMAKE_FOLDER "Thirdparty/SDL") 
     add_subdirectory(${CMAKE_SOURCE_DIR}/Engine/Thirdparty/sdl)
 unset(CMAKE_FOLDER)
+

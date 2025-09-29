@@ -55,7 +55,7 @@ typedef struct vkDevice {
 } vkDevice;
 
 /// @brief Creates and populates the cren vulkan device
-CREN_API void crenvk_device_create(vkDevice* device, VkInstance instance, void* nativeWindow, int validations);
+CREN_API void crenvk_device_create(vkDevice* device, VkInstance instance, void* nativeWindow, void* optionalHandle, int validations);
 
 /// @brief Releases all resources used by the cren vulkan device
 CREN_API void crenvk_device_destroy(vkDevice* device, VkInstance instance);
@@ -101,6 +101,45 @@ CREN_API VkResult crenvk_device_image_transition_layout(VkDevice device, VkQueue
 
 /// @brief inserts a memory dependency on an image
 CREN_API void crenvk_device_insert_image_memory_barrier(VkCommandBuffer cmdBuffer, VkImage image, VkAccessFlags srcAccessFlags, VkAccessFlags dstAccessFlags, VkImageLayout oldImageLayout, VkImageLayout newImageLayout, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkImageSubresourceRange subresourceRange);
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Swapchain
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/// @brief cren vulkan swapchain details
+typedef struct {
+    VkExtent2D extent;
+    VkSurfaceCapabilitiesKHR capabilities;
+    VkSurfaceFormatKHR* surfaceFormats;
+    VkPresentModeKHR* presentModes;
+    uint32_t surfaceFormatCount;
+    uint32_t presentModeCount;
+} vkSwapchainDetails;
+
+/// @brief cren vulkan swapchain
+typedef struct {
+    VkSurfaceFormatKHR swapchainFormat;
+    VkPresentModeKHR swapchainPresentMode;
+    VkExtent2D swapchainExtent;
+    unsigned int swapchainImageCount;
+    VkSwapchainKHR swapchain;
+    VkImage* swapchainImages;
+    VkImageView* swapchainImageViews;
+
+    // used on sync
+    unsigned int imageIndex;
+    unsigned int currentFrame;
+    unsigned int swapchainSyncCount;
+    VkSemaphore* imageAvailableSemaphores;
+    VkSemaphore* finishedRenderingSemaphores;
+    VkFence* framesInFlightFences;
+} vkSwapchain;
+
+/// @brief Creates the cren vulkan swapchain
+CREN_API void crenvk_swapchain_create(vkSwapchain* swapchain, VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, uint32_t width, uint32_t height, bool vsync);
+
+/// @brief Releases all used resources by the swapchain
+CREN_API void crenvk_swapchain_destroy(vkSwapchain* swapchain, VkDevice device);
 
 
 #ifdef __cplusplus 

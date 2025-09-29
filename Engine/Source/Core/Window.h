@@ -52,6 +52,9 @@ namespace Cosmos
 		/// @brief returns the native os window object
 		void* GetNativeWindow();
 
+		/// @brief returns the native os surface/display (this is used only under linux distributions)
+		void* GetNativeOptionalHandle();
+
 		/// @brief returns the monitor window is currently in refresh-rate, usefull for frame cap and resource management
 		float GetRefreshRate();
 

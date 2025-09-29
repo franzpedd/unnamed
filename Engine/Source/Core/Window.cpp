@@ -190,6 +190,21 @@ namespace Cosmos
 		return nullptr;
 	}
 
+	void* Window::GetNativeOptionalHandle()
+	{
+		CRen_Platform platform = cren_detect_platform();
+
+		switch (platform) 
+		{
+			case CREN_PLATFORM_X11: return SDL_GetPointerProperty(SDL_GetWindowProperties((SDL_Window*)mNativeWindow), SDL_PROP_WINDOW_X11_DISPLAY_POINTER, NULL);
+			case CREN_PLATFORM_WAYLAND: return SDL_GetPointerProperty(SDL_GetWindowProperties((SDL_Window*)mNativeWindow), SDL_PROP_WINDOW_WAYLAND_SURFACE_POINTER, NULL);
+			case CREN_PLATFORM_WINDOWS: return nullptr; // windows doesn't needs this
+			default: { break; }
+		}
+		CREN_LOG(CRenLogSeverity_Fatal, "Must check wich ptr we're looking");
+		return nullptr;
+	}
+
 	float Window::GetRefreshRate()
 	{
 		float rate = 60.0f; // 60 is in case SDL doesn't define

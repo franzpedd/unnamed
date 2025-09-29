@@ -10,8 +10,11 @@
 #include "cren_types.h"
 
 #ifdef CREN_BUILD_WITH_VULKAN
+#include "Vulkan/crenvk_buffer.h"
 #include "Vulkan/crenvk_context.h"
 #include "Vulkan/crenvk_core.h"
+#include "Vulkan/crenvk_pipeline.h"
+#include "Vulkan/crenvk_renderphase.h"
 #endif
 
 #endif // CREN_INCLUDED
