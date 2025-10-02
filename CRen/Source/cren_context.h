@@ -2,14 +2,10 @@
 #define CREN_CONTEXT_INCLUDED
 
 #include "cren_defines.h"
-#include "cren_camera.h"
 #include "cren_types.h"
+#include "cren_camera.h"
 #include "cren_callbacks.h"
 #include <vecmath/vecmath.h>
-
-#ifdef __cplusplus 
-extern "C" {
-#endif
 
 /// @brief cren creation needed information
 typedef struct CRenCreateInfo
@@ -25,6 +21,10 @@ typedef struct CRenCreateInfo
 	bool vsync;
 	bool customViewport;
 } CRenCreateInfo;
+
+#ifdef __cplusplus 
+extern "C" {
+#endif
 
 /// @brief creates the cren context, initializing the library
 /// @param createInfo the address of a create info specification

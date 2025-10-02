@@ -6,28 +6,11 @@
 #include <stdio.h>
 #include <string.h>
 
-/// @brief object and functions definitions
-#if defined(_WIN32) || defined(_WIN64)
-    #define WIN32_LEAN_AND_MEAN
-    #include <Windows.h>
-    #include <sal.h>
-#elif defined(__APPLE__) && defined(__MACH__)
-    #include <Metal/Metal.h>
-#elif defined(__ANDROID__)
-    #include <android/native_window.h>
-elif defined(__linux__)
-    #if defined(CREN_LINUX_X11)
-        #include <X11/Xlib.h>
-    #elif defined(CREN_LINUX_WAYLAND)
-        #include <wayland-client.h>
-    #endif
-#endif
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Internal
+// internal
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#if defined(_WIN32) || defined(_WIN64) || defined(CREN_LINUX_X11) || defined(CREN_LINUX_WAYLAND)
+#if defined(_WIN32) || defined(_WIN64) || (defined(__linux__) && !defined(__ANDROID__))
 
 /// @brief loads a file using standart fopen
 static unsigned int* internal_cren_dekstop_load_file(const char* path, unsigned long long* outSize)
@@ -63,7 +46,7 @@ static unsigned int* internal_cren_dekstop_load_file(const char* path, unsigned 
     return spirv_code;
 }
 
-#elif defined(__linux__) && defined(__ANDROID__)
+#elif defined(__ANDROID__)
 
 /// @brief loads a file using AAsset
 #error "This will need fixing once I get there again";
@@ -107,7 +90,7 @@ static unsigned int* internal_cren_android_load_file(const char* path, unsigned 
 #endif
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// External
+// external
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 CREN_API CRen_Platform cren_detect_platform()
@@ -124,26 +107,18 @@ CREN_API CRen_Platform cren_detect_platform()
         #endif
     #elif defined(__ANDROID__)
         return CREN_PLATFORM_ANDROID;
-    #elif defined(__linux__) // runtime detection for linux
-        #if defined(CREN_LINUX_X11) && defined(CREN_LINUX_WAYLAND) // both supported - detect at runtime
-            #error "For linux, only one of CREN_LINUX_X11 or CREN_LINUX_WAYLAND must be defined";
-        #elif defined(CREN_LINUX_X11)
-            return CREN_PLATFORM_X11; // force x11
-        #elif defined(CREN_LINUX_WAYLAND)
-            return CREN_PLATFORM_WAYLAND; // force wayland
-        #else
-            #error "For Linux, either CREN_LINUX_X11 or CREN_LINUX_WAYLAND must be defined";
-        #endif
+    #elif defined(__linux__)
+        return CREN_PLATFORM_LINUX;
     #else
         return CREN_PLATFORM_UNKNOWN;
     #endif
 }
 
-CREN_API void cren_get_path(const char* subpath, const char* assetsRoot, int removeExtension, char* output, unsigned long long outputSize)
+CREN_API void cren_get_path(const char* subpath, const char* assetsRoot, bool removeExtension, char* output, unsigned long long outputSize)
 {
     snprintf(output, outputSize, "%s/%s", assetsRoot, subpath);
 
-    if (removeExtension == 1) {
+    if (removeExtension) {
         char* lastDot = strrchr(output, '.'); // find the last '.' in the string
         if (lastDot) {
             *lastDot = '\0'; // truncate the string at the last '.'
@@ -176,7 +151,7 @@ CREN_API unsigned int* cren_load_file(const char* path, unsigned long long* outS
 {
     #if defined(__linux__) && defined(__ANDROID__)
         return internal_cren_android_load_file(path, outSize);
-    #elif defined(_WIN32) || defined(_WIN64) || defined(CREN_LINUX_X11) || defined(CREN_LINUX_WAYLAND)
+    #elif defined(_WIN32) || defined(_WIN64) || (defined(__linux__) && !defined(__ANDROID__))
         return internal_cren_dekstop_load_file(path, outSize);
     #elif defined(__APPLE__) && defined(__MACH__)
         #error "This will need checking for ios and probably be different from macos";

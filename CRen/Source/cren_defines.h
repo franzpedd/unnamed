@@ -16,8 +16,8 @@
 
 /// @brief building as DLL or static-lib, depending on context
 #ifdef CREN_SHARED_LIBRARY
-	#ifdef PLATFORM_WINDOWS
-		#ifdef CREN_BUILDING_DLL
+	#if defined(_MSC_VER)
+		#if defined(CREN_BUILDING_DLL)
 			#define CREN_API __declspec(dllexport)
 		#else
 			#define CREN_API __declspec(dllimport)

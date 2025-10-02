@@ -2,7 +2,10 @@
 #define CRENVK_RENDERPHASE
 #ifdef CREN_BUILD_WITH_VULKAN
 
+#include "cren_defines.h"
+#include "cren_types.h"
 #include "cren_callbacks.h"
+
 #include "crenvk_core.h"
 #include "crenvk_pipeline.h"
 

@@ -8,24 +8,11 @@
 extern "C" {
 #endif
 
-/// @brief what underneath platform is being used
-typedef enum CRen_Platform
-{
-	CREN_PLATFORM_UNKNOWN = -2,
-	CREN_PLATFORM_UNKNOWN_APPLE = -1,
-	CREN_PLATFORM_MACOS,
-	CREN_PLATFORM_IOS,
-	CREN_PLATFORM_X11,
-	CREN_PLATFORM_WAYLAND,
-	CREN_PLATFORM_ANDROID,
-	CREN_PLATFORM_WINDOWS
-} CRen_Platform;
-
 /// @brief attempts to detect what windowing/operating system is currently being used
 CREN_API CRen_Platform cren_detect_platform();
 
 /// @brief formats a const char* with a disk address of a file, constructing it's path
-CREN_API void cren_get_path(const char* subpath, const char* assetsRoot, int removeExtension, char* output, unsigned long long outputSize);
+CREN_API void cren_get_path(const char* subpath, const char* assetsRoot, bool removeExtension, char* output, unsigned long long outputSize);
 
 /// @brief loads an image given a disk path using stb's library
 CREN_API unsigned char* cren_stbimage_load_from_file(const char* path, int desiredChannels, int* outWidth, int* outHeight, int* outChannels);

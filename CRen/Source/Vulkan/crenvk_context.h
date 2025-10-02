@@ -15,7 +15,7 @@ extern "C" {
 #endif
 
 /// @brief holds all vulkan objects used by the backend
-typedef struct
+typedef struct CRenVulkanBackend
 {
 	vkInstance instance;
 	vkDevice device;

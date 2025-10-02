@@ -13,6 +13,10 @@ if(NOT EXISTS ${VECMATH_DIR})
     execute_process(COMMAND ${GIT_EXECUTABLE} clone https://github.com/franzpedd/vecmath.git ${VECMATH_DIR})
 endif()
 
+set(CMAKE_FOLDER "Thirdparty/vecmath") 
+    add_subdirectory(${CMAKE_SOURCE_DIR}/CRen/Thirdparty/vecmath)
+unset(CMAKE_FOLDER)
+
 # ------------------------------------------------------------------------------------------------------------- dependency: ctoolbox
 set(CTOOLBOX_DIR ${CMAKE_SOURCE_DIR}/CRen/Thirdparty/ctoolbox)
 if(NOT EXISTS ${CTOOLBOX_DIR})

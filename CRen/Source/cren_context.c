@@ -35,12 +35,17 @@ CREN_API CRenContext* cren_initialize(CRenCreateInfo createInfo)
 
 	CRenContext* context = malloc(sizeof(CRenContext));
 	CREN_ASSERT(context != NULL, "Failed to allocate memory for CRen");
+
 	context->createInfo = createInfo;
 	context->usingCustomViewport = createInfo.customViewport;
 	context->usingVSync = createInfo.vsync;
-
+	context->currentlyMinimized = false;
+	context->mustResize = true;
+	context->framebufferSize.xy.x = context->createInfo.width;
+	context->framebufferSize.xy.y = context->createInfo.height;
+	
 	context->camera = cren_camera_create(CREN_CAMERA_TYPE_FREE_LOOK, (float)createInfo.width / (float)createInfo.height, createInfo.api);
-
+	
 	return context;
 }
 
@@ -61,14 +66,17 @@ CREN_API void cren_create_renderer(CRenContext* context)
 
 CREN_API void cren_shutdown(CRenContext* context)
 {
-	char leaksMessage[2028];
-	if (memm_get_leaks_string(leaksMessage, sizeof(leaksMessage)) > 0) {
-		CREN_LOG(CRenLogSeverity_Error, "There were leaks detected uppon CRen shutdown. Details:\n %s", leaksMessage);
-	}
-	
 	#ifdef CREN_BUILD_WITH_VULKAN
 	if (context) crenvk_terminate(&context->backend);
 	#endif
+
+	free(context);
+
+	// memory leak checkage
+	char leaksMessage[2028];
+	memm_get_leaks_string(leaksMessage, sizeof(leaksMessage));
+	CREN_LOG(CREN_LOG_SEVERITY_INFO, "%s", leaksMessage);
+
 	memm_shutdown();
 }
 
@@ -92,8 +100,8 @@ CREN_API void cren_render(CRenContext* context, float timestep)
 CREN_API void cren_resize(CRenContext* context, int width, int height)
 {
 	context->framebufferSize.xy.x = width;
-	context->framebufferSize.xy.y  = height;
-	context->mustResize = 1; // vulkan will pickup the change automatically
+	context->framebufferSize.xy.y = height;
+	context->mustResize = true; // vulkan will pickup the change automatically
 }
 
 CREN_API void cren_minimize(CRenContext* context)
@@ -190,7 +198,7 @@ CREN_API void cren_set_ui_image_count_callback(CRenContext* context, CRenCallbac
 
 CREN_API void cren_set_draw_ui_raw_data_callback(CRenContext* context, CRenCallback_DrawUIRawData callback)
 {
-    context->callbacks.drawUIRawData = callback;
+	context->callbacks.drawUIRawData = callback;
 }
 
 CREN_API void cren_set_get_vulkan_instance_required_extensions_callback(CRenContext* context, CRenCallback_GetVulkanRequiredInstanceExtensions callback)

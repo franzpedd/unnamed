@@ -29,12 +29,12 @@ namespace Cosmos
 
         cren_set_ui_image_count_callback(mContext, [](CRenContext* context, unsigned int count) {
             Renderer& rendererClass = *(Renderer*)cren_get_user_pointer(context);
-            //rendererClass.mApp->GetGUIRef().SetMinImageCount(count);
+            rendererClass.mApp->GetGUIRef()->SetMinImageCount(count);
             });
 
         cren_set_draw_ui_raw_data_callback(mContext, [](CRenContext* context, void* commandbuffer) {
             Renderer& rendererClass = *(Renderer*)cren_get_user_pointer(context);
-            //rendererClass.mApp->GetGUIRef().DrawRawData(commandbuffer);
+            rendererClass.mApp->GetGUIRef()->DrawRawData(commandbuffer);
             });
 
         cren_set_resize_callback(mContext, [](CRenContext* context, unsigned int width, unsigned int height) {
@@ -117,11 +117,11 @@ namespace Cosmos
     void Renderer::OnRenderCallback(int stage, double timestep)
     {
         //mApp->GetWorldRef().OnRender(stage);
-        //mApp->GetGUIRef().OnRender(stage);
+        mApp->GetGUIRef()->OnRender(stage);
     }
 
     void Renderer::OnResizeCallback(int width, int height)
     {
-
+        cren_resize(mContext, width, height);
     }
 }

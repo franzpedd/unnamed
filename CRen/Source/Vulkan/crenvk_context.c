@@ -12,8 +12,8 @@ CREN_API CRenVulkanBackend crenvk_initialize(CRenContext* context, unsigned int 
     VkResult res = VK_SUCCESS;
     ctoolbox_result toolboxres = CTOOLBOX_SUCCESS;
     CRenVulkanBackend backend = { 0 };
+
     crenvk_instance_create(context, &backend.instance, appName, appVersion, api, validations, callbacks->getVulkanRequiredInstanceExtensions);
-	
 	callbacks->createVulkanSurfaceCallback(context, backend.instance.instance, &backend.device.surface);
     crenvk_device_create(&backend.device, backend.instance.instance, validations);
     crenvk_swapchain_create(&backend.swapchain, backend.device.device, backend.device.physicalDevice, backend.device.surface, width, height, vsync);
@@ -57,10 +57,8 @@ CREN_API CRenVulkanBackend crenvk_initialize(CRenContext* context, unsigned int 
     }
 
     // buffers
-    vkBuffer* cameraBuffer = crenvk_buffer_create(backend.device.device, backend.device.physicalDevice, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, sizeof(vkBufferCamera));
-    CREN_ASSERT(cameraBuffer != NULL, "Failed to create camera buffer");
-    res = crenvk_buffer_map(cameraBuffer, backend.device.device);
-    CREN_ASSERT(res == VK_SUCCESS, "Failed to map camera buffer");
+    vkBuffer* cameraBuffer = crenvk_buffer_create(backend.device.device, backend.device.physicalDevice, sizeof(vkBufferCamera), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, CREN_CONCURRENTLY_RENDERED_FRAMES);
+	CREN_ASSERT(cameraBuffer != NULL, "Failed to create camera buffer");
 
     backend.buffersLib = shashtable_init();
     CREN_ASSERT(backend.buffersLib != NULL, "Failed to create buffer's library");
@@ -85,20 +83,21 @@ CREN_API void crenvk_terminate(CRenVulkanBackend* backend)
     // buffers and pipelines
     crenvk_pipeline_destroy(backend->device.device, (vkPipeline*)shashtable_lookup(backend->pipelinesLib, CREN_PIPELINE_QUAD_DEFAULT_NAME));
     crenvk_pipeline_destroy(backend->device.device, (vkPipeline*)shashtable_lookup(backend->pipelinesLib, CREN_PIPELINE_QUAD_PICKING_NAME));
-    crenvk_buffer_destroy((vkBuffer*)shashtable_lookup(backend->buffersLib, "Camera"), backend->device.device);
-    shashtable_destroy(backend->buffersLib);
-    shashtable_destroy(backend->pipelinesLib);
+	shashtable_destroy(backend->pipelinesLib);
+    //
+	crenvk_buffer_destroy(backend->device.device, (vkBuffer*)shashtable_lookup(backend->buffersLib, "Camera"));
+	shashtable_destroy(backend->buffersLib);
 
     // renderphases
     if (backend->viewportRenderphase) {
         crenvk_renderphase_viewport_destroy(backend->viewportRenderphase, backend->device.device, true);
         free(backend->viewportRenderphase);
     }
-    crenvk_renderphase_ui_destroy(backend->uiRenderphase, backend->device.device, 1);
+    crenvk_renderphase_ui_destroy(backend->uiRenderphase, backend->device.device, true);
     free(backend->uiRenderphase);
-    crenvk_renderphase_picking_destroy(backend->pickingRenderphase, backend->device.device, true, true);
+    crenvk_renderphase_picking_destroy(backend->pickingRenderphase, backend->device.device, true, false);
     free(backend->pickingRenderphase);
-    crenvk_renderphase_default_destroy(backend->defaultRenderphase, backend->device.device, true, true);
+    crenvk_renderphase_default_destroy(backend->defaultRenderphase, backend->device.device, true, false);
     free(backend->defaultRenderphase);
 
     // core objects
@@ -109,15 +108,15 @@ CREN_API void crenvk_terminate(CRenVulkanBackend* backend)
 
 CREN_API void crenvk_update(CRenVulkanBackend* backend, float timestep, CRenCamera* camera)
 {
-    // send information about the camera to the gpu camera buffer
-    vkBufferCamera cameraData = { 0 };
-    cameraData.view = camera->view;
-    cameraData.viewInverse = fmat4_inverse(&camera->view);
-    cameraData.proj = camera->perspective;
-    cameraData.proj.data[1][1] *= -1.0f; // flyp y because vulkan
+	// send information about the camera to the gpu camera buffer
+	vkBufferCamera cameraData = { 0 };
+	cameraData.view = camera->view;
+	cameraData.viewInverse = fmat4_inverse(&camera->view);
+	cameraData.proj = camera->perspective;
+	cameraData.proj.data[1][1] *= -1.0f; // flip y because vulkan
 
-    vkBuffer* cameraBuffer = (vkBuffer*)shashtable_lookup(backend->buffersLib, "Camera");
-    crenvk_buffer_copy(cameraBuffer, backend->swapchain.currentFrame, &cameraData, sizeof(vkBufferCamera));
+	vkBuffer* cameraBuffer = (vkBuffer*)shashtable_lookup(backend->buffersLib, "Camera");
+	crenvk_buffer_copy(cameraBuffer, backend->swapchain.currentFrame, &cameraData, sizeof(vkBufferCamera), 0);
 }
 
 CREN_API void crenvk_render(void* context, CRenVulkanBackend* backend, float timestep, const CRenCallbacks* callbacks, CRenCamera* camera, bool* hintResize)
@@ -129,7 +128,7 @@ CREN_API void crenvk_render(void* context, CRenVulkanBackend* backend, float tim
 	uint32_t currentFrame = backend->swapchain.currentFrame;
 	vkWaitForFences(backend->device.device, 1, &backend->swapchain.framesInFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
 	VkResult res = vkAcquireNextImageKHR(backend->device.device, backend->swapchain.swapchain, UINT64_MAX, backend->swapchain.imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &backend->swapchain.imageIndex);
-	
+
 	// failed to acquire next image, must recreate
 	if (res == VK_ERROR_OUT_OF_DATE_KHR) {
 		VkDevice device = backend->device.device;
@@ -145,6 +144,9 @@ CREN_API void crenvk_render(void* context, CRenVulkanBackend* backend, float tim
 		if (customViewport) {
 			crenvk_renderphase_viewport_recreate(backend->viewportRenderphase, &backend->swapchain, device, physicalDevice, surface, graphicsQueue, extent);
 		}
+
+		// advance frame even on recreation to avoid stalling
+		backend->swapchain.currentFrame = (currentFrame + 1) % CREN_CONCURRENTLY_RENDERED_FRAMES;
 		return;
 	}
 
@@ -173,31 +175,34 @@ CREN_API void crenvk_render(void* context, CRenVulkanBackend* backend, float tim
 	submitInfo.pSignalSemaphores = signalSemaphores;
 
 	if (customViewport) {
-		const VkCommandBuffer commandBuffers[] = {
-			backend->defaultRenderphase->renderpass->commandBuffers[currentFrame],
-			backend->pickingRenderphase->renderpass->commandBuffers[currentFrame],
-			backend->viewportRenderphase->renderpass->commandBuffers[currentFrame],
-			backend->uiRenderphase->renderpass->commandBuffers[currentFrame]
-		};
+		VkCommandBuffer commandBuffers[4] = { 0 };
+		commandBuffers[0] = backend->defaultRenderphase->renderpass->commandBuffers[currentFrame];
+		commandBuffers[1] = backend->pickingRenderphase->renderpass->commandBuffers[currentFrame];
+		commandBuffers[2] = backend->viewportRenderphase->renderpass->commandBuffers[currentFrame];
+		commandBuffers[3] = backend->uiRenderphase->renderpass->commandBuffers[currentFrame];
 
 		submitInfo.commandBufferCount = CREN_STATIC_ARRAY_SIZE(commandBuffers);
 		submitInfo.pCommandBuffers = commandBuffers;
+
+		VkResult queueSubmit = vkQueueSubmit(backend->device.graphicsQueue, 1, &submitInfo, backend->swapchain.framesInFlightFences[currentFrame]);
+		if (queueSubmit != VK_SUCCESS) {
+			CREN_ASSERT(1, "Renderer update was not able to submit frame to graphics queue");
+		}
 	}
 
 	else {
-		const VkCommandBuffer commandBuffers[] = {
-			backend->defaultRenderphase->renderpass->commandBuffers[currentFrame],
-			backend->pickingRenderphase->renderpass->commandBuffers[currentFrame],
-			backend->uiRenderphase->renderpass->commandBuffers[currentFrame]
-		};
+		VkCommandBuffer commandBuffers[3] = { 0 };
+		commandBuffers[0] = backend->defaultRenderphase->renderpass->commandBuffers[currentFrame];
+		commandBuffers[1] = backend->pickingRenderphase->renderpass->commandBuffers[currentFrame];
+		commandBuffers[2] = backend->uiRenderphase->renderpass->commandBuffers[currentFrame];
 
-		submitInfo.commandBufferCount = (unsigned int)CREN_STATIC_ARRAY_SIZE(commandBuffers);
+		submitInfo.commandBufferCount = CREN_STATIC_ARRAY_SIZE(commandBuffers);
 		submitInfo.pCommandBuffers = commandBuffers;
-	}
 
-	VkResult queueSubmit = vkQueueSubmit(backend->device.graphicsQueue, 1, &submitInfo, backend->swapchain.framesInFlightFences[currentFrame]);
-	if (queueSubmit != VK_SUCCESS) {
-		CREN_ASSERT(1, "Renderer update was not able to submit frame to graphics queue");
+		VkResult queueSubmit = vkQueueSubmit(backend->device.graphicsQueue, 1, &submitInfo, backend->swapchain.framesInFlightFences[currentFrame]);
+		if (queueSubmit != VK_SUCCESS) {
+			CREN_ASSERT(1, "Renderer update was not able to submit frame to graphics queue");
+		}
 	}
 
 	// present the image
@@ -213,7 +218,6 @@ CREN_API void crenvk_render(void* context, CRenVulkanBackend* backend, float tim
 
 	// failed to present the image, must recreate
 	if (res == VK_ERROR_OUT_OF_DATE_KHR || res == VK_SUBOPTIMAL_KHR || *hintResize == true) {
-		*hintResize = 0;
 
 		float2 framebufferSize = cren_get_framebuffer_size(context);
 		VkDevice device = backend->device.device;
@@ -237,11 +241,17 @@ CREN_API void crenvk_render(void* context, CRenVulkanBackend* backend, float tim
 		CRenCallback_Resize fnResize = (CRenCallback_Resize)callbacks->resize;
 		if (callbacks->resize != NULL) fnResize(ctx, framebufferSize.xy.x, framebufferSize.xy.y);
 		if (callbacks->imageCount != NULL) fnImageCount(ctx, backend->swapchain.swapchainImageCount);
+
+		// we must unset the resize flag
+		*hintResize = false;
 	}
 
 	else if (res != VK_SUCCESS) {
 		CREN_ASSERT(1, "Renderer update was not able to properly present the graphics queue frame");
 	}
+
+	// advance to the next frame for the next render call
+	backend->swapchain.currentFrame = (currentFrame + 1) % CREN_CONCURRENTLY_RENDERED_FRAMES;
 }
 
 #endif // CREN_BUILD_WITH_VULKAN

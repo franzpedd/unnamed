@@ -32,7 +32,7 @@ namespace Cosmos
 		ImGui_ImplSDL3_ViewportData* vd = (ImGui_ImplSDL3_ViewportData*)viewport->PlatformUserData;
 		(void)vk_allocator;
 
-		CREN_LOG(CRenLogSeverity_Todo, "Use cren_surface_create instead of SDL's one");
+		CREN_LOG(CREN_LOG_SEVERITY_TODO, "Use cren_surface_create instead of SDL's one");
 		bool ret = SDL_Vulkan_CreateSurface(vd->Window, (VkInstance)vk_instance, NULL, (VkSurfaceKHR*)out_vk_surface);
 		return ret ? 0 : 1; // ret ? VK_SUCCESS : VK_NOT_READY 
 	}
@@ -40,7 +40,7 @@ namespace Cosmos
 	static void Internal_ImGui_ReturnVulkanError(VkResult err)
 	{
 		if(err != VK_SUCCESS) {
-			CREN_LOG(CRenLogSeverity_Error, "ImGui internal error: Result %d", err);
+			CREN_LOG(CREN_LOG_SEVERITY_ERROR, "ImGui internal error: Result %d", err);
 		}
 	}
 
@@ -100,7 +100,7 @@ namespace Cosmos
 		appInfo.QueueFamily = vkBackend->device.graphicsQueueIndex;
 		appInfo.Queue = vkBackend->device.graphicsQueue;
 		appInfo.DescriptorPool = vkBackend->uiRenderphase->descPool;
-		//appInfo.DescriptorPoolSize = 0; // optional
+		appInfo.DescriptorPoolSize = 0; // optional
 		appInfo.MinImageCount = vkBackend->swapchain.swapchainImageCount;
 		appInfo.ImageCount = vkBackend->swapchain.swapchainImageCount;
 		appInfo.PipelineCache = VK_NULL_HANDLE;
@@ -110,8 +110,8 @@ namespace Cosmos
 		appInfo.Allocator = NULL;
 		appInfo.CheckVkResultFn = Internal_ImGui_ReturnVulkanError;
 		appInfo.MinAllocationSize = 1024 * 1024;
-		//appInfo.CustomShaderVertCreateInfo; // customize vertex shader
-		//appInfo.CustomShaderFragCreateInfo; // customize fragment shader
+		//appInfo.CustomShaderVertCreateInfo; // optional customize vertex shader
+		//appInfo.CustomShaderFragCreateInfo; // optional customize fragment shader
 		ImGui_ImplVulkan_Init(&appInfo);
 		
 		// fonts
@@ -121,7 +121,7 @@ namespace Cosmos
 		float fontSize = 18.0f;
 
 		if (platform == CREN_PLATFORM_ANDROID) {
-			CREN_LOG(CRenLogSeverity_Todo, "[Android:Todo]: Figure out an automate way to resize things, maybe wait ImGui-texture branch?");
+			CREN_LOG(CREN_LOG_SEVERITY_TODO, "[Android:Todo]: Figure out an automate way to resize things, maybe wait ImGui-texture branch?");
 			iconSize = 13.0f * 3.0f;
 			fontSize = 18.0f * 3.0f;
 		}
@@ -135,16 +135,13 @@ namespace Cosmos
 		sIconFA = io.Fonts->AddFontFromMemoryCompressedTTF(icon_awesome_compressed_data, icon_awesome_compressed_size, iconSize, &iconCFG, iconRanges1);
 		sIconLC = io.Fonts->AddFontFromMemoryCompressedTTF(icon_lucide_compressed_data, icon_lucide_compressed_size, iconSize, &iconCFG, iconRanges2);
 		io.Fonts->Build();
-		
-		CREN_LOG(CRenLogSeverity_Warn, "Maybe resolve this commented func");
-		//ImGui_ImplVulkan_CreateFontsTexture();
 	}
 
 	GUI::~GUI()
 	{
 		CRenVulkanBackend* backend = (CRenVulkanBackend*)cren_get_vulkan_backend(mApp->GetRendererRef()->GetCRenContext());
 		CRenContext* renderer = mApp->GetRendererRef()->GetCRenContext();
-		//vkDeviceWaitIdle(backend->device.device);
+		vkDeviceWaitIdle(backend->device.device);
 
 		ImGui_ImplVulkan_Shutdown();
 		ImGui_ImplSDL3_Shutdown();

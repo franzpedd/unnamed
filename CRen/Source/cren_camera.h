@@ -5,17 +5,6 @@
 #include "cren_types.h"
 #include <vecmath/vecmath.h>
 
-#ifdef __cplusplus 
-extern "C" {
-#endif
-
-/// @brief defines multiple camera types
-typedef enum CRen_CameraType
-{
-	CREN_CAMERA_TYPE_LOOK_AT,
-	CREN_CAMERA_TYPE_FREE_LOOK
-} CRen_CameraType;
-
 /// @brief cren camera data
 typedef struct CRenCamera
 {
@@ -48,6 +37,10 @@ typedef struct CRenCamera
 	bool movingLeft;
 	bool movingRight;
 } CRenCamera;
+
+#ifdef __cplusplus 
+extern "C" {
+#endif
 
 /// @brief creates and returns a camera
 CREN_API CRenCamera cren_camera_create(CRen_CameraType type, float initialAspectRatio, CRen_Renderer api);

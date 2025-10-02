@@ -5,54 +5,29 @@
 #include <memm/memm.h>
 #include <string.h>
 
+/*
 CREN_API vkBuffer* crenvk_buffer_create(VkDevice device, VkPhysicalDevice physicalDevice, VkBufferUsageFlags usageFlags, VkMemoryPropertyFlags memoryFlags, VkDeviceSize size)
 {
     vkBuffer* buffer = (vkBuffer*)malloc(sizeof(vkBuffer));
     if (!buffer) return NULL;
 
     buffer->mapped = false;
-
-    // allocate buffers
     buffer->buffers = (VkBuffer*)malloc(sizeof(VkBuffer) * CREN_CONCURRENTLY_RENDERED_FRAMES);
-    if (!buffer->buffers) {
-        CREN_LOG(CRenLogSeverity_Error, "Failed to allocate memory for Vulkan buffers");
-        free(buffer);
-        return NULL;
-    }
-
-    // allocate memories
     buffer->memories = (VkDeviceMemory*)malloc(sizeof(VkDeviceMemory) * CREN_CONCURRENTLY_RENDERED_FRAMES);
-    if (!buffer->memories) {
-        CREN_LOG(CRenLogSeverity_Error, "Failed to allocate memory for Vulkan buffer memories");
-        free(buffer->buffers);
-        free(buffer);
-        return NULL;
-    }
-
-    // initialize mappedData array (all entries NULL by default)
     buffer->mappedData = darray_init(sizeof(void*), CREN_CONCURRENTLY_RENDERED_FRAMES);
-    if (!buffer->mappedData) {
-        CREN_LOG(CRenLogSeverity_Error, "Failed to create mapped data array");
-        free(buffer->memories);
-        free(buffer->buffers);
-        free(buffer);
-        return NULL;
-    }
 
-    // create buffers and allocate memory but don't map yet
     for (uint32_t i = 0; i < CREN_CONCURRENTLY_RENDERED_FRAMES; i++) {
-        VkResult res = crenvk_device_create_buffer(device, physicalDevice, usageFlags, memoryFlags, size, &buffer->buffers[i], &buffer->memories[i], NULL);
-        if (res != VK_SUCCESS) {
-            CREN_LOG(CRenLogSeverity_Error, "Failed to create device buffer (Error: %d)", res);
-            crenvk_buffer_destroy(buffer, device);
-            return NULL;
-        }
-
-        // push NULL to mappedData (will be filled later when mapped explicitly)
         void* nullPtr = NULL;
-        if (darray_push_back(buffer->mappedData, &nullPtr) != CTOOLBOX_SUCCESS) {
-            crenvk_buffer_destroy(buffer, device);
-            return NULL;
+        VkResult result = crenvk_device_create_buffer(device, physicalDevice, usageFlags, memoryFlags, size, &buffer->buffers[i], &buffer->memories[i], NULL);
+        CREN_ASSERT(result == VK_SUCCESS, "Failed to create device buffer");
+
+        // if host visible, map immediately
+        if (memoryFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) {
+            result = crenvk_buffer_map(buffer, i, device);
+            CREN_ASSERT(result == VK_SUCCESS, "Failed to map host visible buffer");
+        }
+        else {
+            darray_push_back(buffer->mappedData, &nullPtr);
         }
     }
 
@@ -64,7 +39,6 @@ CREN_API void crenvk_buffer_destroy(vkBuffer* buffer, VkDevice device)
     if (!buffer || device == VK_NULL_HANDLE) return;
 
     for (unsigned int i = 0; i < CREN_CONCURRENTLY_RENDERED_FRAMES; i++) {
-        //void** dataPtr = (void**)crenarray_at(buffer->mappedData, i);
         void** dataPtr = NULL;
         darray_get(buffer->mappedData, i, &dataPtr);
         if (dataPtr && *dataPtr && buffer->mapped) {
@@ -101,43 +75,43 @@ CREN_API void crenvk_buffer_destroy(vkBuffer* buffer, VkDevice device)
     free(buffer);
 }
 
-VkResult crenvk_buffer_map(vkBuffer* buffer, VkDevice device)
+VkResult crenvk_buffer_map(vkBuffer* buffer, uint32_t index, VkDevice device)
 {
-    if (!buffer || !device) return VK_ERROR_INITIALIZATION_FAILED;
-
-    for (unsigned int i = 0; i < CREN_CONCURRENTLY_RENDERED_FRAMES; i++) {
-        //void** dataPtr = crenarray_at(buffer->mappedData, i);
-        void** dataPtr = NULL;
-        darray_get(buffer->mappedData, i, &dataPtr);
-
-        if (!dataPtr) continue; // the mapped data is null, either the buffer was mapped only in the first iteration or an error occured
-        if (*dataPtr) continue;  // skip if already mapped
-
-        VkResult res = vkMapMemory(device, buffer->memories[i], 0, VK_WHOLE_SIZE, 0, dataPtr);
-        if (res != VK_SUCCESS) {
-            CREN_LOG(CRenLogSeverity_Error, "vkMapMemory failed: %d", res);
-            return res;
-        }
+    if (!buffer || index >= CREN_CONCURRENTLY_RENDERED_FRAMES) {
+        return VK_ERROR_INITIALIZATION_FAILED;
     }
+
+    // map the buffer memory
+    void* mappedData = NULL;
+    VkResult result = vkMapMemory(device, buffer->memories[index], 0, VK_WHOLE_SIZE, 0, &mappedData);
+    if (result != VK_SUCCESS) {
+        CREN_LOG(CREN_LOG_SEVERITY_ERROR, "Failed to map buffer memory: %d", result);
+        return result;
+    }
+
+    // store the mapped pointer
+    darray_set(buffer->mappedData, index, &mappedData);
     buffer->mapped = true;
+
     return VK_SUCCESS;
 }
 
-void crenvk_buffer_unmap(vkBuffer* buffer, VkDevice device)
+VkResult crenvk_buffer_unmap(vkBuffer* buffer, uint32_t index, VkDevice device)
 {
-    if (buffer == NULL || device == VK_NULL_HANDLE) return;
-
-    for (unsigned int i = 0; i < CREN_CONCURRENTLY_RENDERED_FRAMES; i++) {
-        //void** dataPtr = (void**)crenarray_at(buffer->mappedData, i);
-        void** dataPtr = NULL;
-        darray_get(buffer->mappedData, i, &dataPtr);
-
-        if (!dataPtr || !(*dataPtr)) continue;
-
-        vkUnmapMemory(device, buffer->memories[i]);
-        *dataPtr = NULL;
+    if (!buffer || index >= CREN_CONCURRENTLY_RENDERED_FRAMES) {
+        return VK_ERROR_INITIALIZATION_FAILED;
     }
-    buffer->mapped = false;
+
+    void* mappedData = NULL;
+    darray_get(buffer->mappedData, index, &mappedData);
+
+    if (mappedData != NULL) {
+        vkUnmapMemory(device, buffer->memories[index]);
+        void* nullPtr = NULL;
+        darray_set(buffer->mappedData, index, &nullPtr);
+    }
+
+    return VK_SUCCESS;
 }
 
 void crenvk_buffer_flush(vkBuffer* buffer, VkDevice device, VkDeviceSize offset, VkDeviceSize size)
@@ -154,22 +128,22 @@ void crenvk_buffer_flush(vkBuffer* buffer, VkDevice device, VkDeviceSize offset,
 VkResult crenvk_buffer_copy(vkBuffer* buffer, unsigned int index, const void* src, unsigned long long size)
 {
     if (!buffer || !src || size == 0) {
-        CREN_LOG(CRenLogSeverity_Error, "Invalid buffer, source, or size");
+        CREN_LOG(CREN_LOG_SEVERITY_ERROR, "Invalid buffer, source, or size");
         return VK_ERROR_INITIALIZATION_FAILED;
     }
+
     // check array bounds
     if (index >= darray_size(buffer->mappedData)) {
-        CREN_LOG(CRenLogSeverity_Error, "Index %u out of bounds (size=%llu)", index, darray_size(buffer->mappedData));
+        CREN_LOG(CREN_LOG_SEVERITY_ERROR, "Index %u out of bounds (size=%llu)", index, darray_size(buffer->mappedData));
         return VK_ERROR_INITIALIZATION_FAILED;
     }
 
     // get the mapped pointer
-    //void* dst = buffer->mappedData->data[index];
-    void** dst = NULL;
-    darray_get(buffer->mappedData, index, &dst);
+    void* dst = NULL;
+    ctoolbox_result result = darray_get(buffer->mappedData, index, &dst);
 
-    if (!dst) {
-        CREN_LOG(CRenLogSeverity_Error, "Buffer not mapped at index %u", index);
+    if (result != CTOOLBOX_SUCCESS || dst == NULL) {
+        CREN_LOG(CREN_LOG_SEVERITY_ERROR, "Buffer not mapped at index %u (result=%d, dst=%p)", index, result, dst);
         return VK_ERROR_MEMORY_MAP_FAILED;
     }
 
@@ -181,9 +155,212 @@ VkResult crenvk_buffer_copy(vkBuffer* buffer, unsigned int index, const void* sr
 void crenvk_buffer_command_copy(VkCommandBuffer cmd, vkBuffer* srcBuffer, vkBuffer* dstBuffer, unsigned int srcIndex, unsigned int dstIndex, const VkBufferCopy* region)
 {
     if (!cmd || !srcBuffer || !dstBuffer) {
-        CREN_LOG(CRenLogSeverity_Error, "Invalid command buffer or buffers");
+        CREN_LOG(CREN_LOG_SEVERITY_ERROR, "Invalid command buffer or buffers");
         return;
     }
 
     vkCmdCopyBuffer(cmd, srcBuffer->buffers[srcIndex], dstBuffer->buffers[dstIndex], 1, region);
+}
+*/
+
+CREN_API vkBuffer* crenvk_buffer_create(VkDevice device, VkPhysicalDevice physicalDevice, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags memoryProperties, uint32_t frameCount)
+{
+    if (size == 0 || frameCount == 0) {
+        CREN_LOG(CREN_LOG_SEVERITY_ERROR, "Invalid buffer size or frame count");
+        return NULL;
+    }
+
+    vkBuffer* buffer = (vkBuffer*)malloc(sizeof(vkBuffer));
+    if (!buffer) {
+        CREN_LOG(CREN_LOG_SEVERITY_ERROR, "Failed to allocate buffer structure");
+        return NULL;
+    }
+
+    buffer->size = size;
+    buffer->usage = usage;
+    buffer->memoryProperties = memoryProperties;
+    buffer->frameCount = frameCount;
+
+    // allocate arrays for per-frame resources
+    buffer->buffers = (VkBuffer*)malloc(sizeof(VkBuffer) * frameCount);
+    buffer->memories = (VkDeviceMemory*)malloc(sizeof(VkDeviceMemory) * frameCount);
+    buffer->mappedPointers = (void**)malloc(sizeof(void*) * frameCount);
+    buffer->isMapped = (bool*)malloc(sizeof(bool) * frameCount);
+
+    if (!buffer->buffers || !buffer->memories || !buffer->mappedPointers || !buffer->isMapped) {
+        CREN_LOG(CREN_LOG_SEVERITY_ERROR, "Failed to allocate buffer arrays");
+        crenvk_buffer_destroy(device, buffer);
+        return NULL;
+    }
+
+    // initialize arrays
+    memset(buffer->mappedPointers, 0, sizeof(void*) * frameCount);
+    memset(buffer->isMapped, 0, sizeof(bool) * frameCount);
+
+    // create each buffer
+    for (uint32_t i = 0; i < frameCount; i++)
+    {
+        VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+        bufferInfo.size = size;
+        bufferInfo.usage = usage;
+        bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+        VkResult result = vkCreateBuffer(device, &bufferInfo, NULL, &buffer->buffers[i]);
+        if (result != VK_SUCCESS) {
+            CREN_LOG(CREN_LOG_SEVERITY_ERROR, "Failed to create buffer %u: %d", i, result);
+            crenvk_buffer_destroy(device, buffer);
+            return NULL;
+        }
+
+        // get memory requirements
+        VkMemoryRequirements memRequirements;
+        vkGetBufferMemoryRequirements(device, buffer->buffers[i], &memRequirements);
+
+        // find memory type
+        VkMemoryAllocateInfo allocInfo = { 0 };
+        allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        allocInfo.allocationSize = memRequirements.size;
+        allocInfo.memoryTypeIndex = crenvk_device_find_memory_type(physicalDevice,memRequirements.memoryTypeBits,memoryProperties);
+
+        result = vkAllocateMemory(device, &allocInfo, NULL, &buffer->memories[i]);
+        if (result != VK_SUCCESS) {
+            CREN_LOG(CREN_LOG_SEVERITY_ERROR, "Failed to allocate buffer memory %u: %d", i, result);
+            crenvk_buffer_destroy(device, buffer);
+            return NULL;
+        }
+
+        // bind memory
+        result = vkBindBufferMemory(device, buffer->buffers[i], buffer->memories[i], 0);
+        if (result != VK_SUCCESS) {
+            CREN_LOG(CREN_LOG_SEVERITY_ERROR, "Failed to bind buffer memory %u: %d", i, result);
+            crenvk_buffer_destroy(device, buffer);
+            return NULL;
+        }
+
+        // auto-map if host visible
+        if (memoryProperties & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) {
+            result = crenvk_buffer_map(device, buffer, i);
+            if (result != VK_SUCCESS) {
+                CREN_LOG(CREN_LOG_SEVERITY_WARN, "Failed to auto-map buffer %u: %d", i, result);
+            }
+        }
+    }
+
+    return buffer;
+}
+
+CREN_API void crenvk_buffer_destroy(VkDevice device, vkBuffer* buffer)
+{
+    if (!buffer) return;
+
+    if (buffer->buffers) {
+        for (uint32_t i = 0; i < buffer->frameCount; i++) {
+            if (buffer->buffers[i] != VK_NULL_HANDLE) {
+                // unmap if mapped
+                if (buffer->isMapped[i]) {
+                    crenvk_buffer_unmap(device, buffer, i);
+                }
+
+                vkDestroyBuffer(device, buffer->buffers[i], NULL);
+                buffer->buffers[i] = VK_NULL_HANDLE;
+            }
+        }
+        free(buffer->buffers);
+    }
+
+    if (buffer->memories) {
+        for (uint32_t i = 0; i < buffer->frameCount; i++) {
+            if (buffer->memories[i] != VK_NULL_HANDLE) {
+                vkFreeMemory(device, buffer->memories[i], NULL);
+                buffer->memories[i] = VK_NULL_HANDLE;
+            }
+        }
+        free(buffer->memories);
+    }
+
+    if (buffer->mappedPointers) free(buffer->mappedPointers);
+    if (buffer->isMapped) free(buffer->isMapped);
+
+    free(buffer);
+}
+
+CREN_API VkResult crenvk_buffer_map(VkDevice device, vkBuffer* buffer, uint32_t frameIndex)
+{
+    if (!buffer || frameIndex >= buffer->frameCount) return VK_ERROR_INITIALIZATION_FAILED;
+    if (buffer->isMapped[frameIndex]) return VK_SUCCESS; // Already mapped
+
+    if (!(buffer->memoryProperties & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)) {
+        CREN_LOG(CREN_LOG_SEVERITY_ERROR, "Cannot map non-host-visible buffer");
+        return VK_ERROR_MEMORY_MAP_FAILED;
+    }
+
+    VkResult result = vkMapMemory(device, buffer->memories[frameIndex], 0, buffer->size, 0, &buffer->mappedPointers[frameIndex]);
+    if (result == VK_SUCCESS) buffer->isMapped[frameIndex] = true;
+    else CREN_LOG(CREN_LOG_SEVERITY_ERROR, "Failed to map buffer: %d", result);
+
+    return result;
+}
+
+CREN_API VkResult crenvk_buffer_unmap(VkDevice device, vkBuffer* buffer, uint32_t frameIndex)
+{
+    if (!buffer || frameIndex >= buffer->frameCount) return VK_ERROR_INITIALIZATION_FAILED;
+    if (!buffer->isMapped[frameIndex]) return VK_SUCCESS; // not mapped
+
+    vkUnmapMemory(device, buffer->memories[frameIndex]);
+    buffer->mappedPointers[frameIndex] = NULL;
+    buffer->isMapped[frameIndex] = false;
+
+    return VK_SUCCESS;
+}
+
+CREN_API VkResult crenvk_buffer_copy(vkBuffer* buffer, uint32_t frameIndex, const void* data, VkDeviceSize size, VkDeviceSize offset)
+{
+    if (!buffer || !data || size == 0) return VK_ERROR_INITIALIZATION_FAILED;
+
+    if (frameIndex >= buffer->frameCount) {
+        CREN_LOG(CREN_LOG_SEVERITY_ERROR, "Frame index %u out of bounds", frameIndex);
+        return VK_ERROR_INITIALIZATION_FAILED;
+    }
+
+    if (offset + size > buffer->size) {
+        CREN_LOG(CREN_LOG_SEVERITY_ERROR, "Copy exceeds buffer size");
+        return VK_ERROR_OUT_OF_DEVICE_MEMORY;
+    }
+
+    if (!buffer->isMapped[frameIndex]) {
+        CREN_LOG(CREN_LOG_SEVERITY_ERROR, "Buffer not mapped at frame %u", frameIndex);
+        return VK_ERROR_MEMORY_MAP_FAILED;
+    }
+
+    memcpy((char*)buffer->mappedPointers[frameIndex] + offset, data, size);
+    return VK_SUCCESS;
+}
+
+CREN_API VkResult crenvk_buffer_flush(VkDevice device, vkBuffer* buffer, uint32_t frameIndex, VkDeviceSize size, VkDeviceSize offset)
+{
+    if (!buffer || frameIndex >= buffer->frameCount) return VK_ERROR_INITIALIZATION_FAILED;
+
+    if (!(buffer->memoryProperties & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))
+    {
+        VkMappedMemoryRange memoryRange = { VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE };
+        memoryRange.memory = buffer->memories[frameIndex];
+        memoryRange.offset = offset;
+        memoryRange.size = (size == VK_WHOLE_SIZE) ? buffer->size - offset : size;
+
+        return vkFlushMappedMemoryRanges(device, 1, &memoryRange);
+    }
+
+    // host coherent memory doesn't need explicit flushing
+    return VK_SUCCESS; 
+}
+
+CREN_API void crenvk_buffer_command_copy(VkCommandBuffer commandBuffer, vkBuffer* srcBuffer, uint32_t srcFrameIndex, vkBuffer* dstBuffer, uint32_t dstFrameIndex, VkDeviceSize size, VkDeviceSize srcOffset, VkDeviceSize dstOffset)
+{
+    if (!srcBuffer || !dstBuffer || srcFrameIndex >= srcBuffer->frameCount || dstFrameIndex >= dstBuffer->frameCount) return;
+
+    VkBufferCopy copyRegion = { 0 };
+    copyRegion.srcOffset = srcOffset;
+    copyRegion.dstOffset = dstOffset;
+    copyRegion.size = (size == VK_WHOLE_SIZE) ? srcBuffer->size - srcOffset : size;
+    vkCmdCopyBuffer(commandBuffer, srcBuffer->buffers[srcFrameIndex], dstBuffer->buffers[dstFrameIndex], 1, &copyRegion);
 }

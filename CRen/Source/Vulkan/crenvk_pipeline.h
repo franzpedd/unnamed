@@ -3,6 +3,7 @@
 #ifdef CREN_BUILD_WITH_VULKAN
 
 #include "cren_defines.h"
+#include "cren_types.h"
 
 #include <ctoolbox/shashtable.h>
 #include <vecmath/vecmath.h>
@@ -21,32 +22,8 @@
 /// @brief How many shader stages a pipeline may have, since we only support Vertex and Fragment for now, 2
 #define CREN_PIPELINE_SHADER_STAGES_COUNT 2
 
-/// @brief all types of shaders
-typedef enum ShaderType 
-{
-	SHADER_TYPE_VERTEX = 0,
-	SHADER_TYPE_FRAGMENT,
-	SHADER_TYPE_COMPUTE,
-	SHADER_TYPE_GEOMETRY,
-	SHADER_TYPE_TESS_CTRL,
-	SHADER_TYPE_TESS_EVAL
-} ShaderType;
-
-/// @brief all types of vertex components, custom attributes not supported, also only covering 1 of each type at the momment
-typedef enum VertexComponent
-{
-	VERTEX_COMPONENT_POSITION = 0,
-	VERTEX_COMPONENT_NORMAL,
-	VERTEX_COMPONENT_UV_0,          // UV_1, UV_2 ...
-	VERTEX_COMPONENT_COLOR_0,       // COLOR_1, COLOR_2 ...
-	VERTEX_COMPONENT_JOINTS_0,      // JOINTS_1, JOINTS_2 ...
-	VERTEX_COMPONENT_WEIGHTS_0,     // WEIGHTS_1, WEIGHTS_2, ...
-
-	VERTEX_COMPONENTS_MAX
-} VertexComponent;
-
 /// @brief cren vertex structure
-typedef struct Vertex
+typedef struct CRenVertex
 {
 	align_as(16) float3 position;
 	align_as(16) float3 normal;
@@ -54,14 +31,14 @@ typedef struct Vertex
 	align_as(16) float4 color_0;
 	align_as(16) float4 joints_0;
 	align_as(16) float4 weights_0;
-} Vertex;
+} CRenVertex;
 
 /// @brief vulkan shader
 typedef struct vkShader
 {
 	const char* name;
 	const char* path;
-	ShaderType type;
+	CRen_ShaderType type;
 	VkShaderModule shaderModule;
 	VkPipelineShaderStageCreateInfo shaderStageCI;
 } vkShader;
@@ -74,7 +51,6 @@ typedef struct vkRenderpass
 	VkFormat surfaceFormat;
 	VkRenderPass renderPass;
 	VkCommandPool commandPool;
-	VkDescriptorPool descriptorPool;
 	VkCommandBuffer commandBuffers[CREN_CONCURRENTLY_RENDERED_FRAMES];
 	VkFramebuffer* framebuffers;
 	uint32_t framebuffersCount;
@@ -93,7 +69,7 @@ typedef struct vkPipelineCreateInfo
 	uint32_t bindingsCount;
 	VkPushConstantRange pushConstants[CREN_PIPELINE_PUSH_CONSTANTS_MAX];
 	uint32_t pushConstantsCount;
-	VertexComponent vertexComponents[VERTEX_COMPONENTS_MAX];
+	CRen_VertexComponent vertexComponents[VERTEX_COMPONENTS_MAX];
 	uint32_t vertexComponentsCount;
 } vkPipelineCreateInfo;
 
@@ -138,7 +114,7 @@ CREN_API void crenvk_pipeline_destroy(VkDevice device, vkPipeline* pipeline);
 CREN_API VkResult crenvk_pipeline_build(VkDevice device, vkPipeline* pipeline);
 
 /// @brief creates a cren vulkan shader
-CREN_API vkShader crenvk_pipeline_create_shader(VkDevice device, const char* name, const char* path, ShaderType type);
+CREN_API vkShader crenvk_pipeline_create_shader(VkDevice device, const char* name, const char* path, CRen_ShaderType type);
 
 /// @brief releases all resources used by a renderpass, this is a func so it's more automatic than manually handling the struct
 CREN_API void crenvk_pipeline_renderpass_release(VkDevice device, vkRenderpass* renderpass);

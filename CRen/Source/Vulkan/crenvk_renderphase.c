@@ -100,12 +100,7 @@ CREN_API VkResult crenvk_renderphase_default_create(VkDevice device, VkPhysicalD
     renderPassCI.pSubpasses = &subpass;
     renderPassCI.dependencyCount = 2u;
     renderPassCI.pDependencies = dependencies;
-
-    res = vkCreateRenderPass(device, &renderPassCI, NULL, &outPhase->renderpass->renderPass);
-    if (res != VK_SUCCESS) {
-        CREN_LOG(CRenLogSeverity_Fatal, "Failed to create Default/Main renderphase renderpass");
-        return res;
-    }
+    CREN_ASSERT(vkCreateRenderPass(device, &renderPassCI, NULL, &outPhase->renderpass->renderPass) == VK_SUCCESS, "Failed to create default renderphase's renderpass");
 
     // command pool and command buffers
     vkRenderpass* renderpass = outPhase->renderpass;
@@ -117,7 +112,7 @@ CREN_API VkResult crenvk_renderphase_default_create(VkDevice device, VkPhysicalD
     cmdPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
     res = vkCreateCommandPool(device, &cmdPoolInfo, NULL, &renderpass->commandPool);
     if (res != VK_SUCCESS) {
-        CREN_LOG(CRenLogSeverity_Fatal, "Failed to create default renderphase command pool");
+        CREN_LOG(CREN_LOG_SEVERITY_FATAL, "Failed to create default renderphase command pool");
         return res;
     }
 
@@ -128,7 +123,7 @@ CREN_API VkResult crenvk_renderphase_default_create(VkDevice device, VkPhysicalD
     cmdBufferAllocInfo.commandBufferCount = CREN_CONCURRENTLY_RENDERED_FRAMES;
     res = vkAllocateCommandBuffers(device, &cmdBufferAllocInfo, renderpass->commandBuffers);
     if (res != VK_SUCCESS) {
-        CREN_LOG(CRenLogSeverity_Fatal, "Failed to create default renderphase command buffers");
+        CREN_LOG(CREN_LOG_SEVERITY_FATAL, "Failed to create default renderphase command buffers");
         return res;
     }
 
@@ -176,13 +171,13 @@ CREN_API VkResult crenvk_renderphase_default_create_framebuffers(vkDefaultRender
         0
     );
     if (res != VK_SUCCESS) {
-        CREN_LOG(CRenLogSeverity_Fatal, "Failed to create default renderphase color image");
+        CREN_LOG(CREN_LOG_SEVERITY_FATAL, "Failed to create default renderphase color image");
         return res;
     }
 
     res = crenvk_device_create_image_view(device, phase->colorImage, colorFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1, 1, VK_IMAGE_VIEW_TYPE_2D, NULL, &phase->colorView);
     if (res != VK_SUCCESS) {
-        CREN_LOG(CRenLogSeverity_Fatal, "Failed to create default renderphase color image view");
+        CREN_LOG(CREN_LOG_SEVERITY_FATAL, "Failed to create default renderphase color image view");
         return res;
     }
 
@@ -204,13 +199,13 @@ CREN_API VkResult crenvk_renderphase_default_create_framebuffers(vkDefaultRender
         0
     );
     if (res != VK_SUCCESS) {
-        CREN_LOG(CRenLogSeverity_Fatal, "Failed to create default renderphase depth image");
+        CREN_LOG(CREN_LOG_SEVERITY_FATAL, "Failed to create default renderphase depth image");
         return res;
     }
 
     res = crenvk_device_create_image_view(device, phase->depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, 1, 1, VK_IMAGE_VIEW_TYPE_2D, NULL, &phase->depthView);
     if (res != VK_SUCCESS) {
-        CREN_LOG(CRenLogSeverity_Fatal, "Failed to create default renderphase depth image view");
+        CREN_LOG(CREN_LOG_SEVERITY_FATAL, "Failed to create default renderphase depth image view");
         return res;
     }
 
@@ -218,7 +213,7 @@ CREN_API VkResult crenvk_renderphase_default_create_framebuffers(vkDefaultRender
     renderpass->framebuffersCount = viewsCount;
     renderpass->framebuffers = (VkFramebuffer*)malloc(sizeof(VkFramebuffer) * viewsCount);
     if (!renderpass->framebuffers) {
-        CREN_LOG(CRenLogSeverity_Fatal, "Failed to allocate memory for default renderphase framebuffers");
+        CREN_LOG(CREN_LOG_SEVERITY_FATAL, "Failed to allocate memory for default renderphase framebuffers");
         return VK_ERROR_OUT_OF_HOST_MEMORY;
     }
 
@@ -235,7 +230,7 @@ CREN_API VkResult crenvk_renderphase_default_create_framebuffers(vkDefaultRender
 
         res = vkCreateFramebuffer(device, &fbci, NULL, &renderpass->framebuffers[i]);
         if (res != VK_SUCCESS) {
-            CREN_LOG(CRenLogSeverity_Fatal, "Failed to create default renderphase framebuffer");
+            CREN_LOG(CREN_LOG_SEVERITY_FATAL, "Failed to create default renderphase framebuffer");
             return res;
         }
     }
@@ -409,7 +404,7 @@ CREN_API VkResult crenvk_renderphase_picking_create(VkDevice device, VkPhysicalD
 
     VkResult res = vkCreateRenderPass(device, &renderPassCI, NULL, &outPhase->renderpass->renderPass);
     if (res != VK_SUCCESS) {
-        CREN_LOG(CRenLogSeverity_Error, "Failed to create picking renderphase renderpass");
+        CREN_LOG(CREN_LOG_SEVERITY_ERROR, "Failed to create picking renderphase renderpass");
         return res;
     }
 
@@ -421,7 +416,7 @@ CREN_API VkResult crenvk_renderphase_picking_create(VkDevice device, VkPhysicalD
 
     res = vkCreateCommandPool(device, &cmdPoolInfo, NULL, &outPhase->renderpass->commandPool);
     if (res != VK_SUCCESS) {
-        CREN_LOG(CRenLogSeverity_Error, "Failed to create picking renderphasse command pool");
+        CREN_LOG(CREN_LOG_SEVERITY_ERROR, "Failed to create picking renderphasse command pool");
         return res;
     }
 
@@ -433,7 +428,7 @@ CREN_API VkResult crenvk_renderphase_picking_create(VkDevice device, VkPhysicalD
 
     res = vkAllocateCommandBuffers(device, &cmdBufferAllocInfo, outPhase->renderpass->commandBuffers);
     if (res != VK_SUCCESS) {
-        CREN_LOG(CRenLogSeverity_Error, "Failed to allocate picking renderphase command buffers");
+        CREN_LOG(CREN_LOG_SEVERITY_ERROR, "Failed to allocate picking renderphase command buffers");
         return res;
     }
 
@@ -482,13 +477,13 @@ CREN_API VkResult crenvk_renderphase_picking_create_framebuffers(vkPickingRender
         0
     );
     if (res != VK_SUCCESS) {
-        CREN_LOG(CRenLogSeverity_Fatal, "Failed to create picking framebufer depth image");
+        CREN_LOG(CREN_LOG_SEVERITY_FATAL, "Failed to create picking framebufer depth image");
         return res;
     }
 
     res = crenvk_device_create_image_view(device, phase->depthImage, phase->depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, 1, 1, VK_IMAGE_VIEW_TYPE_2D, NULL, &phase->depthView);
     if (res != VK_SUCCESS) {
-        CREN_LOG(CRenLogSeverity_Fatal, "Failed to create picking framebufer depth image view");
+        CREN_LOG(CREN_LOG_SEVERITY_FATAL, "Failed to create picking framebufer depth image view");
         return res;
     }
 
@@ -525,7 +520,7 @@ CREN_API VkResult crenvk_renderphase_picking_create_framebuffers(vkPickingRender
             0
         );
         if (res != VK_SUCCESS) {
-            CREN_LOG(CRenLogSeverity_Fatal, "Failed to create picking framebuffer color image");
+            CREN_LOG(CREN_LOG_SEVERITY_FATAL, "Failed to create picking framebuffer color image");
             return res;
         }
 
@@ -567,7 +562,7 @@ CREN_API VkResult crenvk_renderphase_picking_create_framebuffers(vkPickingRender
         framebufferCI.layers = 1;
         res = vkCreateFramebuffer(device, &framebufferCI, NULL, &phase->renderpass->framebuffers[i]);
         if (res != VK_SUCCESS) {
-            CREN_LOG(CRenLogSeverity_Fatal, "Failed to create picking framebuffer");
+            CREN_LOG(CREN_LOG_SEVERITY_FATAL, "Failed to create picking framebuffer");
             return res;
         }
     }
@@ -723,7 +718,7 @@ CREN_API VkResult crenvk_renderphase_ui_create(VkDevice device, VkPhysicalDevice
     info.pDependencies = &dependency;
     VkResult res = vkCreateRenderPass(device, &info, NULL, &outPhase->renderpass->renderPass);
     if (res != VK_SUCCESS) {
-        CREN_LOG(CRenLogSeverity_Fatal, "Failed to create ui renderphase renderpass");
+        CREN_LOG(CREN_LOG_SEVERITY_FATAL, "Failed to create ui renderphase renderpass");
         return res;
     }
 
@@ -738,7 +733,7 @@ CREN_API VkResult crenvk_renderphase_ui_create(VkDevice device, VkPhysicalDevice
     descInfo.pBindings = binding;
     res = vkCreateDescriptorSetLayout(device, &descInfo, NULL, &outPhase->descSetLayout);
     if (res != VK_SUCCESS) {
-        CREN_LOG(CRenLogSeverity_Fatal, "Failed to create ui descriptor set layout");
+        CREN_LOG(CREN_LOG_SEVERITY_FATAL, "Failed to create ui descriptor set layout");
         return res;
     }
 
@@ -767,7 +762,7 @@ CREN_API VkResult crenvk_renderphase_ui_create(VkDevice device, VkPhysicalDevice
     poolCI.pPoolSizes = poolSizes;
     res = vkCreateDescriptorPool(device, &poolCI, NULL, &outPhase->descPool);
     if (res != VK_SUCCESS) {
-        CREN_LOG(CRenLogSeverity_Fatal, "Failed to create descriptor pool for the ui");
+        CREN_LOG(CREN_LOG_SEVERITY_FATAL, "Failed to create descriptor pool for the ui");
         return res;
     }
 
@@ -779,7 +774,7 @@ CREN_API VkResult crenvk_renderphase_ui_create(VkDevice device, VkPhysicalDevice
     cmdPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
     res = vkCreateCommandPool(device, &cmdPoolInfo, NULL, &outPhase->renderpass->commandPool);
     if (res != VK_SUCCESS) {
-        CREN_LOG(CRenLogSeverity_Fatal, "Failed to create ui renderphase command pool");
+        CREN_LOG(CREN_LOG_SEVERITY_FATAL, "Failed to create ui renderphase command pool");
         return res;
     }
 
@@ -790,7 +785,7 @@ CREN_API VkResult crenvk_renderphase_ui_create(VkDevice device, VkPhysicalDevice
     cmdBufferAllocInfo.commandBufferCount = CREN_CONCURRENTLY_RENDERED_FRAMES;
     res = vkAllocateCommandBuffers(device, &cmdBufferAllocInfo, outPhase->renderpass->commandBuffers);
     if (res != VK_SUCCESS) {
-        CREN_LOG(CRenLogSeverity_Fatal, "Failed to allocate command buffers for the ui renderphass");
+        CREN_LOG(CREN_LOG_SEVERITY_FATAL, "Failed to allocate command buffers for the ui renderphass");
         return res;
     }
 
@@ -827,7 +822,7 @@ CREN_API VkResult crenvk_renderphase_ui_framebuffers_create(vkUIRenderphase* pha
 
         VkResult res = vkCreateFramebuffer(device, &framebufferCI, NULL, &phase->renderpass->framebuffers[i]);
         if (res != VK_SUCCESS) {
-            CREN_LOG(CRenLogSeverity_Fatal, "Failed to create ui renderphase framebuffer");
+            CREN_LOG(CREN_LOG_SEVERITY_FATAL, "Failed to create ui renderphase framebuffer");
             return res;
         }
     }
@@ -969,7 +964,7 @@ CREN_API VkResult crenvk_renderphase_viewport_create(VkDevice device, VkPhysical
 
     VkResult res = vkCreateRenderPass(device, &renderPassCI, NULL, &outPhase->renderpass->renderPass);
     if (res != VK_SUCCESS) {
-        CREN_LOG(CRenLogSeverity_Fatal, "Failed to create vulkan renderpass for the viewport render phase");
+        CREN_LOG(CREN_LOG_SEVERITY_FATAL, "Failed to create vulkan renderpass for the viewport render phase");
         return res;
     }
 
@@ -981,7 +976,7 @@ CREN_API VkResult crenvk_renderphase_viewport_create(VkDevice device, VkPhysical
     cmdPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
     res = vkCreateCommandPool(device, &cmdPoolInfo, NULL, &outPhase->renderpass->commandPool);
     if (res != VK_SUCCESS) {
-        CREN_LOG(CRenLogSeverity_Fatal, "Failed to create viewport renderphase command pool");
+        CREN_LOG(CREN_LOG_SEVERITY_FATAL, "Failed to create viewport renderphase command pool");
         return res;
     }
 
@@ -992,7 +987,7 @@ CREN_API VkResult crenvk_renderphase_viewport_create(VkDevice device, VkPhysical
     cmdBufferAllocInfo.commandBufferCount = CREN_CONCURRENTLY_RENDERED_FRAMES;
     res = vkAllocateCommandBuffers(device, &cmdBufferAllocInfo, outPhase->renderpass->commandBuffers);
     if (res != VK_SUCCESS) {
-        CREN_LOG(CRenLogSeverity_Fatal, "Failed to allocate command buffers for the viewport renderphase");
+        CREN_LOG(CREN_LOG_SEVERITY_FATAL, "Failed to allocate command buffers for the viewport renderphase");
         return res;
     }
     return VK_SUCCESS;
@@ -1020,7 +1015,7 @@ CREN_API void crenvk_renderphase_viewport_destroy(vkViewportRenderphase* phase, 
 
 CREN_API VkResult crenvk_renderphase_viewport_create_framebuffers(vkViewportRenderphase* phase, VkDevice device, VkPhysicalDevice physicalDevice, VkQueue graphicsQueue, VkImageView* swapchainViews, uint32_t swapchainViewCount, VkExtent2D extent)
 {
-    uint32_t imageCount = swapchainViewCount;
+    unsigned int imageCount = swapchainViewCount;
     VkFormat depthFormat = crenvk_device_find_depth_format(physicalDevice);
 
     // descriptor pool
@@ -1029,12 +1024,12 @@ CREN_API VkResult crenvk_renderphase_viewport_create_framebuffers(vkViewportRend
     poolCI.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
     poolCI.pNext = NULL;
     poolCI.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-    poolCI.maxSets = (uint32_t)(2 * CREN_STATIC_ARRAY_SIZE(poolSizes));
-    poolCI.poolSizeCount = (uint32_t)CREN_STATIC_ARRAY_SIZE(poolSizes);
+    poolCI.maxSets = (unsigned int)(2 * CREN_STATIC_ARRAY_SIZE(poolSizes));
+    poolCI.poolSizeCount = (unsigned int)CREN_STATIC_ARRAY_SIZE(poolSizes);
     poolCI.pPoolSizes = poolSizes;
     VkResult res = vkCreateDescriptorPool(device, &poolCI, NULL, &phase->descriptorPool);
     if (res != VK_SUCCESS) {
-        CREN_LOG(CRenLogSeverity_Fatal, "Failed to create viewport descriptor pool");
+        CREN_LOG(CREN_LOG_SEVERITY_FATAL, "Failed to create viewport descriptor pool");
         return res;
     }
 
@@ -1050,7 +1045,7 @@ CREN_API VkResult crenvk_renderphase_viewport_create_framebuffers(vkViewportRend
     info.pBindings = binding;
     res = vkCreateDescriptorSetLayout(device, &info, NULL, &phase->descriptorSetLayout);
     if (res != VK_SUCCESS) {
-        CREN_LOG(CRenLogSeverity_Fatal, "Failed to create vulkan descriptor set layout for the viewport render phase");
+        CREN_LOG(CREN_LOG_SEVERITY_FATAL, "Failed to create vulkan descriptor set layout for the viewport render phase");
         return res;
     }
 
@@ -1068,7 +1063,7 @@ CREN_API VkResult crenvk_renderphase_viewport_create_framebuffers(vkViewportRend
         &phase->sampler
     );
     if (res != VK_SUCCESS) {
-        CREN_LOG(CRenLogSeverity_Fatal, "Failed to create vulkan sampler for the viewport render phase");
+        CREN_LOG(CREN_LOG_SEVERITY_FATAL, "Failed to create vulkan sampler for the viewport render phase");
         return res;
     }
 
@@ -1091,13 +1086,13 @@ CREN_API VkResult crenvk_renderphase_viewport_create_framebuffers(vkViewportRend
         0
     );
     if (res != VK_SUCCESS) {
-        CREN_LOG(CRenLogSeverity_Fatal, "Failed to create the viewport renderphase color image");
+        CREN_LOG(CREN_LOG_SEVERITY_FATAL, "Failed to create the viewport renderphase color image");
         return res;
     }
 
     res = crenvk_device_create_image_view(device, phase->colorImage, phase->renderpass->surfaceFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1, 1, VK_IMAGE_VIEW_TYPE_2D, NULL, &phase->colorView);
     if (res != VK_SUCCESS) {
-        CREN_LOG(CRenLogSeverity_Fatal, "Failed to create the viewport renderphase color image view");
+        CREN_LOG(CREN_LOG_SEVERITY_FATAL, "Failed to create the viewport renderphase color image view");
         return res;
     }
 
@@ -1120,13 +1115,13 @@ CREN_API VkResult crenvk_renderphase_viewport_create_framebuffers(vkViewportRend
         0
     );
     if (res != VK_SUCCESS) {
-        CREN_LOG(CRenLogSeverity_Fatal, "Failed to create the viewport renderphase depth image");
+        CREN_LOG(CREN_LOG_SEVERITY_FATAL, "Failed to create the viewport renderphase depth image");
         return res;
     }
 
     res = crenvk_device_create_image_view(device, phase->depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, 1, 1, VK_IMAGE_VIEW_TYPE_2D, NULL, &phase->depthView);
     if (res != VK_SUCCESS) {
-        CREN_LOG(CRenLogSeverity_Fatal, "Failed to create the viewport renderphase depth image view");
+        CREN_LOG(CREN_LOG_SEVERITY_FATAL, "Failed to create the viewport renderphase depth image view");
         return res;
     }
 
@@ -1157,7 +1152,7 @@ CREN_API VkResult crenvk_renderphase_viewport_create_framebuffers(vkViewportRend
 
     res = crenvk_device_create_image_descriptor_set(device, phase->descriptorPool, phase->descriptorSetLayout, phase->sampler, phase->colorView, &phase->descriptorSet);
     if (res != VK_SUCCESS) {
-        CREN_LOG(CRenLogSeverity_Fatal, "Failed to create the viewport image descriptor set");
+        CREN_LOG(CREN_LOG_SEVERITY_FATAL, "Failed to create the viewport image descriptor set");
         return res;
     }
 
@@ -1179,7 +1174,7 @@ CREN_API VkResult crenvk_renderphase_viewport_create_framebuffers(vkViewportRend
         framebufferCI.layers = 1;
         res = vkCreateFramebuffer(device, &framebufferCI, NULL, &phase->renderpass->framebuffers[i]);
         if (res != VK_SUCCESS) {
-            CREN_LOG(CRenLogSeverity_Fatal, "Failed to create viewport renderphase framebuffer");
+            CREN_LOG(CREN_LOG_SEVERITY_FATAL, "Failed to create viewport renderphase framebuffer");
             return res;
         }
     }

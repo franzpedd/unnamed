@@ -19,7 +19,7 @@ static VkVertexInputBindingDescription* internal_crenvk_pipeline_get_binding_des
 
 	VkVertexInputBindingDescription* bindings = (VkVertexInputBindingDescription*)malloc(sizeof(VkVertexInputBindingDescription));
 	bindings[0].binding = 0;
-	bindings[0].stride = sizeof(Vertex);
+	bindings[0].stride = sizeof(CRenVertex);
 	bindings[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
 	*bindingCount = 1U;
@@ -28,12 +28,12 @@ static VkVertexInputBindingDescription* internal_crenvk_pipeline_get_binding_des
 
 
 /// @brief creates an array of VkVertexInputAttributeDescription
-static VkVertexInputAttributeDescription* internal_crenvk_get_attribute_descriptions(VertexComponent* vertexComponents, uint32_t componentsCount, uint32_t* attributesCount)
+static VkVertexInputAttributeDescription* internal_crenvk_get_attribute_descriptions(CRen_VertexComponent* vertexComponents, uint32_t componentsCount, uint32_t* attributesCount)
 {
 	VkVertexInputAttributeDescription* bindings = (VkVertexInputAttributeDescription*)malloc(sizeof(VkVertexInputAttributeDescription) * componentsCount);
 
 	for (uint32_t i = 0; i < componentsCount; i++) {
-		VertexComponent component = vertexComponents[i];
+		CRen_VertexComponent component = vertexComponents[i];
 		VkVertexInputAttributeDescription desc = { 0 };
 		desc.binding = 0;
 		desc.location = (uint32_t)component;
@@ -43,42 +43,42 @@ static VkVertexInputAttributeDescription* internal_crenvk_get_attribute_descript
 			case VERTEX_COMPONENT_POSITION:
 			{
 				desc.format = VK_FORMAT_R32G32B32_SFLOAT;
-				desc.offset = offsetof(Vertex, position);
+				desc.offset = offsetof(CRenVertex, position);
 				break;
 			}
 
 			case VERTEX_COMPONENT_NORMAL:
 			{
 				desc.format = VK_FORMAT_R32G32B32_SFLOAT;
-				desc.offset = offsetof(Vertex, normal);
+				desc.offset = offsetof(CRenVertex, normal);
 				break;
 			}
 
 			case VERTEX_COMPONENT_UV_0:
 			{
 				desc.format = VK_FORMAT_R32G32_SFLOAT;
-				desc.offset = offsetof(Vertex, uv_0);
+				desc.offset = offsetof(CRenVertex, uv_0);
 				break;
 			}
 
 			case VERTEX_COMPONENT_COLOR_0:
 			{
 				desc.format = VK_FORMAT_R32G32B32A32_SFLOAT;
-				desc.offset = offsetof(Vertex, color_0);
+				desc.offset = offsetof(CRenVertex, color_0);
 				break;
 			}
 
 			case VERTEX_COMPONENT_WEIGHTS_0:
 			{
 				desc.format = VK_FORMAT_R32G32B32A32_SFLOAT;
-				desc.offset = offsetof(Vertex, weights_0);
+				desc.offset = offsetof(CRenVertex, weights_0);
 				break;
 			}
 
 			case VERTEX_COMPONENT_JOINTS_0:
 			{
 				desc.format = VK_FORMAT_R32G32B32A32_SFLOAT;
-				desc.offset = offsetof(Vertex, joints_0);
+				desc.offset = offsetof(CRenVertex, joints_0);
 				break;
 			}
 
@@ -91,7 +91,7 @@ static VkVertexInputAttributeDescription* internal_crenvk_get_attribute_descript
 }
 
 
-static VkPipelineVertexInputStateCreateInfo internal_crenvk_pipeline_populate_visci(vkPipeline* pipeline, VertexComponent* vertexComponents, uint32_t componentsCount)
+static VkPipelineVertexInputStateCreateInfo internal_crenvk_pipeline_populate_visci(vkPipeline* pipeline, CRen_VertexComponent* vertexComponents, uint32_t componentsCount)
 {
 	pipeline->bindingsDescription = internal_crenvk_pipeline_get_binding_descriptions(pipeline->passingVertexData, &pipeline->bindingsDescriptionCount);
 	pipeline->attributesDescription = internal_crenvk_get_attribute_descriptions(vertexComponents, componentsCount, &pipeline->attributesDescriptionCount);
@@ -125,12 +125,7 @@ CREN_API VkResult crenvk_pipeline_create(VkDevice device, vkPipelineCreateInfo* 
 	descSetLayoutCI.flags = 0;
 	descSetLayoutCI.bindingCount = ci->bindingsCount;
 	descSetLayoutCI.pBindings = ci->bindings;
-
-	VkResult res = vkCreateDescriptorSetLayout(device, &descSetLayoutCI, NULL, &outPipe->descriptorSetLayout);
-	if (res != VK_SUCCESS) {
-		CREN_LOG(CRenLogSeverity_Error, "Failed to create descriptor set layout");
-		return res;
-	}
+	CREN_ASSERT(vkCreateDescriptorSetLayout(device, &descSetLayoutCI, NULL, &outPipe->descriptorSetLayout) == VK_SUCCESS, "Failed to create descriptor set layout");
 
 	// pipeline layout
 	VkPipelineLayoutCreateInfo pipelineLayoutCI = { 0 };
@@ -141,13 +136,7 @@ CREN_API VkResult crenvk_pipeline_create(VkDevice device, vkPipelineCreateInfo* 
 	pipelineLayoutCI.pSetLayouts = &outPipe->descriptorSetLayout;
 	pipelineLayoutCI.pushConstantRangeCount = ci->pushConstantsCount;
 	pipelineLayoutCI.pPushConstantRanges = ci->pushConstants;
-
-	res = vkCreatePipelineLayout(device, &pipelineLayoutCI, NULL, &outPipe->layout);
-	if (res != VK_SUCCESS) {
-		vkDestroyDescriptorSetLayout(device, outPipe->descriptorSetLayout, NULL);
-		CREN_LOG(CRenLogSeverity_Error, "Failed to create pipeline layout");
-		return res;
-	}
+	CREN_ASSERT(vkCreatePipelineLayout(device, &pipelineLayoutCI, NULL, &outPipe->layout) == VK_SUCCESS, "Failed to create pipeline layout");
 
 	// vertex input state
 	outPipe->vertexInputState = internal_crenvk_pipeline_populate_visci(outPipe, ci->vertexComponents, ci->vertexComponentsCount);
@@ -272,14 +261,14 @@ CREN_API VkResult crenvk_pipeline_build(VkDevice device, vkPipeline* pipeline)
 
 	VkResult res = vkCreateGraphicsPipelines(device, pipeline->cache, 1, &ci, NULL, &pipeline->pipeline);
 	if (res != VK_SUCCESS) {
-		CREN_LOG(CRenLogSeverity_Error, "Failed to build the graphics pipeline {%d}", res);
+		CREN_LOG(CREN_LOG_SEVERITY_ERROR, "Failed to build the graphics pipeline {%d}", res);
 		return res;
 	}
 
 	return VK_SUCCESS;
 }
 
-CREN_API vkShader crenvk_pipeline_create_shader(VkDevice device, const char* name, const char* path, ShaderType type)
+CREN_API vkShader crenvk_pipeline_create_shader(VkDevice device, const char* name, const char* path, CRen_ShaderType type)
 {
 	vkShader shader = { 0 };
     shader.name = name;
@@ -303,7 +292,7 @@ CREN_API vkShader crenvk_pipeline_create_shader(VkDevice device, const char* nam
 
     unsigned long long spirvSize = 0;
     unsigned int* spirvCode = cren_load_file(path, &spirvSize);
-    if (spirvCode == NULL) CREN_LOG(CRenLogSeverity_Error, "SPIR-V code is NULL, therefore could not load file");
+    if (spirvCode == NULL) CREN_LOG(CREN_LOG_SEVERITY_ERROR, "SPIR-V code is NULL, therefore could not load file");
 
     VkShaderModuleCreateInfo moduleCI = { 0 };
     moduleCI.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
@@ -321,10 +310,9 @@ CREN_API void crenvk_pipeline_renderpass_release(VkDevice device, vkRenderpass* 
 {
 	vkDeviceWaitIdle(device);
 
-	if (renderpass->descriptorPool) vkDestroyDescriptorPool(device, renderpass->descriptorPool, NULL);
-	if (renderpass->renderPass) vkDestroyRenderPass(device, renderpass->renderPass, NULL);
+	if (renderpass->renderPass != VK_NULL_HANDLE) vkDestroyRenderPass(device, renderpass->renderPass, NULL);
 	if (renderpass->commandBuffers) vkFreeCommandBuffers(device, renderpass->commandPool, CREN_CONCURRENTLY_RENDERED_FRAMES, renderpass->commandBuffers);
-	if (renderpass->commandPool) vkDestroyCommandPool(device, renderpass->commandPool, NULL);
+	if (renderpass->commandPool != VK_NULL_HANDLE) vkDestroyCommandPool(device, renderpass->commandPool, NULL);
 
 	for (unsigned int i = 0; i < renderpass->framebuffersCount; i++) {
 		vkDestroyFramebuffer(device, renderpass->framebuffers[i], NULL);
@@ -380,7 +368,7 @@ CREN_API VkResult crenvk_pipeline_create_quad(shashtable* pipelines, vkRenderpas
 	defaultPipeline = (vkPipeline*)malloc(sizeof(vkPipeline));
 	VkResult res = crenvk_pipeline_create(device, &ci, defaultPipeline);
 	if (res != VK_SUCCESS || defaultPipeline == NULL) {
-		CREN_LOG(CRenLogSeverity_Fatal, "Failed to create quad default pipeline");
+		CREN_LOG(CREN_LOG_SEVERITY_FATAL, "Failed to create quad default pipeline");
 		return res;
 	}
 
@@ -388,7 +376,7 @@ CREN_API VkResult crenvk_pipeline_create_quad(shashtable* pipelines, vkRenderpas
 
 	res = crenvk_pipeline_build(device, defaultPipeline);
 	if (res != VK_SUCCESS) {
-		CREN_LOG(CRenLogSeverity_Fatal, "Failed to build quad default pipeline");
+		CREN_LOG(CREN_LOG_SEVERITY_FATAL, "Failed to build quad default pipeline");
 		return res;
 	}
 
@@ -440,7 +428,7 @@ CREN_API VkResult crenvk_pipeline_create_quad(shashtable* pipelines, vkRenderpas
 	pickingPipeline = (vkPipeline*)malloc(sizeof(vkPipeline));
 	res = crenvk_pipeline_create(device, &ci, pickingPipeline);
 	if (res != VK_SUCCESS || pickingPipeline == NULL) {
-		CREN_LOG(CRenLogSeverity_Fatal, "Failed to create quad picking pipeline");
+		CREN_LOG(CREN_LOG_SEVERITY_FATAL, "Failed to create quad picking pipeline");
 		return res;
 	}
 
@@ -449,14 +437,14 @@ CREN_API VkResult crenvk_pipeline_create_quad(shashtable* pipelines, vkRenderpas
 
 	res = crenvk_pipeline_build(device, pickingPipeline);
 	if (res != VK_SUCCESS) {
-		CREN_LOG(CRenLogSeverity_Fatal, "Failed to build quad picking pipeline");
+		CREN_LOG(CREN_LOG_SEVERITY_FATAL, "Failed to build quad picking pipeline");
 		return res;
 	}
 
 	ctoolres = shashtable_insert(pipelines, CREN_PIPELINE_QUAD_PICKING_NAME, pickingPipeline);
 	CREN_ASSERT(ctoolres == CTOOLBOX_SUCCESS, "Failed to insert quad picking pipeline into pipeline's library");
 
-	CREN_LOG(CRenLogSeverity_Todo, "Create wireframe pipeline");
+	CREN_LOG(CREN_LOG_SEVERITY_TODO, "Create wireframe pipeline");
 	return VK_SUCCESS;
 }
 

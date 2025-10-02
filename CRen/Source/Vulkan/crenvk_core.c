@@ -15,22 +15,22 @@
 static VKAPI_ATTR VkBool32 VKAPI_CALL internal_crenvk_debug_callback(VkDebugUtilsMessageSeverityFlagBitsEXT severity, VkDebugUtilsMessageTypeFlagsEXT type, const VkDebugUtilsMessengerCallbackDataEXT* callback, void* userData)
 {
     if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT) {
-        CREN_LOG(CRenLogSeverity_Error, "%s\n", callback->pMessage);
+        CREN_LOG(CREN_LOG_SEVERITY_ERROR, "%s\n", callback->pMessage);
         return VK_FALSE;
     }
 
     if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
-        CREN_LOG(CRenLogSeverity_Warn, "%s\n", callback->pMessage);
+        CREN_LOG(CREN_LOG_SEVERITY_WARN, "%s\n", callback->pMessage);
         return VK_FALSE;
     }
 
     if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT) {
-        CREN_LOG(CRenLogSeverity_Info, "%s\n", callback->pMessage);
+        CREN_LOG(CREN_LOG_SEVERITY_INFO, "%s\n", callback->pMessage);
         return VK_FALSE;
     }
 
     if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT) {
-        CREN_LOG(CRenLogSeverity_Trace, "%s\n", callback->pMessage);
+        CREN_LOG(CREN_LOG_SEVERITY_TRACE, "%s\n", callback->pMessage);
         return VK_FALSE;
     }
     return VK_TRUE;
@@ -46,9 +46,9 @@ void crenvk_instance_create(CRenContext* context, vkInstance* instance, const ch
     instance->debugger = VK_NULL_HANDLE;
     instance->validationsEnabled = validations;
 
-    CREN_LOG(CRenLogSeverity_Trace, "Requesting %u instance extensions:", count);
+    CREN_LOG(CREN_LOG_SEVERITY_TRACE, "Requesting %u instance extensions:", count);
     for (uint32_t i = 0; i < count; i++) {
-        CREN_LOG(CRenLogSeverity_Trace, "  [%u] %s", i, extensions[i]);
+        CREN_LOG(CREN_LOG_SEVERITY_TRACE, "  [%u] %s", i, extensions[i]);
     }
 
     // application info - fully initialized
@@ -95,7 +95,7 @@ void crenvk_instance_create(CRenContext* context, vkInstance* instance, const ch
     // create instance
     VkResult result = vkCreateInstance(&instanceCI, NULL, &instance->instance);
     if (result != VK_SUCCESS) {
-        CREN_LOG(CRenLogSeverity_Error, "Failed to create Vulkan Instance: %d", result);
+        CREN_LOG(CREN_LOG_SEVERITY_ERROR, "Failed to create Vulkan Instance: %d", result);
         return;
     }
 
@@ -106,15 +106,13 @@ void crenvk_instance_create(CRenContext* context, vkInstance* instance, const ch
         if (createDebugFunc) {
             result = createDebugFunc(instance->instance, &debugUtilsCI, NULL, &instance->debugger);
             if (result != VK_SUCCESS) {
-                CREN_LOG(CRenLogSeverity_Warn, "Failed to create Vulkan Debug Messenger: %d", result);
+                CREN_LOG(CREN_LOG_SEVERITY_WARN, "Failed to create Vulkan Debug Messenger: %d", result);
                 instance->debugger = VK_NULL_HANDLE;
             }
         } else {
-            CREN_LOG(CRenLogSeverity_Warn, "vkCreateDebugUtilsMessengerEXT not available");
+            CREN_LOG(CREN_LOG_SEVERITY_WARN, "vkCreateDebugUtilsMessengerEXT not available");
         }
     }
-
-    CREN_LOG(CRenLogSeverity_Trace, "Vulkan instance created successfully");
 }
 
 void crenvk_instance_destroy(vkInstance* instance)
@@ -374,7 +372,7 @@ VkResult crenvk_device_create_buffer(VkDevice device, VkPhysicalDevice physicalD
 
     res = vkCreateBuffer(device, &bufferCI, NULL, buffer);
     if (res != VK_SUCCESS) {
-        CREN_LOG(CRenLogSeverity_Error, "Failed to create buffer on GPU");
+        CREN_LOG(CREN_LOG_SEVERITY_ERROR, "Failed to create buffer on GPU");
         return res;
     }
 
@@ -389,14 +387,14 @@ VkResult crenvk_device_create_buffer(VkDevice device, VkPhysicalDevice physicalD
 
     res = vkAllocateMemory(device, &allocInfo, NULL, memory);
     if (res != VK_SUCCESS) {
-        CREN_LOG(CRenLogSeverity_Error, "Failed to allocate memory for GPU buffer");
+        CREN_LOG(CREN_LOG_SEVERITY_ERROR, "Failed to allocate memory for GPU buffer");
         vkDestroyBuffer(device, *buffer, NULL);
         return res;
     }
 
     res = vkBindBufferMemory(device, *buffer, *memory, 0);
     if (res != VK_SUCCESS) {
-        CREN_LOG(CRenLogSeverity_Error, "Failed to bind GPU memory with buffer");
+        CREN_LOG(CREN_LOG_SEVERITY_ERROR, "Failed to bind GPU memory with buffer");
         vkDestroyBuffer(device, *buffer, NULL);
         vkFreeMemory(device, *memory, NULL);
         return res;
@@ -412,7 +410,7 @@ VkResult crenvk_device_create_buffer(VkDevice device, VkPhysicalDevice physicalD
         }
 
         else {
-            CREN_LOG(CRenLogSeverity_Warn, "Failed to map memory for data upload (VkResult: %d)", res);
+            CREN_LOG(CREN_LOG_SEVERITY_WARN, "Failed to map memory for data upload (VkResult: %d)", res);
         }
     }
     return VK_SUCCESS;
@@ -435,7 +433,7 @@ VkCommandBuffer crenvk_device_begin_commandbuffer_singletime(VkDevice device, Vk
 
     VkResult res = vkBeginCommandBuffer(commandBuffer, &cmdBufferBeginInfo);
     if (res != VK_SUCCESS) {
-        CREN_LOG(CRenLogSeverity_Error, "Failed to begin command buffer");
+        CREN_LOG(CREN_LOG_SEVERITY_ERROR, "Failed to begin command buffer");
     }
 
     return commandBuffer;
@@ -452,12 +450,12 @@ void crenvk_device_end_commandbuffer_singletime(VkDevice device, VkCommandPool c
 
     VkResult res = vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE);
     if (res != VK_SUCCESS) {
-        CREN_LOG(CRenLogSeverity_Error, "Failed to submit command buffer to queue");
+        CREN_LOG(CREN_LOG_SEVERITY_ERROR, "Failed to submit command buffer to queue");
     }
 
     res = vkQueueWaitIdle(queue);
     if (res != VK_SUCCESS) {
-        CREN_LOG(CRenLogSeverity_Error, "Failed to await queue response from sent command buffer");
+        CREN_LOG(CREN_LOG_SEVERITY_ERROR, "Failed to await queue response from sent command buffer");
     }
 
     vkFreeCommandBuffers(device, cmdPool, 1, &cmdBuffer);
@@ -468,13 +466,14 @@ unsigned int crenvk_device_find_memory_type(VkPhysicalDevice physicalDevice, uns
     VkPhysicalDeviceMemoryProperties memProperties;
     vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
 
-    for (unsigned int i = 0; i < memProperties.memoryTypeCount; i++) {
+    for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
         if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
             return i;
         }
     }
 
-    return 0;
+    CREN_LOG(CREN_LOG_SEVERITY_ERROR, "Failed to find suitable memory type");
+    return UINT32_MAX;
 }
 
 VkFormat crenvk_device_find_suitable_format(VkPhysicalDevice physicalDevice, const VkFormat* candidates, unsigned int candidatesCount, VkImageTiling tiling, VkFormatFeatureFlags features)
@@ -522,7 +521,7 @@ VkResult crenvk_device_create_image(unsigned int width, unsigned int height, uns
 
     res = vkCreateImage(device, &imageCI, NULL, image);
     if (res != VK_SUCCESS) {
-        CREN_LOG(CRenLogSeverity_Error, "Failed to create device image (%d)", res);
+        CREN_LOG(CREN_LOG_SEVERITY_ERROR, "Failed to create device image (%d)", res);
         return res;
     }
 
@@ -537,13 +536,13 @@ VkResult crenvk_device_create_image(unsigned int width, unsigned int height, uns
 
     res = vkAllocateMemory(device, &allocInfo, NULL, memory);
     if (res != VK_SUCCESS) {
-        CREN_LOG(CRenLogSeverity_Error, "Failed to allocate memory for the device image (%d)", res);
+        CREN_LOG(CREN_LOG_SEVERITY_ERROR, "Failed to allocate memory for the device image (%d)", res);
         return res;
     }
 
     res = vkBindImageMemory(device, *image, *memory, 0);
     if (res != VK_SUCCESS) {
-        CREN_LOG(CRenLogSeverity_Error, "Failed to bind memory with device image (%d)", res);
+        CREN_LOG(CREN_LOG_SEVERITY_ERROR, "Failed to bind memory with device image (%d)", res);
         return res;
     }
 
@@ -553,7 +552,7 @@ VkResult crenvk_device_create_image(unsigned int width, unsigned int height, uns
 VkResult crenvk_device_create_image_view(VkDevice device, VkImage image, VkFormat format, VkImageAspectFlags aspect, unsigned int mipLevels, unsigned int layerCount, VkImageViewType viewType, const VkComponentMapping* swizzle, VkImageView* outView)
 {
     if (mipLevels == 0 || layerCount == 0) {
-        CREN_LOG(CRenLogSeverity_Error, "Invalid mipLevels or layerCount (must be >= 1)");
+        CREN_LOG(CREN_LOG_SEVERITY_ERROR, "Invalid mipLevels or layerCount (must be >= 1)");
         return VK_ERROR_INITIALIZATION_FAILED;
     }
 
@@ -579,7 +578,7 @@ VkResult crenvk_device_create_image_view(VkDevice device, VkImage image, VkForma
 
     VkResult res = vkCreateImageView(device, &imageViewCI, NULL, outView);
     if (res != VK_SUCCESS) {
-        CREN_LOG(CRenLogSeverity_Error, "Failed to create image view (VkResult: %d)", res);
+        CREN_LOG(CREN_LOG_SEVERITY_ERROR, "Failed to create image view (VkResult: %d)", res);
         return res;
     }
 
@@ -611,7 +610,7 @@ VkResult crenvk_device_create_image_sampler(VkDevice device, VkPhysicalDevice ph
 
     VkResult res = vkCreateSampler(device, &samplerCI, NULL, outSampler);
     if (res != VK_SUCCESS) {
-        CREN_LOG(CRenLogSeverity_Error, "Failed to create image sampler");
+        CREN_LOG(CREN_LOG_SEVERITY_ERROR, "Failed to create image sampler");
         return res;
     }
 
@@ -628,7 +627,7 @@ VkResult crenvk_device_create_image_descriptor_set(VkDevice device, VkDescriptor
     allocInfo.pSetLayouts = &descriptorSetLayout;
     VkResult res = vkAllocateDescriptorSets(device, &allocInfo, outDescriptor);
     if (res != VK_SUCCESS) {
-        CREN_LOG(CRenLogSeverity_Error, "Failed to allocate descriptor set");
+        CREN_LOG(CREN_LOG_SEVERITY_ERROR, "Failed to allocate descriptor set");
         return res;
     }
 
@@ -766,7 +765,7 @@ VkResult crenvk_device_image_transition_layout(VkDevice device, VkQueue queue, V
 
     else
     {
-        CREN_LOG(CRenLogSeverity_Error, "The transition of layout OLD:%d NEW:%d is not supported (See VkImageLayout)", oldLayout, newLayout);
+        CREN_LOG(CREN_LOG_SEVERITY_ERROR, "The transition of layout OLD:%d NEW:%d is not supported (See VkImageLayout)", oldLayout, newLayout);
         return VK_ERROR_INITIALIZATION_FAILED;
     }
 
@@ -799,8 +798,6 @@ void crenvk_device_insert_image_memory_barrier(VkCommandBuffer cmdBuffer, VkImag
 /// @brief queries information for the swapchain, like available surface formats and etc.
 static vkSwapchainDetails internal_crenvk_query_swapchain_details(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface)
 {
-    CREN_LOG(CRenLogSeverity_Trace, "Querying swapchain details for device: %p, surface: %p", (void*)physicalDevice, (void*)surface);
-    
     vkSwapchainDetails details = { 0 };   
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &details.capabilities);
     vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &details.surfaceFormatCount, NULL);

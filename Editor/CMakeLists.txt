@@ -36,3 +36,4 @@ set_target_properties(Editor PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "$<TARGET_
 
 # ------------------------------------------------------------------------------------------------------------- dependencies
 target_link_libraries(Editor PRIVATE CRen Engine)
+target_link_directories(Editor PUBLIC ${CMAKE_SOURCE_DIR}/Bin)

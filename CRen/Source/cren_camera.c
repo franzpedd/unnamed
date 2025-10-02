@@ -16,7 +16,7 @@ static void internal_camera_update_view_matrix(CRenCamera* camera)
 	camera->viewPosition = camera->position;
 }
 
-CRenCamera cren_camera_create(CRen_CameraType type, float initialAspectRatio, CRen_Renderer api)
+CREN_API CRenCamera cren_camera_create(CRen_CameraType type, float initialAspectRatio, CRen_Renderer api)
 {
 	CRenCamera camera = { 0 };
 	camera.type = type;
@@ -39,11 +39,11 @@ CRenCamera cren_camera_create(CRen_CameraType type, float initialAspectRatio, CR
 
 	// calculate initial perspective
 	if (camera.api == CREN_RENDERER_API_VULKAN_1_1 || camera.api == CREN_RENDERER_API_VULKAN_1_2 || camera.api == CREN_RENDERER_API_VULKAN_1_3) {
-		CREN_LOG(CRenLogSeverity_Info, "This math function needs verifing");
+		CREN_LOG(CREN_LOG_SEVERITY_INFO, "This math function needs verifing");
 		camera.perspective = fmat4_perspective_vulkan(to_fradians(camera.fov), initialAspectRatio, camera.near, camera.far);
 	}
 	else {
-		CREN_LOG(CRenLogSeverity_Fatal, "The camera system is only functional under vulkan right now");
+		CREN_LOG(CREN_LOG_SEVERITY_FATAL, "The camera system is only functional under vulkan right now");
 	}
 
 	// update initial view
@@ -52,7 +52,7 @@ CRenCamera cren_camera_create(CRen_CameraType type, float initialAspectRatio, CR
 	return camera;
 }
 
-void cren_camera_update(CRenCamera* camera, float timestep)
+CREN_API void cren_camera_update(CRenCamera* camera, float timestep)
 {
 	if (!camera->shouldMove) return;
 
@@ -96,27 +96,27 @@ void cren_camera_update(CRenCamera* camera, float timestep)
 	internal_camera_update_view_matrix(camera);
 }
 
-void cren_camera_set_aspect_ratio(CRenCamera* camera, float aspect)
+CREN_API void cren_camera_set_aspect_ratio(CRenCamera* camera, float aspect)
 {
 	if (camera->api == CREN_RENDERER_API_VULKAN_1_1 || camera->api == CREN_RENDERER_API_VULKAN_1_2 || camera->api == CREN_RENDERER_API_VULKAN_1_3) {
-		CREN_LOG(CRenLogSeverity_Info, "This math function needs verifing");
+		CREN_LOG(CREN_LOG_SEVERITY_INFO, "This math function needs verifing");
 		camera->perspective = fmat4_perspective_vulkan(to_fradians(camera->fov), aspect, camera->near, camera->far);
 	}
 
 	else {
-		CREN_LOG(CRenLogSeverity_Fatal, "The camera system is only functional under vulkan right now");
+		CREN_LOG(CREN_LOG_SEVERITY_FATAL, "The camera system is only functional under vulkan right now");
 	}
 
 	camera->aspectRatio = aspect;
 }
 
-void cren_camera_translate(CRenCamera* camera, float3 dir)
+CREN_API void cren_camera_translate(CRenCamera* camera, float3 dir)
 {
 	camera->position = float3_add(&camera->position, &dir);
 	internal_camera_update_view_matrix(camera);
 }
 
-void cren_camera_rotate(CRenCamera* camera, float3 dir)
+CREN_API void cren_camera_rotate(CRenCamera* camera, float3 dir)
 {
 	camera->rotation = float3_add(&camera->rotation, &dir);
 	internal_camera_update_view_matrix(camera);

@@ -6,7 +6,6 @@
 #include <SDL3/SDL_video.h>
 #include <SDL3/SDL_vulkan.h>
 #include <backends/imgui_impl_sdl3.h>
-#include "Window.h"
 
 namespace Cosmos
 {
@@ -14,7 +13,7 @@ namespace Cosmos
 		: mApp(app), mTitle(title), mWidth(width), mHeight(height)
 	{
 		if (SDL_Init(SDL_INIT_VIDEO) == false) {
-			CREN_LOG(CRenLogSeverity_Fatal, "SDL could not be initialized, more info: %s", SDL_GetError());
+			CREN_LOG(CREN_LOG_SEVERITY_FATAL, "SDL could not be initialized, more info: %s", SDL_GetError());
 			return;
 		}
 
@@ -24,13 +23,13 @@ namespace Cosmos
 		mNativeWindow = SDL_CreateWindow(title, width, height, flags);
 
 		if (!mNativeWindow) {
-			CREN_LOG(CRenLogSeverity_Fatal, "Window could not be created, more info: %s", SDL_GetError());
+			CREN_LOG(CREN_LOG_SEVERITY_FATAL, "Window could not be created, more info: %s", SDL_GetError());
 			SDL_Quit();
 			return;
 		}
 
-		CREN_LOG(CRenLogSeverity_Todo, "Implement mobile touch events");
-		CREN_LOG(CRenLogSeverity_Todo, "Implement imgui event");
+		CREN_LOG(CREN_LOG_SEVERITY_TODO, "Implement mobile touch events");
+		CREN_LOG(CREN_LOG_SEVERITY_TODO, "Implement imgui event");
 
 		// window logo
 		char iconPath[128];
@@ -39,7 +38,7 @@ namespace Cosmos
 		int iconWidth, iconHeight, iconChannels;
 		unsigned char* sIcon = cren_stbimage_load_from_file(iconPath, 4, &iconWidth, &iconHeight, &iconChannels);
 		if (!sIcon) {
-			CREN_LOG(CRenLogSeverity_Error, "%s", cren_stbimage_get_error());
+			CREN_LOG(CREN_LOG_SEVERITY_ERROR, "%s", cren_stbimage_get_error());
 		}
 
 		SDL_Surface* iconSurface = SDL_CreateSurfaceFrom(iconWidth, iconHeight, SDL_PIXELFORMAT_RGBA32, sIcon, iconWidth * 4);
@@ -180,7 +179,7 @@ namespace Cosmos
     void Window::CreateSurface(void *instance, void *surface)
     {
 		if (!SDL_Vulkan_CreateSurface(mNativeWindow, (VkInstance)instance, nullptr, (VkSurfaceKHR*)surface)) {
-			CREN_LOG(CRenLogSeverity_Fatal, "Failed to create Vulkan Surface trought SDL");
+			CREN_LOG(CREN_LOG_SEVERITY_FATAL, "Failed to create Vulkan Surface trought SDL");
 		}
     }
 
