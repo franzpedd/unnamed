@@ -2,6 +2,10 @@
 
 #include <Cosmos.h>
 
+// forward declarations
+namespace Cosmos { class Dockspace; }
+namespace Cosmos { class Viewport; }
+
 namespace Cosmos
 {
 	class Editor : public Application
@@ -15,6 +19,7 @@ namespace Cosmos
 		virtual ~Editor();
 
 	private:
-
+		Dockspace* mDockspace = nullptr;
+		Viewport* mViewport = nullptr;
 	};
 }

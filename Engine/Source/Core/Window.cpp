@@ -42,7 +42,7 @@ namespace Cosmos
 		}
 
 		SDL_Surface* iconSurface = SDL_CreateSurfaceFrom(iconWidth, iconHeight, SDL_PIXELFORMAT_RGBA32, sIcon, iconWidth * 4);
-		SDL_SetWindowIcon(mNativeWindow, iconSurface);
+		SDL_SetWindowIcon(mNativeWindow, iconSurface); // this only works on desktop
 		SDL_DestroySurface(iconSurface);
 		cren_stbimage_destroy(sIcon);
 	}

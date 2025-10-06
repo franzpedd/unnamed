@@ -11,9 +11,213 @@ namespace Cosmos
 	}
 }
 
+namespace Cosmos::UIWidget
+{
+	COSMOS_API ID GetID(const char* name)
+	{
+		return (ID)ImGui::GetID("##MyDockspace");
+	}
+
+	COSMOS_API bool BeginContext(const char* name, bool* open, ContextFlags flags)
+	{
+		return ImGui::Begin(name, open, flags);
+	}
+
+	COSMOS_API void EndContext()
+	{
+		ImGui::End();
+	}
+
+	COSMOS_API bool BeginChildContext(const char* name, const float2& size, ContextChildFlags childFlags, ContextFlags windowFlags)
+	{
+		return ImGui::BeginChild(name, { size.xy.x, size.xy.y }, childFlags, windowFlags);
+	}
+
+	COSMOS_API void EndChildContext()
+	{
+		ImGui::EndChild();
+	}
+
+	COSMOS_API uint32_t Dockspace(ID id, const float2& size)
+	{
+		return ImGui::DockSpace(id, { size.xy.x, size.xy.y });
+	}
+
+	COSMOS_API void SetNextWindowSize(const float2& size)
+	{
+		ImGui::SetNextWindowSize({ size.xy.x, size.xy.y });
+	}
+
+	COSMOS_API void SetNextWindowPos(const float2& pos, const float2& pivot)
+	{
+		ImGui::SetNextWindowPos({ pos.xy.x, pos.xy.y }, 0, { pivot.xy.x, pivot.xy.y });
+	}
+
+	COSMOS_API float2 GetCurrentWindowSize()
+	{
+		ImVec2 size = ImGui::GetWindowSize();
+		return { size.x, size.y };
+	}
+
+	COSMOS_API float2 GetCurrentWindowPos()
+	{
+		ImVec2 pos = ImGui::GetWindowPos();
+		return { pos.x, pos.y };
+	}
+
+	COSMOS_API float2 GetMainViewportSize()
+	{
+		ImVec2 size = ImGui::GetMainViewport()->Size;
+		return { size.x, size.y };
+	}
+
+	COSMOS_API float2 GetMainViewportPosition()
+	{
+		ImVec2 pos = ImGui::GetMainViewport()->Pos;
+		return { pos.x, pos.y };
+	}
+
+	COSMOS_API float2 GetContentRegionAvail()
+	{
+		ImVec2 size = ImGui::GetContentRegionAvail();
+		return { size.x, size.y };
+	}
+
+	COSMOS_API bool IsItemHovered(HoveredFlags flags)
+	{
+		return ImGui::IsItemHovered((ImGuiHoveredFlags)flags);
+	}
+
+	COSMOS_API void SetCursorPos(float2 pos)
+	{
+		ImGui::SetCursorPos({ pos.xy.x, pos.xy.y });
+	}
+
+	COSMOS_API void SetCursorPosX(float value)
+	{
+		ImGui::SetCursorPosX(value);
+	}
+
+	COSMOS_API void SetCursorPosY(float value)
+	{
+		ImGui::SetCursorPosY(value);
+	}
+
+	COSMOS_API float2 GetCursorPos()
+	{
+		ImVec2 pos = ImGui::GetCursorPos();
+		return { pos.x, pos.y };
+	}
+
+	COSMOS_API float GetCursorPosX()
+	{
+		return ImGui::GetCursorPosX();
+	}
+
+	COSMOS_API float GetCursorPosY()
+	{
+		return ImGui::GetCursorPosY();
+	}
+
+	COSMOS_API void SameLine(float startOffset, float spacing)
+	{
+		ImGui::SameLine(startOffset, spacing);
+	}
+
+	COSMOS_API void NewLine()
+	{
+		ImGui::NewLine();
+	}
+
+	COSMOS_API void Separator(float thickness, bool vertical)
+	{
+		ImGui::SeparatorEx(vertical == true ? ImGuiSeparatorFlags_Vertical : ImGuiSeparatorFlags_Horizontal, thickness);
+	}
+
+	COSMOS_API void PushStyleVar(const StyleVar var, float value)
+	{
+		ImGui::PushStyleVar((ImGuiStyleVar)var, value);
+	}
+
+	COSMOS_API void PushStyleVar(const StyleVar var, float2 value)
+	{
+		ImGui::PushStyleVar((ImGuiStyleVar)var, { value.xy.x, value.xy.y });
+	}
+
+	COSMOS_API void PopStyleVar(uint32_t count)
+	{
+		ImGui::PopStyleVar(count);
+	}
+
+	COSMOS_API void PushStyleColor(const StyleColor color, float4 value)
+	{
+		ImGui::PushStyleColor((ImGuiCol)color, { value.xyzw.x, value.xyzw.y, value.xyzw.z, value.xyzw.w });
+	}
+
+	COSMOS_API void PopStyleColor(uint32_t count)
+	{
+		ImGui::PopStyleColor(count);
+	}
+
+	COSMOS_API void PushItemWidth(float width)
+	{
+		ImGui::PushItemWidth(width);
+	}
+
+	COSMOS_API void PopItemWidth()
+	{
+		ImGui::PopItemWidth();
+	}
+
+	COSMOS_API void Text(const char* fmt, ...)
+	{
+		va_list args;
+		va_start(args, fmt);
+		ImGui::TextV(fmt, args);
+		va_end(args);
+	}
+
+	COSMOS_API void SeparatorText(const char* label)
+	{
+		ImGui::SeparatorText(label);
+	}
+
+	COSMOS_API bool URLText(const char* label, const char* url)
+	{
+		return ImGui::TextLinkOpenURL(label, url);
+	}
+
+	COSMOS_API bool Button(const char* label, const float2 size)
+	{
+		return ImGui::Button(label, { size.xy.x, size.xy.y });
+	}
+
+	COSMOS_API bool Selectable(const char* label, bool selected, SelectableFlags flags, const float2& size)
+	{
+		return ImGui::Selectable(label, selected, flags, { size.xy.x, size.xy.y });
+	}
+
+	COSMOS_API void Image(uint64_t TexID, const float2& size, const float2& uv0, const float2& uv1)
+	{
+		ImGui::Image((ImTextureRef)TexID, { size.xy.x, size.xy.y }, { uv0.xy.x, uv0.xy.y }, { uv1.xy.x, uv1.xy.y });
+	}
+
+	COSMOS_API void SetTooltip(const char* fmt, ...)
+	{
+		va_list args;
+		va_start(args, fmt);
+		ImGui::SetTooltipV(fmt, args);
+		va_end(args);
+	}
+	COSMOS_API bool SliderFloat(const char* label, float* v, float vmin, float vmax, const char* format, SliderFlags flags)
+	{
+		return ImGui::SliderFloat(label, v, vmin, vmax, format, (ImGuiSliderFlags)flags);
+	}
+}
+
 namespace Cosmos::WidgetExtended
 {
-	void TextCentered(const char* fmt, ...)
+	COSMOS_API void TextCentered(const char* fmt, ...)
 	{
 		auto windowWidth = ImGui::GetWindowSize().x;
 		auto textWidth = ImGui::CalcTextSize(fmt).x;
@@ -25,7 +229,7 @@ namespace Cosmos::WidgetExtended
 		va_end(args);
 	}
 
-	void FloatControl(const char* label, float* value)
+	COSMOS_API void FloatControl(const char* label, float* value)
 	{
 		ImGui::PushID(label);
 
@@ -54,7 +258,7 @@ namespace Cosmos::WidgetExtended
 		ImGui::PopID();
 	}
 
-	void Float2Control(const char* label, float* x, float* y)
+	COSMOS_API void Float2Control(const char* label, float* x, float* y)
 	{
 		ImGui::PushID(label);
 
@@ -99,7 +303,7 @@ namespace Cosmos::WidgetExtended
 		ImGui::PopID();
 	}
 
-	void Float3Controller(const char* label, float* x, float* y, float* z)
+	COSMOS_API void Float3Controller(const char* label, float* x, float* y, float* z)
 	{
 		ImGui::PushID(label);
 
@@ -161,12 +365,12 @@ namespace Cosmos::WidgetExtended
 		ImGui::PopID();
 	}
 
-	void VerticalSeparator(float thickness)
+	COSMOS_API void VerticalSeparator(float thickness)
 	{
 		ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical, thickness);
 	}
 
-	void TextBackground(float4 bgCol, float4 txtCol, const char* label, const char* fmt, ...)
+	COSMOS_API void TextBackground(float4 bgCol, float4 txtCol, const char* label, const char* fmt, ...)
 	{
 		ImVec4 bg = ImVec4(bgCol.xyzw.x, bgCol.xyzw.y, bgCol.xyzw.z, bgCol.xyzw.w);
 		ImVec4 txt = ImVec4(txtCol.xyzw.x, txtCol.xyzw.y, txtCol.xyzw.z, txtCol.xyzw.w);
@@ -184,7 +388,7 @@ namespace Cosmos::WidgetExtended
 		ImGui::PopStyleVar();
 	}
 
-	bool Checkbox(const char* label, bool* v)
+	COSMOS_API bool Checkbox(const char* label, bool* v)
 	{
 		ImGuiWindow* window = ImGui::GetCurrentWindow();
 
@@ -245,7 +449,7 @@ namespace Cosmos::WidgetExtended
 		return pressed;
 	}
 
-	bool CheckboxSliderEx(const char* label, bool* v)
+	COSMOS_API bool CheckboxSliderEx(const char* label, bool* v)
 	{
 		ImGui::Spacing();
 

@@ -593,7 +593,7 @@ CREN_API void crenvk_renderphase_picking_recreate(vkPickingRenderphase* phase, v
     crenvk_renderphase_picking_create_framebuffers(phase, device, physicalDevice, graphicsQueue, swapchain->swapchainImageViews, swapchain->swapchainImageCount, extent);
 }
 
-CREN_API void crenvk_renderphase_picking_update(vkPickingRenderphase* phase, void* context, void* backend, uint32_t currentFrame, uint32_t swapchainImageIndex, bool usingViewport, double timestep, CRenCallback_Render callback)
+CREN_API void crenvk_renderphase_picking_update(vkPickingRenderphase* phase, void* context, void* backend, uint32_t currentFrame, uint32_t swapchainImageIndex, bool usingViewport, float timestep, CRenCallback_Render callback)
 {
     CRenVulkanBackend* vkBackend = (CRenVulkanBackend*)backend;
 

@@ -146,11 +146,7 @@ namespace Cosmos
 		ImGui_ImplVulkan_Shutdown();
 		ImGui_ImplSDL3_Shutdown();
 
-		for (auto& widget : mWidgets.GetElementsRef()) {
-			delete widget;
-		}
-
-		mWidgets.GetElementsRef().clear();
+		mWidgets.Clear();
 		ImGui::DestroyContext((ImGuiContext*)mContext);
 	}
 
@@ -161,15 +157,16 @@ namespace Cosmos
 		ImGui::NewFrame();
 		ImGuizmo::BeginFrame();
 
-		for (auto& widget : mWidgets.GetElementsRef()) {
-			widget->OnUpdate();
-		}
+		mWidgets.ForEach([](Widget* widget)
+			{
+				if(widget->GetVisibility()) widget->OnUpdate();
+			});
 
-		// end frame
 		ImGui::Render();
 
 		ImGuiIO& io = ImGui::GetIO();
-		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+		{
 			ImGui::UpdatePlatformWindows();
 			ImGui::RenderPlatformWindowsDefault();
 		}
@@ -177,9 +174,10 @@ namespace Cosmos
 
 	void GUI::OnRender(int stage)
 	{
-		for (auto& widget : mWidgets.GetElementsRef()) {
-			widget->OnRender(stage);
-		}
+		mWidgets.ForEach([stage](Widget* widget)
+			{
+				if (widget->GetVisibility()) widget->OnRender(stage);
+			});
 	}
 
 	void GUI::AddWidget(Widget* widget)
@@ -187,22 +185,17 @@ namespace Cosmos
 		if (!widget) return;
 
 		if (!FindWidgetByName(widget->GetName())) {
-			mWidgets.Push(widget);
+			mWidgets.PushToTop(widget);
 		}
 	}
 
 	Widget* GUI::FindWidgetByName(const char* name)
 	{
-		Widget* found = nullptr;
-
-		for (auto& widget : mWidgets.GetElementsRef()) {
-			if (widget->GetName() == name) {
-				found = widget;
-				break;
-			}
-		}
-
-		return found;
+		auto result = mWidgets.FindIf([&name](Widget* widget)
+			{
+				return widget && strcmp(widget->GetName(), name) == 0;
+			});
+		return result ? *result : nullptr;
 	}
 
 	void GUI::ToggleCursor(bool hide)
@@ -220,65 +213,74 @@ namespace Cosmos
 
 	void GUI::OnMinimize()
 	{
-		for (auto& widget : mWidgets.GetElementsRef()) {
-			widget->OnMinimize();
-		}
+		mWidgets.ForEach([](Widget* widget)
+			{
+				if (widget->GetVisibility()) widget->OnMinimize();
+			});
 	}
 
 	void GUI::OnRestore(int width, int height)
 	{
-		for (auto& widget : mWidgets.GetElementsRef()) {
-			widget->OnRestore(width, height);
-		}
+		mWidgets.ForEach([width, height](Widget* widget)
+			{
+				if (widget->GetVisibility()) widget->OnRestore(width, height);
+			});
 	}
 
 	void GUI::OnResize(int width, int height)
 	{
-		for (auto& widget : mWidgets.GetElementsRef()) {
-			widget->OnResize(width, height);
-		}
+		mWidgets.ForEach([width, height](Widget* widget)
+			{
+				if (widget->GetVisibility()) widget->OnResize(width, height);
+			});
 	}
 
 	void GUI::OnKeyPress(Input::Keycode keycode, Input::Keymod mod, bool held)
 	{
-		for (auto& widget : mWidgets.GetElementsRef()) {
-			widget->OnKeyPress(keycode, mod, held);
-		}
+		mWidgets.ForEach([keycode, mod, held](Widget* widget)
+			{
+				if (widget->GetVisibility()) widget->OnKeyPress(keycode, mod, held);
+			});
 	}
 
 	void GUI::OnKeyRelease(Input::Keycode keycode)
 	{
-		for (auto& widget : mWidgets.GetElementsRef()) {
-			widget->OnKeyRelease(keycode);
-		}
+		mWidgets.ForEach([keycode](Widget* widget)
+			{
+				if (widget->GetVisibility()) widget->OnKeyRelease(keycode);
+			});
 	}
 
 	void GUI::OnButtonPress(Input::Buttoncode buttoncode, Input::Keymod mod)
 	{
-		for (auto& widget : mWidgets.GetElementsRef()) {
-			widget->OnButtonPress(buttoncode, mod);
-		}
+		mWidgets.ForEach([buttoncode, mod](Widget* widget)
+			{
+				if (widget->GetVisibility()) widget->OnButtonPress(buttoncode, mod);
+			});
 	}
 
 	void GUI::OnButtonRelease(Input::Buttoncode buttoncode)
 	{
-		for (auto& widget : mWidgets.GetElementsRef()) {
-			widget->OnButtonRelease(buttoncode);
-		}
+		mWidgets.ForEach([buttoncode](Widget* widget)
+			{
+				if (widget->GetVisibility()) widget->OnButtonRelease(buttoncode);
+			});
 	}
 
 	void GUI::OnMouseScroll(double xoffset, double yoffset)
 	{
-		for (auto& widget : mWidgets.GetElementsRef()) {
-			widget->OnMouseScroll(xoffset, yoffset);
-		}
+		mWidgets.ForEach([xoffset, yoffset](Widget* widget)
+			{
+				if (widget->GetVisibility()) widget->OnMouseScroll(xoffset, yoffset);
+			});
 	}
 
 	void GUI::OnMouseMove(double xpos, double ypos)
 	{
-		for (auto& widget : mWidgets.GetElementsRef()) {
-			widget->OnMouseMove(xpos, ypos);
-		}
+		mWidgets.ForEach([xpos, ypos](Widget* widget)
+			{
+				if (widget->GetVisibility()) widget->OnMouseMove(xpos, ypos);
+			});
 	}
 
 	void GUI::OnDPIChange(float scale)

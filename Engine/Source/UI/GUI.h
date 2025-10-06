@@ -1,14 +1,15 @@
 #pragma once
 
+#include "Core/Defines.h"
 #include "UI/Widget.h"
-#include "Util/Stack.h"
+#include "Util/Container.h"
 
 // forward declarations
 namespace Cosmos { class Application; }
 
 namespace Cosmos
 {
-	class GUI
+	class COSMOS_API GUI
 	{
 	public:
 
@@ -88,7 +89,7 @@ namespace Cosmos
 	private:
 
 		Application* mApp;
-		Stack<Widget*> mWidgets;
+		DualContainer<Widget*> mWidgets;
 		void* mContext;
 	};
 }

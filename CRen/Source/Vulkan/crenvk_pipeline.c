@@ -26,7 +26,6 @@ static VkVertexInputBindingDescription* internal_crenvk_pipeline_get_binding_des
 	return bindings;
 }
 
-
 /// @brief creates an array of VkVertexInputAttributeDescription
 static VkVertexInputAttributeDescription* internal_crenvk_get_attribute_descriptions(CRen_VertexComponent* vertexComponents, uint32_t componentsCount, uint32_t* attributesCount)
 {

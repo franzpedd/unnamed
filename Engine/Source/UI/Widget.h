@@ -1,6 +1,8 @@
 #pragma once
 
+#include "Core/Defines.h"
 #include "Core/Input.h"
+#include "WidgetTypes.h"
 #include <vecmath/vecmath.h>
 
 #define IMGUI_DEFINE_MATH_OPERATORS
@@ -8,7 +10,7 @@
 
 namespace Cosmos
 {
-	class Widget
+	class COSMOS_API Widget
 	{
 	public:
 
@@ -71,98 +73,99 @@ namespace Cosmos
 	};
 }
 
+namespace Cosmos::UIWidget
+{
+	/// @brief returns the id for a given window name
+	COSMOS_API ID GetID(const char* name);
+
+	/// @brief window contexts
+	COSMOS_API bool BeginContext(const char* name, bool* open = nullptr, ContextFlags flags = ContextFlags_None);
+	COSMOS_API void EndContext();
+	COSMOS_API bool BeginChildContext(const char* name, const float2& size = { 0.0f, 0.0f }, ContextChildFlags flags = ChildFlags_None, ContextFlags = ContextFlags_None);
+	COSMOS_API void EndChildContext();
+	COSMOS_API uint32_t Dockspace(ID id, const float2& size = { 0.0f, 0.0f });
+
+	/// @brief context and window info
+	COSMOS_API void SetNextWindowSize(const float2& size);
+	COSMOS_API void SetNextWindowPos(const float2& pos, const float2& pivot = {0.0f, 0.0f});
+	COSMOS_API float2 GetCurrentWindowSize();
+	COSMOS_API float2 GetCurrentWindowPos();
+	COSMOS_API float2 GetMainViewportSize();
+	COSMOS_API float2 GetMainViewportPosition();
+	COSMOS_API float2 GetContentRegionAvail();
+	COSMOS_API bool IsItemHovered(HoveredFlags flags = HoveredFlags_None);
+
+	/// @brief widget identation
+	COSMOS_API void SetCursorPos(float2 pos);
+	COSMOS_API void SetCursorPosX(float value);
+	COSMOS_API void SetCursorPosY(float value);
+	COSMOS_API float2 GetCursorPos();
+	COSMOS_API float GetCursorPosX();
+	COSMOS_API float GetCursorPosY();
+	COSMOS_API void SameLine(float startOffset = 0.0f, float spacing = -1.0f);
+	COSMOS_API void NewLine();
+	COSMOS_API void Separator(float thickness = 1.0f, bool vertical = false);
+
+	/// @brief style modification
+	COSMOS_API void PushStyleVar(const StyleVar var, float value);
+	COSMOS_API void PushStyleVar(const StyleVar var, float2 value);
+	COSMOS_API void PopStyleVar(uint32_t count = 1);
+	COSMOS_API void PushStyleColor(const StyleColor color, float4 value);
+	COSMOS_API void PopStyleColor(uint32_t count = 1);
+	COSMOS_API void PushItemWidth(float width);
+	COSMOS_API void PopItemWidth();
+
+	/// @brief various standart widgets
+	COSMOS_API void Text(const char* fmt, ...);
+	COSMOS_API void SeparatorText(const char* label);
+	COSMOS_API bool URLText(const char* label, const char* url);
+	COSMOS_API bool Button(const char* label, const float2 size = { 0.0f, 0.0f });
+	COSMOS_API bool Selectable(const char* label, bool selected = false, SelectableFlags flags = SelectableFlags_None, const float2& size = { 0.0f, 0.0f });
+	COSMOS_API void Image(uint64_t TexID, const float2& size = { 0.0f, 0.0f }, const float2& uv0 = { 0.0f, 0.0f }, const float2& uv1 = { 0.0f, 0.0f });
+	COSMOS_API void SetTooltip(const char* fmt, ...);
+	COSMOS_API bool SliderFloat(const char* label, float* v, float vmin, float vmax, const char* format = "%.3f", SliderFlags flags = SliderFlags_None);
+}
+
 namespace Cosmos::WidgetExtended
 {
 	/// @brief centered text in the window
 	/// @param fmt va_arglist to format the text
-	void TextCentered(const char* fmt, ...);
+	COSMOS_API void TextCentered(const char* fmt, ...);
 
 	/// @brief little hack that transforms a table into a text with colored background
 	/// @param bgCol the background color 0-255 for each value
 	/// @param txtCol the text color 0-255 for each value
 	/// @param label the text id/text
 	/// @param fmt va_arglist to format the text
-	void TextBackground(float4 bgCol, float4 txtCol, const char* label, const char* fmt, ...);
+	COSMOS_API void TextBackground(float4 bgCol, float4 txtCol, const char* label, const char* fmt, ...);
 
 	/// @brief custom checkbox
 	/// @param label checkbox text
 	/// @param v controls the checkbox is on/off
 	/// @return true enabled, false on disabled
-	bool Checkbox(const char* label, bool* v);
+	COSMOS_API bool Checkbox(const char* label, bool* v);
 
 	/// @brief custom checkbox slider
 	/// @param label checkbox text
 	/// @param v controls the checkbox is on/off
 	/// @return true enabled, false on disabled
-	bool CheckboxSliderEx(const char* label, bool* v);
+	COSMOS_API bool CheckboxSliderEx(const char* label, bool* v);
 
 	/// @brief custom float controller
 	/// @param label label control text
 	/// @param x controller value
-	void FloatControl(const char* label, float* value);
+	COSMOS_API void FloatControl(const char* label, float* value);
 
 	/// @brief custom 2d float controller
 	/// @param label label control text
 	/// @param x first controller value
 	/// @param y second controller value
-	void Float2Control(const char* label, float* x, float* y);
+	COSMOS_API void Float2Control(const char* label, float* x, float* y);
 
 	/// @brief custom 3d float controller
 	/// @param label label control text
 	/// @param x first controller value
 	/// @param y second controller value
 	/// @param z third controller value
-	void Float3Controller(const char* label, float* x, float* y, float* z);
-
-	/// @brief makes a vertical separator with given thickness
-	/// @param thickness how 'thick' the separator is
-	void VerticalSeparator(float thickness);
-}
-
-namespace Cosmos::WidgetUtils
-{
-	class CenteredControlWrapper {
-	public:
-		explicit CenteredControlWrapper(bool result) : result_(result) {}
-
-		operator bool() const {
-			return result_;
-		}
-
-	private:
-		bool result_;
-	};
-
-	class ControlCenterer {
-	public:
-		ControlCenterer(ImVec2 windowSize) : windowSize_(windowSize) {}
-
-		template<typename Func>
-		CenteredControlWrapper operator()(Func control) const {
-			
-			ImVec2 originalPos = ImGui::GetCursorPos();
-
-			// Draw offscreen to calculate size
-			ImGui::SetCursorPos(ImVec2(-10000.0f, -10000.0f));
-
-			ImGui::PushID(this);
-			control();
-			ImGui::PopID();
-
-			ImVec2 controlSize = ImGui::GetItemRectSize();
-
-			// Draw at centered position
-			ImGui::SetCursorPos(ImVec2((windowSize_.x - controlSize.x) * 0.5f, originalPos.y));
-
-			control();
-
-			return CenteredControlWrapper(ImGui::IsItemClicked());
-		}
-
-	private:
-		ImVec2 windowSize_;
-	};
-
-#define CENTERED_CONTROL(control) Cosmos::WidgetUtils::ControlCenterer { ImGui::GetWindowSize() }([&]() { control; } )
-
+	COSMOS_API void Float3Controller(const char* label, float* x, float* y, float* z);
 }

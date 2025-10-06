@@ -13,7 +13,7 @@
 #if defined(_WIN32) || defined(_WIN64) || (defined(__linux__) && !defined(__ANDROID__))
 
 /// @brief loads a file using standart fopen
-static unsigned int* internal_cren_dekstop_load_file(const char* path, unsigned long long* outSize)
+static unsigned int* internal_cren_dekstop_load_file(const char* path, size_t* outSize)
 {
     FILE* file = fopen(path, "rb");
     if (!file) return NULL;
@@ -50,7 +50,7 @@ static unsigned int* internal_cren_dekstop_load_file(const char* path, unsigned 
 
 /// @brief loads a file using AAsset
 #error "This will need fixing once I get there again";
-static unsigned int* internal_cren_android_load_file(const char* path, unsigned long long* outSize)
+static unsigned int* internal_cren_android_load_file(const char* path, size_t* outSize)
 {
     if (!g_AssetManager) {
         CREN_LOG("[Android]: AssetManager is NULL, make sure CRen is compiled as a Shared Library and don't forget to call cren_android_assets_manager_init from Java-Side");
@@ -114,7 +114,7 @@ CREN_API CRen_Platform cren_detect_platform()
     #endif
 }
 
-CREN_API void cren_get_path(const char* subpath, const char* assetsRoot, bool removeExtension, char* output, unsigned long long outputSize)
+CREN_API void cren_get_path(const char* subpath, const char* assetsRoot, bool removeExtension, char* output, size_t outputSize)
 {
     snprintf(output, outputSize, "%s/%s", assetsRoot, subpath);
 
@@ -126,7 +126,7 @@ CREN_API void cren_get_path(const char* subpath, const char* assetsRoot, bool re
     }
 }
 
-CREN_API unsigned char* cren_stbimage_load_from_file(const char* path, int desiredChannels, int* outWidth, int* outHeight, int* outChannels)
+CREN_API uint8_t* cren_stbimage_load_from_file(const char* path, int desiredChannels, int* outWidth, int* outHeight, int* outChannels)
 {
     int x, y, channels = 0;
     stbi_uc* pixels = stbi_load(path, &x, &y, &channels, desiredChannels);
@@ -137,7 +137,7 @@ CREN_API unsigned char* cren_stbimage_load_from_file(const char* path, int desir
     return pixels;
 }
 
-CREN_API void cren_stbimage_destroy(unsigned char* ptr)
+CREN_API void cren_stbimage_destroy(uint8_t* ptr)
 {
     stbi_image_free(ptr);
 }
@@ -147,7 +147,7 @@ CREN_API const char* cren_stbimage_get_error()
     return stbi_failure_reason();
 }
 
-CREN_API unsigned int* cren_load_file(const char* path, unsigned long long* outSize)
+CREN_API unsigned int* cren_load_file(const char* path, size_t* outSize)
 {
     #if defined(__linux__) && defined(__ANDROID__)
         return internal_cren_android_load_file(path, outSize);

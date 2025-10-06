@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 /// @brief DLL exporting
 #if defined(_WIN32)
     #if defined(COSMOS_EXPORT)

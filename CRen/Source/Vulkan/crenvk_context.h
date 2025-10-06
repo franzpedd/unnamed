@@ -10,10 +10,6 @@
 #include "crenvk_renderphase.h"
 #include <shashtable.h>
 
-#ifdef __cplusplus 
-extern "C" {
-#endif
-
 /// @brief holds all vulkan objects used by the backend
 typedef struct CRenVulkanBackend
 {
@@ -27,6 +23,10 @@ typedef struct CRenVulkanBackend
 	shashtable* buffersLib;
 	shashtable* pipelinesLib;
 } CRenVulkanBackend;
+
+#ifdef __cplusplus 
+extern "C" {
+#endif
 
 /// @brief initializes the vulkan context
 CREN_API CRenVulkanBackend crenvk_initialize

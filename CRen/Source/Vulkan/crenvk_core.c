@@ -36,7 +36,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL internal_crenvk_debug_callback(VkDebugUtil
     return VK_TRUE;
 }
 
-void crenvk_instance_create(CRenContext* context, vkInstance* instance, const char* appName, unsigned int appVersion, CRen_Renderer api, bool validations, CRenCallback_GetVulkanRequiredInstanceExtensions callback)
+void crenvk_instance_create(CRenContext* context, vkInstance* instance, const char* appName, uint32_t appVersion, CRen_Renderer api, bool validations, CRenCallback_GetVulkanRequiredInstanceExtensions callback)
 {
     if (!instance) return;
     
@@ -131,9 +131,9 @@ void crenvk_instance_destroy(vkInstance* instance)
     }
 }
 
-CREN_API unsigned int crenvk_encodeversion(CRen_Renderer api)
+CREN_API uint32_t crenvk_encodeversion(CRen_Renderer api)
 {
-    unsigned int variant, major, minor, patch;
+    uint32_t variant, major, minor, patch;
     switch (api)
     {
         case CREN_RENDERER_API_VULKAN_1_0: return VK_MAKE_API_VERSION(0, 1, 0, 0);
@@ -149,17 +149,17 @@ CREN_API unsigned int crenvk_encodeversion(CRen_Renderer api)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// @brief checks if a given physical device supports the required extensions
-static int internal_crenvk_check_device_extension_support(VkPhysicalDevice device, const char** required_extensions, unsigned int extension_count)
+static int internal_crenvk_check_device_extension_support(VkPhysicalDevice device, const char** required_extensions, uint32_t extension_count)
 {
-    unsigned int available_extension_count;
+    uint32_t available_extension_count;
     vkEnumerateDeviceExtensionProperties(device, NULL, &available_extension_count, NULL);
 
     VkExtensionProperties* available_extensions = (VkExtensionProperties*)malloc(available_extension_count * sizeof(VkExtensionProperties));
     vkEnumerateDeviceExtensionProperties(device, NULL, &available_extension_count, available_extensions);
 
-    for (unsigned int i = 0; i < extension_count; i++) {
+    for (uint32_t i = 0; i < extension_count; i++) {
         int extension_found = 0;
-        for (unsigned int j = 0; j < available_extension_count; j++) {
+        for (uint32_t j = 0; j < available_extension_count; j++) {
             if (strcmp(required_extensions[i], available_extensions[j].extensionName) == 0) {
                 extension_found = 1;
                 break;
@@ -179,7 +179,7 @@ static int internal_crenvk_check_device_extension_support(VkPhysicalDevice devic
 static VkPhysicalDevice internal_crenvk_choose_physical_device(VkInstance instance, VkSurfaceKHR surface)
 {
     // selecting most suitable physical device
-    unsigned int gpus = 0;
+    uint32_t gpus = 0;
     vkEnumeratePhysicalDevices(instance, &gpus, NULL);
 
     VkPhysicalDevice* devices = (VkPhysicalDevice*)malloc(gpus * sizeof(VkPhysicalDevice));
@@ -187,10 +187,10 @@ static VkPhysicalDevice internal_crenvk_choose_physical_device(VkInstance instan
 
     VkPhysicalDevice choosenOne = VK_NULL_HANDLE;
     const char* requiredExtensions[] = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
-    const unsigned int requiredExtensionsCount = 1;
+    const uint32_t requiredExtensionsCount = 1;
     VkDeviceSize bestScore = 0;
 
-    for (unsigned int i = 0; i < gpus; i++) {
+    for (uint32_t i = 0; i < gpus; i++) {
 
         // checking support
         VkPhysicalDeviceProperties device_props;
@@ -207,7 +207,7 @@ static VkPhysicalDevice internal_crenvk_choose_physical_device(VkInstance instan
         VkDeviceSize currentScore = 0;
         if (device_props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) currentScore += 1000;  // discrete gpu
         currentScore += device_props.limits.maxImageDimension2D;                                    // max texture size
-        for (unsigned int j = 0; j < mem_props.memoryHeapCount; j++) {                              // prefer devices with dedicated VRAM
+        for (uint32_t j = 0; j < mem_props.memoryHeapCount; j++) {                              // prefer devices with dedicated VRAM
             if (mem_props.memoryHeaps[j].flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT) {
                 currentScore += mem_props.memoryHeaps[j].size / (VkDeviceSize)(1024 * 1024);        // mb
             }
@@ -227,12 +227,12 @@ static VkPhysicalDevice internal_crenvk_choose_physical_device(VkInstance instan
 static void internal_crenvk_create_logical_device(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, VkDevice* device, VkQueue* graphicsQueue, VkQueue* presentQueue, VkQueue* computeQueue, int* graphicsIndex, int* presentIndex, int* computeIndex, bool validations)
 {
     const char* validationLayers[] = { "VK_LAYER_KHRONOS_validation" }; // must be the same as instance, wich it is
-    unsigned int validationLayerCount = 1;
+    uint32_t validationLayerCount = 1;
 
     // find unique queue families
     vkQueueFamilyIndices indices = crenvk_device_find_queue_families(physicalDevice, surface);
-    unsigned int queueFamilyIndices[3]; // store unique queue family indices
-    unsigned int queueCount = 0;
+    uint32_t queueFamilyIndices[3]; // store unique queue family indices
+    uint32_t queueCount = 0;
     float queuePriority = 1.0f;
 
     if (indices.graphicFamily != -1) queueFamilyIndices[queueCount++] = indices.graphicFamily;
@@ -241,7 +241,7 @@ static void internal_crenvk_create_logical_device(VkPhysicalDevice physicalDevic
     
     // create queue create info for each unique queue family
     VkDeviceQueueCreateInfo* queueCreateInfos = (VkDeviceQueueCreateInfo*)malloc(sizeof(VkDeviceQueueCreateInfo) * queueCount);
-    for (unsigned int i = 0; i < queueCount; i++) {
+    for (uint32_t i = 0; i < queueCount; i++) {
         queueCreateInfos[i].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
         queueCreateInfos[i].pNext = NULL;
         queueCreateInfos[i].queueFamilyIndex = queueFamilyIndices[i];
@@ -253,10 +253,10 @@ static void internal_crenvk_create_logical_device(VkPhysicalDevice physicalDevic
     // handle apple extension
     #if defined(__APPLE__) && defined(__MACH__) && (VK_HEADER_VERSION >= 216)
     const char* extensions[] = { VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME };
-    unsigned int extensionCount = 2;
+    uint32_t extensionCount = 2;
     #else
     const char* extensions[] = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
-    unsigned int extensionCount = 1;
+    uint32_t extensionCount = 1;
     #endif
 
     // required features
@@ -326,13 +326,13 @@ vkQueueFamilyIndices crenvk_device_find_queue_families(VkPhysicalDevice device, 
     indices.presentFamily = UINT32_MAX;
     indices.computeFamily = UINT32_MAX;
 
-    unsigned int queue_family_count = 0;
+    uint32_t queue_family_count = 0;
     vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, NULL);
 
     VkQueueFamilyProperties* queue_families = (VkQueueFamilyProperties*)malloc(queue_family_count * sizeof(VkQueueFamilyProperties));
     vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, queue_families);
 
-    for (unsigned int i = 0; i < queue_family_count; i++) {
+    for (uint32_t i = 0; i < queue_family_count; i++) {
         // check for graphics support
         if (queue_families[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) {
             indices.graphicFamily = i;
@@ -461,7 +461,7 @@ void crenvk_device_end_commandbuffer_singletime(VkDevice device, VkCommandPool c
     vkFreeCommandBuffers(device, cmdPool, 1, &cmdBuffer);
 }
 
-unsigned int crenvk_device_find_memory_type(VkPhysicalDevice physicalDevice, unsigned int typeFilter, VkMemoryPropertyFlags properties)
+uint32_t crenvk_device_find_memory_type(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties)
 {
     VkPhysicalDeviceMemoryProperties memProperties;
     vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
@@ -476,10 +476,10 @@ unsigned int crenvk_device_find_memory_type(VkPhysicalDevice physicalDevice, uns
     return UINT32_MAX;
 }
 
-VkFormat crenvk_device_find_suitable_format(VkPhysicalDevice physicalDevice, const VkFormat* candidates, unsigned int candidatesCount, VkImageTiling tiling, VkFormatFeatureFlags features)
+VkFormat crenvk_device_find_suitable_format(VkPhysicalDevice physicalDevice, const VkFormat* candidates, uint32_t candidatesCount, VkImageTiling tiling, VkFormatFeatureFlags features)
 {
     VkFormat resFormat = VK_FORMAT_UNDEFINED;
-    for (unsigned int i = 0; i < candidatesCount; i++) {
+    for (uint32_t i = 0; i < candidatesCount; i++) {
         VkFormatProperties props;
         vkGetPhysicalDeviceFormatProperties(physicalDevice, candidates[i], &props);
 
@@ -498,7 +498,7 @@ VkFormat crenvk_device_find_depth_format(VkPhysicalDevice physicalDevice)
     return format;
 }
 
-VkResult crenvk_device_create_image(unsigned int width, unsigned int height, unsigned int mipLevels, unsigned int arrayLayers, VkDevice device, VkPhysicalDevice physicalDevice, VkImage* image, VkDeviceMemory* memory, VkFormat format, VkSampleCountFlagBits samples, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags memoryProperties, VkImageCreateFlags flags)
+VkResult crenvk_device_create_image(uint32_t width, uint32_t height, uint32_t mipLevels, uint32_t arrayLayers, VkDevice device, VkPhysicalDevice physicalDevice, VkImage* image, VkDeviceMemory* memory, VkFormat format, VkSampleCountFlagBits samples, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags memoryProperties, VkImageCreateFlags flags)
 {
     VkResult res = VK_SUCCESS;
 
@@ -549,7 +549,7 @@ VkResult crenvk_device_create_image(unsigned int width, unsigned int height, uns
     return VK_SUCCESS;
 }
 
-VkResult crenvk_device_create_image_view(VkDevice device, VkImage image, VkFormat format, VkImageAspectFlags aspect, unsigned int mipLevels, unsigned int layerCount, VkImageViewType viewType, const VkComponentMapping* swizzle, VkImageView* outView)
+VkResult crenvk_device_create_image_view(VkDevice device, VkImage image, VkFormat format, VkImageAspectFlags aspect, uint32_t mipLevels, uint32_t layerCount, VkImageViewType viewType, const VkComponentMapping* swizzle, VkImageView* outView)
 {
     if (mipLevels == 0 || layerCount == 0) {
         CREN_LOG(CREN_LOG_SEVERITY_ERROR, "Invalid mipLevels or layerCount (must be >= 1)");
@@ -713,7 +713,7 @@ void crenvk_device_create_image_mipmaps(VkDevice device, VkQueue queue, VkComman
     vkCmdPipelineBarrier(cmdBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, NULL, 0, NULL, 1, &barrier);
 }
 
-VkResult crenvk_device_image_transition_layout(VkDevice device, VkQueue queue, VkCommandBuffer cmdBuffer, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout, unsigned int mipLevels, unsigned int layerCount)
+VkResult crenvk_device_image_transition_layout(VkDevice device, VkQueue queue, VkCommandBuffer cmdBuffer, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels, uint32_t layerCount)
 {
     VkImageMemoryBarrier barrier = { 0 };
     barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -823,9 +823,9 @@ static vkSwapchainDetails internal_crenvk_query_swapchain_details(VkPhysicalDevi
 }
 
 /// @brief chooses the swapchain surface format, opting with the most widely supported (VK_FORMAT_B8G8R8A8_UNORM & VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
-static VkSurfaceFormatKHR internal_crenvk_choose_swapchain_surface_format(VkSurfaceFormatKHR* formats, unsigned int quantity)
+static VkSurfaceFormatKHR internal_crenvk_choose_swapchain_surface_format(VkSurfaceFormatKHR* formats, uint32_t quantity)
 {
-    for (unsigned int i = 0; i < quantity; i++) {
+    for (uint32_t i = 0; i < quantity; i++) {
         if (formats[i].format == VK_FORMAT_B8G8R8A8_UNORM && formats[i].colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) return formats[i];
     }
 
@@ -840,7 +840,7 @@ static VkPresentModeKHR internal_crenvk_choose_swapchain_present_mode(VkPresentM
 
     // search for the best non-VSync mode
     int immediateModeAvailable = 0;
-    for (unsigned int i = 0; i < quantity; i++) {
+    for (uint32_t i = 0; i < quantity; i++) {
         if (modes[i] == VK_PRESENT_MODE_MAILBOX_KHR)  return VK_PRESENT_MODE_MAILBOX_KHR; // prefer MAILBOX (multiple buffering) if available
         if (modes[i] == VK_PRESENT_MODE_IMMEDIATE_KHR) immediateModeAvailable = 1; // mark IMMEDIATE mode as available for fallback
     }
@@ -853,7 +853,7 @@ static VkPresentModeKHR internal_crenvk_choose_swapchain_present_mode(VkPresentM
 }
 
 /// @brief clamps the swapchain extent between the surface capabilities and returns it as the swapchain extent
-static VkExtent2D internal_crenvk_choose_swapchain_extent(const VkSurfaceCapabilitiesKHR* capabilities, unsigned int width, unsigned int height)
+static VkExtent2D internal_crenvk_choose_swapchain_extent(const VkSurfaceCapabilitiesKHR* capabilities, uint32_t width, uint32_t height)
 {
     if (capabilities->currentExtent.width != UINT32_MAX) return capabilities->currentExtent;
 
@@ -913,7 +913,7 @@ void crenvk_swapchain_create(vkSwapchain* swapchain, VkDevice device, VkPhysical
     vkGetSwapchainImagesKHR(device, swapchain->swapchain, &swapchain->swapchainImageCount, swapchain->swapchainImages);
 
     // create image views
-    for (unsigned int i = 0; i < swapchain->swapchainImageCount; i++) {
+    for (uint32_t i = 0; i < swapchain->swapchainImageCount; i++) {
         crenvk_device_create_image_view(device, swapchain->swapchainImages[i], swapchain->swapchainFormat.format, VK_IMAGE_ASPECT_COLOR_BIT, 1, 1, VK_IMAGE_VIEW_TYPE_2D, NULL, &swapchain->swapchainImageViews[i]);
     }
 
@@ -946,7 +946,7 @@ void crenvk_swapchain_create(vkSwapchain* swapchain, VkDevice device, VkPhysical
 
 void crenvk_swapchain_destroy(vkSwapchain* swapchain, VkDevice device)
 {
-    for (unsigned int i = 0; i < swapchain->swapchainSyncCount; i++) {
+    for (uint32_t i = 0; i < swapchain->swapchainSyncCount; i++) {
         if (swapchain->imageAvailableSemaphores[i]) vkDestroySemaphore(device, swapchain->imageAvailableSemaphores[i], NULL);
         if (swapchain->finishedRenderingSemaphores[i]) vkDestroySemaphore(device, swapchain->finishedRenderingSemaphores[i], NULL);
         if (swapchain->framesInFlightFences[i]) vkDestroyFence(device, swapchain->framesInFlightFences[i], NULL);
@@ -955,7 +955,7 @@ void crenvk_swapchain_destroy(vkSwapchain* swapchain, VkDevice device)
     free(swapchain->finishedRenderingSemaphores);
     free(swapchain->framesInFlightFences);
 
-    for (unsigned int i = 0; i < swapchain->swapchainImageCount; i++) vkDestroyImageView(device, swapchain->swapchainImageViews[i], NULL);
+    for (uint32_t i = 0; i < swapchain->swapchainImageCount; i++) vkDestroyImageView(device, swapchain->swapchainImageViews[i], NULL);
 
     free(swapchain->swapchainImageViews);
     free(swapchain->swapchainImages); // swapchain images are vkDestroyed internally

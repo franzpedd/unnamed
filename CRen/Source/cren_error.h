@@ -9,10 +9,6 @@ extern "C" {
 #endif
 
 /// @brief logs a message error into the platform output/console (this function is designed to be called by the library, use macros instead)
-/// @param severity the severity of the error
-/// @param file the file from where to throw the message
-/// @param line the line from where the log was thrown
-/// @fmt va_args with information about the error
 CREN_API void cren_log_message(CRen_LogSeverity severity, const char* file, int line, const char* fmt, ...);
 
 #ifdef __cplusplus 

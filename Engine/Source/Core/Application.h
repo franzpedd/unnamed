@@ -52,6 +52,9 @@ namespace Cosmos
 		/// @brief destructor
 		virtual ~Application();
 
+		/// @brief returns the assets path
+		inline const char* GetAssetsDir() { return mAssetsPath; }
+
 		/// @brief returns a reference to the window class
 		inline Unique<Window>& GetWindowRef() { return mWindow; }
 
@@ -107,6 +110,7 @@ namespace Cosmos
 	private:
 
 		ApplicationCreateInfo mApplicationCreateInfo;
+		const char* mAssetsPath = nullptr;
 		Unique<Window> mWindow;
 		Unique<Renderer> mRenderer;
 		Unique<GUI> mGUI;

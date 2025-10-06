@@ -7,7 +7,7 @@
 namespace Cosmos
 {
 	Application::Application(const ApplicationCreateInfo& ci)
-		: mApplicationCreateInfo(ci)
+		: mApplicationCreateInfo(ci), mAssetsPath(ci.assetsPath)
 	{
         mWindow = CreateUnique<Window>(this, ci.appName, ci.width, ci.height, ci.fullscreen, ci.assetsPath);
         mRenderer = CreateUnique<Renderer>(this, ci.appName, COSMOS_MAKE_VERSION(0, 1, 0, 0), ci.customViewport, ci.validations, ci.vsync, ci.assetsPath, ci.renderer, ci.msaa);
@@ -127,14 +127,13 @@ namespace Cosmos
     {
         mGUI->OnKeyPress(keycode, mod, held);
         
-        // camera
         CRenCamera* cam = mRenderer->GetMainCamera();
-        if (cam->shouldMove) {
-            if (keycode == Input::KEYCODE_W) cam->movingForward = true;
-            if (keycode == Input::KEYCODE_S) cam->movingBackward = true;
-            if (keycode == Input::KEYCODE_A) cam->movingLeft = true;
-            if (keycode == Input::KEYCODE_D) cam->movingRight = true;
-            if (keycode == Input::KEYCODE_LSHIFT) cam->modifierPressed = true;
+        if (cren_camera_can_move(cam)) {
+            if (keycode == Input::KEYCODE_W) cren_camera_move(cam, CREN_CAMERA_DIRECTION_FORWARD, true);
+            if (keycode == Input::KEYCODE_S) cren_camera_move(cam, CREN_CAMERA_DIRECTION_BACKWARD, true);
+            if (keycode == Input::KEYCODE_A) cren_camera_move(cam, CREN_CAMERA_DIRECTION_LEFT, true);
+            if (keycode == Input::KEYCODE_D) cren_camera_move(cam, CREN_CAMERA_DIRECTION_RIGHT, true);
+            if (keycode == Input::KEYCODE_LSHIFT) cren_camera_pressing_speed_modifier(cam, true);
         }
     }
 
@@ -142,14 +141,13 @@ namespace Cosmos
     {
         mGUI->OnKeyRelease(keycode);
         
-        // camera
         CRenCamera* cam = mRenderer->GetMainCamera();
-        if (cam->shouldMove) {
-            if (keycode == Input::KEYCODE_W) cam->movingForward = false;
-            if (keycode == Input::KEYCODE_S) cam->movingBackward = false;
-            if (keycode == Input::KEYCODE_A) cam->movingLeft = false;
-            if (keycode == Input::KEYCODE_D) cam->movingRight = false;
-            if (keycode == Input::KEYCODE_LSHIFT) cam->modifierPressed = false;
+        if (cren_camera_can_move(cam)) {
+            if (keycode == Input::KEYCODE_W) cren_camera_move(cam, CREN_CAMERA_DIRECTION_FORWARD, false);
+            if (keycode == Input::KEYCODE_S) cren_camera_move(cam, CREN_CAMERA_DIRECTION_BACKWARD, false);
+            if (keycode == Input::KEYCODE_A) cren_camera_move(cam, CREN_CAMERA_DIRECTION_LEFT, false);
+            if (keycode == Input::KEYCODE_D) cren_camera_move(cam, CREN_CAMERA_DIRECTION_RIGHT, false);
+            if (keycode == Input::KEYCODE_LSHIFT) cren_camera_pressing_speed_modifier(cam, false);
         }
     }
 
@@ -172,22 +170,9 @@ namespace Cosmos
     {
         mGUI->OnMouseMove(xpos, ypos);
         
-        // camera
         CRenCamera* cam = mRenderer->GetMainCamera();
-        if (cam->shouldMove) {
-        
-            // avoid scene flip
-            if (cam->rotation.xyz.x >= 89.0f) cam->rotation.xyz.x = 89.0f;
-            if (cam->rotation.xyz.x <= -89.0f) cam->rotation.xyz.x = -89.0f;
-        
-            // reset rotation on 360 degrees
-            if (cam->rotation.xyz.x >= 360.0f) cam->rotation.xyz.x = 0.0f;
-            if (cam->rotation.xyz.x <= -360.0f) cam->rotation.xyz.x = 0.0f;
-            if (cam->rotation.xyz.y >= 360.0f) cam->rotation.xyz.y = 0.0f;
-            if (cam->rotation.xyz.y <= -360.0f) cam->rotation.xyz.y = 0.0f;
-        
-            float rotationspeed = 1.0f;
-            float3 rot = { float(-ypos) * rotationspeed * 0.5f , float(xpos) * rotationspeed * 0.5f, 0.0f };
+        if (cren_camera_can_move(cam)) {
+            float3 rot = { float(-ypos), float(xpos), 0.0f };
             cren_camera_rotate(cam, rot);
         }
     }

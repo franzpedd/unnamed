@@ -109,10 +109,11 @@ CREN_API void crenvk_terminate(CRenVulkanBackend* backend)
 CREN_API void crenvk_update(CRenVulkanBackend* backend, float timestep, CRenCamera* camera)
 {
 	// send information about the camera to the gpu camera buffer
+	fmat4 view = cren_camera_get_view(camera);
 	vkBufferCamera cameraData = { 0 };
-	cameraData.view = camera->view;
-	cameraData.viewInverse = fmat4_inverse(&camera->view);
-	cameraData.proj = camera->perspective;
+	cameraData.view = view;
+	cameraData.viewInverse = fmat4_inverse(&view);
+	cameraData.proj = cren_camera_get_perspective(camera);
 	cameraData.proj.data[1][1] *= -1.0f; // flip y because vulkan
 
 	vkBuffer* cameraBuffer = (vkBuffer*)shashtable_lookup(backend->buffersLib, "Camera");

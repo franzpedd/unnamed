@@ -8,7 +8,7 @@ struct CRenContext
 {
     // needed info
 	CRenCreateInfo createInfo;
-    CRenCamera camera;
+    CRenCamera* camera;
 
     // hints
     bool currentlyMinimized;
@@ -20,8 +20,10 @@ struct CRenContext
 	CRenCallbacks callbacks;
 
 	// useful info
-	float2 framebufferSize;
 	float2 mousePos;
+	float2 framebufferSize;
+	float2 viewportPos;		// only when usingCustomViewport
+	float2 viewportSize;	// only when usingCustomViewport
 
     // backend renderer api
     #ifdef CREN_BUILD_WITH_VULKAN
@@ -29,7 +31,7 @@ struct CRenContext
     #endif
 };
 
-CREN_API CRenContext* cren_initialize(CRenCreateInfo createInfo)
+CREN_API CRenContext* cren_initialize(const CRenCreateInfo createInfo)
 {
 	memm_init();
 
@@ -66,6 +68,8 @@ CREN_API void cren_create_renderer(CRenContext* context)
 
 CREN_API void cren_shutdown(CRenContext* context)
 {
+	cren_camera_destroy(context->camera);
+
 	#ifdef CREN_BUILD_WITH_VULKAN
 	if (context) crenvk_terminate(&context->backend);
 	#endif
@@ -82,15 +86,15 @@ CREN_API void cren_shutdown(CRenContext* context)
 
 CREN_API void cren_update(CRenContext* context, float timestep)
 {
-	cren_camera_update(&context->camera, timestep);
+	cren_camera_update(context->camera, timestep);
 }
 
 CREN_API void cren_render(CRenContext* context, float timestep)
 {
 	#ifdef CREN_BUILD_WITH_VULKAN
 	if (!context->currentlyMinimized) {
-		crenvk_update(&context->backend, timestep, &context->camera);
-		crenvk_render(context, &context->backend, timestep, &context->callbacks, &context->camera, &context->mustResize);
+		crenvk_update(&context->backend, timestep, context->camera);
+		crenvk_render(context, &context->backend, timestep, &context->callbacks, context->camera, &context->mustResize);
 	}
 	#else
 	#error "Undefined backend"
@@ -117,7 +121,7 @@ CREN_API void cren_restore(CRenContext* context)
 CREN_API CRenCamera* cren_get_camera(CRenContext* context)
 {
 	if (!context) return NULL;
-	return &context->camera;
+	return context->camera;
 }
 
 CREN_API bool cren_are_validations_enabled(CRenContext *context)
@@ -152,6 +156,20 @@ CREN_API void cren_set_mousepos(CRenContext* context, const float2 pos)
 {
 	if (!context) return;
 	context->mousePos = pos;
+}
+
+CREN_API void cren_set_viewport_pos(CRenContext* context, const float2 pos)
+{
+	if (!context) return;
+	if (!context->usingCustomViewport) return;
+	context->viewportPos = pos;
+}
+
+CREN_API void cren_set_viewport_size(CRenContext* context, const float2 size)
+{
+	if (!context) return;
+	if (!context->usingCustomViewport) return;
+	context->viewportSize = size;
 }
 
 CREN_API float2 cren_get_framebuffer_size(CRenContext* context)
