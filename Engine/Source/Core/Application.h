@@ -67,6 +67,12 @@ namespace Cosmos
 		/// @brief sets the time between loop itarations, this comes from window refresh rate and changes when SDL_EVENT_WINDOW_DISPLAY_CHANGED happens
 		inline void SetTargetFrameTime(double targetFPS, double frameTimer) { mTargetFPS = targetFPS; mTargetFrameTime = frameTimer; }
 
+		/// @brief returns the average frames per second
+		inline double GetAverageFPS() { return mAverageFPS; }
+
+		/// @brief returns the target frames per second
+		inline double GetTargetFPS() { return mTargetFPS; }
+
 	public:
 
 		/// @brief called for initializing main loop
@@ -124,8 +130,5 @@ namespace Cosmos
 		double mAverageFPS = 0;
 		double mTargetFPS = 0.0f;
 		double mTargetFrameTime = 0.0f;
-
-		double mLastMouseX = 0.0;
-		double mLastMouseY = 0.0;
 	};
 }

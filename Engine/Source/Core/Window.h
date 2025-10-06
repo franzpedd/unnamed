@@ -58,6 +58,12 @@ namespace Cosmos
 		/// @brief returns the monitor window is currently in refresh-rate, usefull for frame cap and resource management
 		float GetRefreshRate();
 
+		/// @brief returns the window's size
+		float2 GetWindowSize();
+
+		/// @brief returns the cursor position
+		float2 GetCursorPos();
+
 	protected:
 
 		Application* mApp;

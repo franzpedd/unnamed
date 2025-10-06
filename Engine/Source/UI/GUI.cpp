@@ -64,7 +64,7 @@ namespace Cosmos
 		}
 
 		if (io.BackendFlags | ImGuiBackendFlags_PlatformHasViewports && io.BackendFlags | ImGuiBackendFlags_RendererHasViewports) {
-			io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+			if(cren_detect_platform() == CREN_PLATFORM_WINDOWS) io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // only windows supports viewports
 			io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 		}
 
@@ -99,8 +99,8 @@ namespace Cosmos
 		appInfo.Device = vkBackend->device.device;
 		appInfo.QueueFamily = vkBackend->device.graphicsQueueIndex;
 		appInfo.Queue = vkBackend->device.graphicsQueue;
-		appInfo.DescriptorPool = VK_NULL_HANDLE; //vkBackend->uiRenderphase->descPool;
-		appInfo.DescriptorPoolSize = 128; // optional
+		appInfo.DescriptorPool = VK_NULL_HANDLE;
+		appInfo.DescriptorPoolSize = 128; // This is an arbitrary value
 		appInfo.MinImageCount = vkBackend->swapchain.swapchainImageCount;
 		appInfo.ImageCount = vkBackend->swapchain.swapchainImageCount;
 		appInfo.PipelineCache = VK_NULL_HANDLE;

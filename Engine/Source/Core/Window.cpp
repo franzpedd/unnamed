@@ -6,6 +6,7 @@
 #include <SDL3/SDL_video.h>
 #include <SDL3/SDL_vulkan.h>
 #include <backends/imgui_impl_sdl3.h>
+#include "Window.h"
 
 namespace Cosmos
 {
@@ -45,6 +46,9 @@ namespace Cosmos
 		SDL_SetWindowIcon(mNativeWindow, iconSurface); // this only works on desktop
 		SDL_DestroySurface(iconSurface);
 		cren_stbimage_destroy(sIcon);
+
+		// enables a max frames so we don't use all resources
+		mApp->SetTargetFrameTime((GetRefreshRate() * 2), 1 / (GetRefreshRate() * 2));
 	}
 
 	Window::~Window()
@@ -197,5 +201,24 @@ namespace Cosmos
 		}
 
 		return rate;
+	}
+
+    float2 Window::GetWindowSize()
+    {
+		int width, height;
+		SDL_GetWindowSize(mNativeWindow, &width, &height);
+
+        return {(float)width, (float)height};
+    }
+
+    float2 Window::GetCursorPos()
+	{
+		float2 size = GetWindowSize();
+    	float2 pos = { 0.0f, 0.0f };
+		
+    	SDL_GetMouseState(&pos.xy.x, &pos.xy.y);
+    	pos.xy.y = size.xy.y - pos.xy.y;
+		
+    	return pos;
 	}
 }

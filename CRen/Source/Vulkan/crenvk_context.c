@@ -54,7 +54,6 @@ static void internal_crenvk_resize(CRenVulkanBackend* backend, CRenContext* cont
  	}
  	
  	*hintResize = false;
- 	CREN_LOG(CREN_LOG_SEVERITY_INFO, "Resize completed successfully");
 }
 
 CREN_API CRenVulkanBackend crenvk_initialize(CRenContext* context, unsigned int width, unsigned int height, const CRenCallbacks* callbacks, const char* appName, const char* rootPath, unsigned int appVersion, CRen_Renderer api, CRen_MSAA msaa, bool vsync, bool validations, bool customViewport)

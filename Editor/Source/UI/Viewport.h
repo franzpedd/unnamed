@@ -52,6 +52,9 @@ namespace Cosmos
 		/// @brief draws the entity list, usefull for debug and easy access to all entities on the scene
 		void DrawEntityList();
 
+		/// @brief draw's a statistics subwindow at top-right of the viewport
+		void DrawStatistics();
+
 	private:
 
 		Cosmos::Application* mApp = nullptr;
@@ -79,6 +82,11 @@ namespace Cosmos
 			bool menusVisible[MenuOption_Max];
 			bool visible;
 		} mSettings;
+
+		struct Statistics 
+		{
+			bool visible;
+		} mStatistics;
 
 		std::vector<Cosmos::Entity*> mSelectedEntities;
 	};

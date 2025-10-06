@@ -1,4 +1,5 @@
 #include "UI/Viewport.h"
+#include "Viewport.h"
 
 namespace Cosmos
 {
@@ -47,6 +48,7 @@ namespace Cosmos
 
 		// update the settings window
 		DrawSettings();
+		DrawStatistics();
 	}
 
 	void Viewport::OnRender(int stage)
@@ -232,7 +234,6 @@ namespace Cosmos
 
 	void Viewport::DrawSettings()
 	{
-		/*
 		if (!mSettings.visible) return;
 		static Settings::MenuOption selected = Settings::MenuOption::General;
 		
@@ -246,7 +247,7 @@ namespace Cosmos
 			UIWidget::SeparatorText(ICON_LC_BUG " Debug Info");
 			if (UIWidget::Selectable("Entity List", selected == Settings::MenuOption::General)) selected = Settings::MenuOption::EntityList;
 		}
-		UIWidget::EndContext();
+		UIWidget::EndChildContext();
 		
 		UIWidget::SameLine();
 
@@ -261,7 +262,6 @@ namespace Cosmos
 		UIWidget::EndChildContext();
 		
 		UIWidget::EndContext();
-		*/
 	}
 
 	void Viewport::CreateGridResources()
@@ -336,8 +336,6 @@ namespace Cosmos
 
 	void Viewport::DrawGeneralInfo()
 	{
-		CREN_LOG(CREN_LOG_SEVERITY_TODO, "Address the url links when changing repo");
-
 		UIWidget::SeparatorText(ICON_FA_INFO_CIRCLE " About the project: Cosmos");
 		UIWidget::Text("Cosmos is a framework that allows the developer to create applications for desktop and mobile");
 		UIWidget::Text("It is but a wish of mine to develop games with it");
@@ -386,4 +384,16 @@ namespace Cosmos
 		//	ImGui::PopID();
 		//}
 	}
+
+
+	void Viewport::DrawStatistics()
+	{
+		float2 mousePos = mApp->GetWindowRef()->GetCursorPos();
+
+		UIWidget::BeginContext("##Statistics", &mStatistics.visible, static_cast<UIWidget::ContextFlags>(UIWidget::ContextFlags_NoBackground | UIWidget::ContextFlags_NoDecoration));
+		UIWidget::Text("Mouse Pos %dx%d", (int)mousePos.xy.x, (int)mousePos.xy.y);
+		UIWidget::Text("Average/Target FPS %d/%d", (int)mApp->GetAverageFPS(), (int)mApp->GetTargetFPS());
+		UIWidget::EndContext();
+	}
+
 }
