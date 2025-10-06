@@ -3,6 +3,7 @@
 
 /// @brief include standart bool and integer implementations
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 /// @brief align-as per compiler

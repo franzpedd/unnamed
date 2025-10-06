@@ -16,7 +16,12 @@ namespace Cosmos
 		Editor(const ApplicationCreateInfo& ci);
 
 		/// @brief destructor
-		virtual ~Editor();
+		virtual ~Editor() = default;
+
+	protected:
+
+		/// @brief calls before all internal objects still exists, for handling outside engine object-destruction that depends on it
+		virtual void Shutdown() override;
 
 	private:
 		Dockspace* mDockspace = nullptr;

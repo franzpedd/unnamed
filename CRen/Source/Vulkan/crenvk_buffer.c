@@ -8,7 +8,7 @@
 CREN_API vkBuffer* crenvk_buffer_create(VkDevice device, VkPhysicalDevice physicalDevice, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags memoryProperties, uint32_t frameCount)
 {
     if (size == 0 || frameCount == 0) {
-        CREN_LOG(CREN_LOG_SEVERITY_ERROR, "Invalid buffer size or frame count");
+        CREN_LOG(CREN_LOG_SEVERITY_ERROR, "Invalid buffer size or frame count");    
         return NULL;
     }
 

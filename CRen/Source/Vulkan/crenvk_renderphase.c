@@ -240,8 +240,6 @@ CREN_API VkResult crenvk_renderphase_default_create_framebuffers(vkDefaultRender
 
 CREN_API void crenvk_renderphase_default_recreate(vkDefaultRenderphase* phase, vkSwapchain* swapchain, VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, VkSampleCountFlagBits msaa, VkExtent2D extent, bool finalPhase, bool vsync)
 {
-    vkDeviceWaitIdle(device);
-
     // must recreate some default phase objects
     vkDestroyImageView(device, phase->depthView, NULL);
     vkDestroyImage(device, phase->depthImage, NULL);
@@ -257,8 +255,6 @@ CREN_API void crenvk_renderphase_default_recreate(vkDefaultRenderphase* phase, v
     free(phase->renderpass->framebuffers);
 
     // recreate swapchain
-    crenvk_swapchain_destroy(swapchain, device);
-    crenvk_swapchain_create(swapchain, device, physicalDevice, surface, extent.width, extent.height, vsync);
     crenvk_renderphase_default_create_framebuffers(phase, device, physicalDevice, swapchain->swapchainImageViews, swapchain->swapchainImageCount, extent, swapchain->swapchainFormat.format);
 }
 
@@ -572,6 +568,7 @@ CREN_API VkResult crenvk_renderphase_picking_create_framebuffers(vkPickingRender
 
 CREN_API void crenvk_renderphase_picking_recreate(vkPickingRenderphase* phase, vkSwapchain* swapchain, VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, VkQueue graphicsQueue, VkExtent2D extent)
 {
+    CREN_LOG(CREN_LOG_SEVERITY_TRACE,"Recreating %s with extent %dx%d", "Picking", extent.width, extent.height);
     vkDestroyImage(device, phase->depthImage, NULL);
     vkFreeMemory(device, phase->depthMemory, NULL);
     vkDestroyImageView(device, phase->depthView, NULL);
@@ -722,50 +719,6 @@ CREN_API VkResult crenvk_renderphase_ui_create(VkDevice device, VkPhysicalDevice
         return res;
     }
 
-    // ui descriptor set layout, follows ImGui specs
-    VkDescriptorSetLayoutBinding binding[1] = { 0 };
-    binding[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    binding[0].descriptorCount = 1;
-    binding[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-    VkDescriptorSetLayoutCreateInfo descInfo = { 0 };
-    descInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    descInfo.bindingCount = 1;
-    descInfo.pBindings = binding;
-    res = vkCreateDescriptorSetLayout(device, &descInfo, NULL, &outPhase->descSetLayout);
-    if (res != VK_SUCCESS) {
-        CREN_LOG(CREN_LOG_SEVERITY_FATAL, "Failed to create ui descriptor set layout");
-        return res;
-    }
-
-    // ui descriptor pool, follows ImGui specs
-    VkDescriptorPoolSize poolSizes[] =
-    {
-        { VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
-        { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
-        { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },
-        { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000 },
-        { VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000 },
-        { VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000 },
-        { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000 },
-        { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000 },
-        { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 },
-        { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 },
-        { VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 }
-    };
-
-    VkDescriptorPoolCreateInfo poolCI = { 0 };
-    poolCI.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    poolCI.pNext = NULL;
-    poolCI.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-    poolCI.maxSets = 1000 * 11U;
-    poolCI.poolSizeCount = 11U;
-    poolCI.pPoolSizes = poolSizes;
-    res = vkCreateDescriptorPool(device, &poolCI, NULL, &outPhase->descPool);
-    if (res != VK_SUCCESS) {
-        CREN_LOG(CREN_LOG_SEVERITY_FATAL, "Failed to create descriptor pool for the ui");
-        return res;
-    }
-
     // command pool and buffers
     vkQueueFamilyIndices indices = crenvk_device_find_queue_families(physicalDevice, surface);
     VkCommandPoolCreateInfo cmdPoolInfo = { 0 };
@@ -797,9 +750,6 @@ CREN_API void crenvk_renderphase_ui_destroy(vkUIRenderphase* phase, VkDevice dev
     vkDeviceWaitIdle(device);
 
     if (destroyRenderpass) crenvk_pipeline_renderpass_release(device, phase->renderpass);
-
-    vkDestroyDescriptorSetLayout(device, phase->descSetLayout, NULL);
-    vkDestroyDescriptorPool(device, phase->descPool, NULL);
 }
 
 CREN_API VkResult crenvk_renderphase_ui_framebuffers_create(vkUIRenderphase* phase, VkDevice device, VkExtent2D extent, VkImageView* swapchainViews, uint32_t swapchainViewsCount)
@@ -831,8 +781,6 @@ CREN_API VkResult crenvk_renderphase_ui_framebuffers_create(vkUIRenderphase* pha
 
 CREN_API void crenvk_renderphase_ui_recreate(vkUIRenderphase* phase, vkSwapchain* swapchain, VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, VkExtent2D extent)
 {
-    vkDeviceWaitIdle(device);
-
     for (uint32_t i = 0; i < phase->renderpass->framebuffersCount; i++) {
         vkDestroyFramebuffer(device, phase->renderpass->framebuffers[i], NULL);
     }
@@ -1019,7 +967,7 @@ CREN_API VkResult crenvk_renderphase_viewport_create_framebuffers(vkViewportRend
     VkFormat depthFormat = crenvk_device_find_depth_format(physicalDevice);
 
     // descriptor pool
-    VkDescriptorPoolSize poolSizes[] = { { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 2 } };
+    VkDescriptorPoolSize poolSizes[] = { { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, CREN_CONCURRENTLY_RENDERED_FRAMES } };
     VkDescriptorPoolCreateInfo poolCI = { 0 };
     poolCI.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
     poolCI.pNext = NULL;
@@ -1184,7 +1132,7 @@ CREN_API VkResult crenvk_renderphase_viewport_create_framebuffers(vkViewportRend
 
 CREN_API void crenvk_renderphase_viewport_recreate(vkViewportRenderphase* phase, vkSwapchain* swapchain, VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, VkQueue graphicsQueue, VkExtent2D extent)
 {
-    crenvk_renderphase_viewport_destroy(phase, device, 0);
+    crenvk_renderphase_viewport_destroy(phase, device, false);
 
     for (uint32_t i = 0; i < phase->renderpass->framebuffersCount; i++) {
         vkDestroyFramebuffer(device, phase->renderpass->framebuffers[i], NULL);

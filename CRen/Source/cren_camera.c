@@ -38,14 +38,14 @@ struct CRenCamera
 };
 
 /// @brief updates the view projection matrix of a camera
-static void internal_camera_update_view_matrix(CRenCamera* camera)
+static void internal_camera_update_view_matrix(CRenCamera* camera) 
 {
 	// calculate target point
 	float3 target = float3_add(&camera->position, &camera->frontPosition);
 	const float3 worldUp = { 0.0f, 1.0f, 0.0f };
-
+	
 	// create the view matrix
-	camera->view = fmat4_lookat_agnostic(&camera->position, &target, &worldUp);
+	camera->view = fmat4_lookat_vulkan(&camera->position, &target, &worldUp);
 	camera->viewPosition = camera->position;
 }
 
@@ -111,7 +111,7 @@ CREN_API void cren_camera_update(CRenCamera* camera, float timestep)
 	}
 
 	const float3 worldUp = { 0.0f, 1.0f, 0.0f };
-	float3 right = float3_cross(&camera->frontPosition, &worldUp);
+	float3 right = float3_cross(&worldUp, &camera->frontPosition);
 	right = float3_normalize(&right);
 
 	// apply movement
@@ -139,7 +139,6 @@ CREN_API void cren_camera_update(CRenCamera* camera, float timestep)
 CREN_API void cren_camera_set_aspect_ratio(CRenCamera* camera, float aspect)
 {
 	if (camera->api == CREN_RENDERER_API_VULKAN_1_1 || camera->api == CREN_RENDERER_API_VULKAN_1_2 || camera->api == CREN_RENDERER_API_VULKAN_1_3) {
-		CREN_LOG(CREN_LOG_SEVERITY_INFO, "This math function needs verifing");
 		camera->perspective = fmat4_perspective_vulkan(to_fradians(camera->fov), aspect, camera->near, camera->far);
 	}
 
@@ -206,10 +205,10 @@ CREN_API void cren_camera_move(CRenCamera* camera, CRen_CameraDirection dir, boo
 
 	switch (dir)
 	{
-		case CREN_CAMERA_DIRECTION_FORWARD: camera->movingForward = moving;
-		case CREN_CAMERA_DIRECTION_BACKWARD: camera->movingBackward = moving;
-		case CREN_CAMERA_DIRECTION_LEFT: camera->movingLeft = moving;
-		case CREN_CAMERA_DIRECTION_RIGHT: camera->movingRight = moving;
+		case CREN_CAMERA_DIRECTION_FORWARD: { camera->movingForward = moving; break; }
+		case CREN_CAMERA_DIRECTION_BACKWARD: { camera->movingBackward = moving; break; }
+		case CREN_CAMERA_DIRECTION_LEFT: { camera->movingLeft = moving; break; }
+		case CREN_CAMERA_DIRECTION_RIGHT: { camera->movingRight = moving; break; }
 	}
 }
 

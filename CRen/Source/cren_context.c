@@ -26,6 +26,7 @@ struct CRenContext
 	float2 viewportSize;	// only when usingCustomViewport
 
     // backend renderer api
+	CRen_MSAA msaa;
     #ifdef CREN_BUILD_WITH_VULKAN
     CRenVulkanBackend backend;
     #endif
@@ -45,6 +46,7 @@ CREN_API CRenContext* cren_initialize(const CRenCreateInfo createInfo)
 	context->mustResize = true;
 	context->framebufferSize.xy.x = context->createInfo.width;
 	context->framebufferSize.xy.y = context->createInfo.height;
+	context->msaa = context->createInfo.msaa;
 	
 	context->camera = cren_camera_create(CREN_CAMERA_TYPE_FREE_LOOK, (float)createInfo.width / (float)createInfo.height, createInfo.api);
 	
@@ -133,6 +135,11 @@ CREN_API bool cren_are_validations_enabled(CRenContext *context)
 bool cren_using_vsync(CRenContext* context)
 {
 	return context->usingVSync;
+}
+
+CREN_API CRen_MSAA cren_get_msaa(CRenContext *context)
+{
+    return context->msaa;
 }
 
 CREN_API bool cren_using_custom_viewport(CRenContext* context)

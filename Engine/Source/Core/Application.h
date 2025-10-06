@@ -50,7 +50,7 @@ namespace Cosmos
 		Application(const ApplicationCreateInfo& ci);
 
 		/// @brief destructor
-		virtual ~Application();
+		virtual ~Application() = default;
 
 		/// @brief returns the assets path
 		inline const char* GetAssetsDir() { return mAssetsPath; }
@@ -75,7 +75,12 @@ namespace Cosmos
 		/// @brief forces the closing of the application
 		void Quit();
 
-	public:
+	protected:
+
+		/// @brief calls before all internal objects still exists, for handling outside engine object-destruction that depends on it
+		virtual void Shutdown() = 0;
+
+ 	public:
 
 		/// @brief this is called by the window, signaling it's iconification
 		void OnMinimize();
@@ -119,5 +124,8 @@ namespace Cosmos
 		double mAverageFPS = 0;
 		double mTargetFPS = 0.0f;
 		double mTargetFrameTime = 0.0f;
+
+		double mLastMouseX = 0.0;
+		double mLastMouseY = 0.0;
 	};
 }

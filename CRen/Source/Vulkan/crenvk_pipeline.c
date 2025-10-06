@@ -216,7 +216,7 @@ CREN_API void crenvk_pipeline_destroy(VkDevice device, vkPipeline* pipeline)
 	vkDeviceWaitIdle(device);
 
 	vkDestroyPipeline(device, pipeline->pipeline, NULL);
-	vkDestroyPipelineLayout(device, pipeline->layout, NULL);
+	vkDestroyPipelineLayout(device, pipeline->layout, NULL); 
 	vkDestroyDescriptorSetLayout(device, pipeline->descriptorSetLayout, NULL);
 
 	if (pipeline->bindingsDescription != NULL) free(pipeline->bindingsDescription);
@@ -289,7 +289,7 @@ CREN_API vkShader crenvk_pipeline_create_shader(VkDevice device, const char* nam
         default: { break; }
     }
 
-    unsigned long long spirvSize = 0;
+    size_t spirvSize = 0;
     unsigned int* spirvCode = cren_load_file(path, &spirvSize);
     if (spirvCode == NULL) CREN_LOG(CREN_LOG_SEVERITY_ERROR, "SPIR-V code is NULL, therefore could not load file");
 

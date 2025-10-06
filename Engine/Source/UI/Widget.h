@@ -121,7 +121,7 @@ namespace Cosmos::UIWidget
 	COSMOS_API bool URLText(const char* label, const char* url);
 	COSMOS_API bool Button(const char* label, const float2 size = { 0.0f, 0.0f });
 	COSMOS_API bool Selectable(const char* label, bool selected = false, SelectableFlags flags = SelectableFlags_None, const float2& size = { 0.0f, 0.0f });
-	COSMOS_API void Image(uint64_t TexID, const float2& size = { 0.0f, 0.0f }, const float2& uv0 = { 0.0f, 0.0f }, const float2& uv1 = { 0.0f, 0.0f });
+	COSMOS_API void Image(uint64_t TexID, const float2& size = { 0.0f, 0.0f }, const float2& uv0 = { 0.0f, 0.0f }, const float2& uv1 = { 1.0f, 1.0f });
 	COSMOS_API void SetTooltip(const char* fmt, ...);
 	COSMOS_API bool SliderFloat(const char* label, float* v, float vmin, float vmax, const char* format = "%.3f", SliderFlags flags = SliderFlags_None);
 }

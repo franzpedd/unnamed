@@ -14,9 +14,9 @@ namespace Cosmos
 		GetGUIRef()->AddWidget(mViewport);
 	}
 
-	Editor::~Editor()
-	{
+    void Editor::Shutdown()
+    {
 		delete mViewport;
 		delete mDockspace;
-	}
+    }
 }

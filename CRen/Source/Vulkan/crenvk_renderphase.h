@@ -50,8 +50,6 @@ typedef struct vkPickingRenderphase
 typedef struct vkUIRenderphase
 {
     vkRenderpass* renderpass;
-    VkDescriptorPool descPool;
-    VkDescriptorSetLayout descSetLayout;
 } vkUIRenderphase;
 
 /// @brief optional viewport renderphase, uses it's own resources for managing the scene more appropriately, only drawing the scene on itself instead of the main renderphase

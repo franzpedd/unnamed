@@ -99,8 +99,8 @@ namespace Cosmos
 		appInfo.Device = vkBackend->device.device;
 		appInfo.QueueFamily = vkBackend->device.graphicsQueueIndex;
 		appInfo.Queue = vkBackend->device.graphicsQueue;
-		appInfo.DescriptorPool = vkBackend->uiRenderphase->descPool;
-		appInfo.DescriptorPoolSize = 0; // optional
+		appInfo.DescriptorPool = VK_NULL_HANDLE; //vkBackend->uiRenderphase->descPool;
+		appInfo.DescriptorPoolSize = 128; // optional
 		appInfo.MinImageCount = vkBackend->swapchain.swapchainImageCount;
 		appInfo.ImageCount = vkBackend->swapchain.swapchainImageCount;
 		appInfo.PipelineCache = VK_NULL_HANDLE;
@@ -229,6 +229,7 @@ namespace Cosmos
 
 	void GUI::OnResize(int width, int height)
 	{
+		CRenVulkanBackend* vkBackend = (CRenVulkanBackend*)cren_get_vulkan_backend(mApp->GetRendererRef()->GetCRenContext());
 		mWidgets.ForEach([width, height](Widget* widget)
 			{
 				if (widget->GetVisibility()) widget->OnResize(width, height);

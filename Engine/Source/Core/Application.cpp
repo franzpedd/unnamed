@@ -14,10 +14,6 @@ namespace Cosmos
         mGUI = CreateUnique<GUI>(this);
     }
 
-	Application::~Application()
-	{
-	}
-
 	void Application::Run()
 	{
         using Clock = std::chrono::steady_clock;
@@ -96,6 +92,8 @@ namespace Cosmos
         if (frameCount > 0 && fpsAccumulator > 0.0) {
             mAverageFPS = (double)(frameCount) / fpsAccumulator;
         }
+
+        Shutdown();
 	}
 
     void Application::Quit()
@@ -172,7 +170,7 @@ namespace Cosmos
         
         CRenCamera* cam = mRenderer->GetMainCamera();
         if (cren_camera_can_move(cam)) {
-            float3 rot = { float(-ypos), float(xpos), 0.0f };
+            float3 rot = { float(-ypos), float(-xpos), 0.0f };
             cren_camera_rotate(cam, rot);
         }
     }

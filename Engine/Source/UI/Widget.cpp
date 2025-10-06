@@ -199,7 +199,7 @@ namespace Cosmos::UIWidget
 
 	COSMOS_API void Image(uint64_t TexID, const float2& size, const float2& uv0, const float2& uv1)
 	{
-		ImGui::Image((ImTextureRef)TexID, { size.xy.x, size.xy.y }, { uv0.xy.x, uv0.xy.y }, { uv1.xy.x, uv1.xy.y });
+		ImGui::Image((ImTextureID)TexID, { size.xy.x, size.xy.y }, { uv0.xy.x, uv0.xy.y }, { uv1.xy.x, uv1.xy.y });
 	}
 
 	COSMOS_API void SetTooltip(const char* fmt, ...)

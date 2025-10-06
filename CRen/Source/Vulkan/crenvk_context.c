@@ -7,6 +7,56 @@
 
 #ifdef CREN_BUILD_WITH_VULKAN
 
+/// @brief handles the resize code, used internally
+static void internal_crenvk_resize(CRenVulkanBackend* backend, CRenContext* context, const CRenCallbacks* callbacks, CRenCamera* camera, bool customViewport, bool vsync, bool* hintResize)
+{
+    vkDeviceWaitIdle(backend->device.device);
+
+	CRen_MSAA msaa = cren_get_msaa(context);
+    float2 framebufferSize = cren_get_framebuffer_size(context);
+    VkExtent2D newExtent = { (uint32_t)framebufferSize.xy.x, (uint32_t)framebufferSize.xy.y };
+
+	// If you wish to make a vulkan resize, you must first re-invent the universe
+	if (customViewport) {
+		crenvk_renderphase_viewport_destroy(backend->viewportRenderphase, backend->device.device, true);
+	}
+    crenvk_renderphase_ui_destroy(backend->uiRenderphase, backend->device.device, true);
+    crenvk_renderphase_picking_destroy(backend->pickingRenderphase, backend->device.device, true, false);
+    crenvk_renderphase_default_destroy(backend->defaultRenderphase, backend->device.device, true, false);
+	
+    crenvk_swapchain_destroy(&backend->swapchain, backend->device.device);
+	crenvk_swapchain_create(&backend->swapchain, backend->device.device, backend->device.physicalDevice, backend->device.surface, newExtent.width, newExtent.height, vsync);
+
+   	crenvk_renderphase_default_create(backend->device.device, backend->device.physicalDevice, backend->device.surface, backend->swapchain.swapchainFormat.format, (VkSampleCountFlagBits)msaa, !customViewport, backend->defaultRenderphase);
+    crenvk_renderphase_default_create_framebuffers(backend->defaultRenderphase, backend->device.device, backend->device.physicalDevice, backend->swapchain.swapchainImageViews, backend->swapchain.swapchainImageCount, backend->swapchain.swapchainExtent, backend->swapchain.swapchainFormat.format);
+    crenvk_renderphase_picking_create(backend->device.device, backend->device.physicalDevice, backend->device.surface, backend->pickingRenderphase);
+    crenvk_renderphase_picking_create_framebuffers(backend->pickingRenderphase, backend->device.device, backend->device.physicalDevice, backend->device.graphicsQueue, backend->swapchain.swapchainImageViews, backend->swapchain.swapchainImageCount, backend->swapchain.swapchainExtent);
+    crenvk_renderphase_ui_create(backend->device.device, backend->device.physicalDevice, backend->device.surface, backend->swapchain.swapchainFormat.format, VK_SAMPLE_COUNT_1_BIT, 1, backend->uiRenderphase);
+    crenvk_renderphase_ui_framebuffers_create(backend->uiRenderphase, backend->device.device, backend->swapchain.swapchainExtent, backend->swapchain.swapchainImageViews, backend->swapchain.swapchainImageCount);
+    if (customViewport) {
+        crenvk_renderphase_viewport_create(backend->device.device, backend->device.physicalDevice, backend->device.surface, VK_FORMAT_R8G8B8A8_SRGB, VK_SAMPLE_COUNT_1_BIT, backend->viewportRenderphase);
+        crenvk_renderphase_viewport_create_framebuffers(backend->viewportRenderphase, backend->device.device, backend->device.physicalDevice, backend->device.graphicsQueue, backend->swapchain.swapchainImageViews, backend->swapchain.swapchainImageCount, backend->swapchain.swapchainExtent);
+    }
+
+ 	// update camera aspect ratio
+ 	float aspect = (newExtent.height > 0) ? (float)newExtent.width / (float)newExtent.height : 1.0f;
+ 	cren_camera_set_aspect_ratio(camera, aspect);
+ 	
+ 	// notify application
+ 	if (callbacks->resize != NULL) {
+ 	    CRenCallback_Resize fnResize = (CRenCallback_Resize)callbacks->resize;
+ 	    fnResize(context, newExtent.width, newExtent.height);
+ 	}
+ 	
+ 	if (callbacks->imageCount != NULL) {
+ 	    CRenCallback_ImageCount fnImageCount = (CRenCallback_ImageCount)callbacks->imageCount;
+ 	    fnImageCount(context, backend->swapchain.swapchainImageCount);
+ 	}
+ 	
+ 	*hintResize = false;
+ 	CREN_LOG(CREN_LOG_SEVERITY_INFO, "Resize completed successfully");
+}
+
 CREN_API CRenVulkanBackend crenvk_initialize(CRenContext* context, unsigned int width, unsigned int height, const CRenCallbacks* callbacks, const char* appName, const char* rootPath, unsigned int appVersion, CRen_Renderer api, CRen_MSAA msaa, bool vsync, bool validations, bool customViewport)
 {
     VkResult res = VK_SUCCESS;
@@ -115,7 +165,7 @@ CREN_API void crenvk_update(CRenVulkanBackend* backend, float timestep, CRenCame
 	cameraData.viewInverse = fmat4_inverse(&view);
 	cameraData.proj = cren_camera_get_perspective(camera);
 	cameraData.proj.data[1][1] *= -1.0f; // flip y because vulkan
-
+	
 	vkBuffer* cameraBuffer = (vkBuffer*)shashtable_lookup(backend->buffersLib, "Camera");
 	crenvk_buffer_copy(cameraBuffer, backend->swapchain.currentFrame, &cameraData, sizeof(vkBufferCamera), 0);
 }
@@ -132,19 +182,7 @@ CREN_API void crenvk_render(void* context, CRenVulkanBackend* backend, float tim
 
 	// failed to acquire next image, must recreate
 	if (res == VK_ERROR_OUT_OF_DATE_KHR) {
-		VkDevice device = backend->device.device;
-		VkPhysicalDevice physicalDevice = backend->device.physicalDevice;
-		VkSurfaceKHR surface = backend->device.surface;
-		VkExtent2D extent = backend->swapchain.swapchainExtent;
-		VkQueue graphicsQueue = backend->device.graphicsQueue;
-
-		crenvk_renderphase_default_recreate(backend->defaultRenderphase, &backend->swapchain, device, physicalDevice, surface, backend->defaultRenderphase->renderpass->msaa, extent, customViewport, vsync);
-		crenvk_renderphase_picking_recreate(backend->pickingRenderphase, &backend->swapchain, device, physicalDevice, surface, graphicsQueue, extent);
-		crenvk_renderphase_ui_recreate(backend->uiRenderphase, &backend->swapchain, device, physicalDevice, surface, extent);
-
-		if (customViewport) {
-			crenvk_renderphase_viewport_recreate(backend->viewportRenderphase, &backend->swapchain, device, physicalDevice, surface, graphicsQueue, extent);
-		}
+		internal_crenvk_resize(backend, ctx, callbacks, camera, customViewport, vsync, hintResize);
 
 		// advance frame even on recreation to avoid stalling
 		backend->swapchain.currentFrame = (currentFrame + 1) % CREN_CONCURRENTLY_RENDERED_FRAMES;
@@ -219,32 +257,7 @@ CREN_API void crenvk_render(void* context, CRenVulkanBackend* backend, float tim
 
 	// failed to present the image, must recreate
 	if (res == VK_ERROR_OUT_OF_DATE_KHR || res == VK_SUBOPTIMAL_KHR || *hintResize == true) {
-
-		float2 framebufferSize = cren_get_framebuffer_size(context);
-		VkDevice device = backend->device.device;
-		VkPhysicalDevice physicalDevice = backend->device.physicalDevice;
-		VkSurfaceKHR surface = backend->device.surface;
-		VkExtent2D extent = { framebufferSize.xy.x, framebufferSize.xy.y };
-		VkQueue graphicsQueue = backend->device.graphicsQueue;
-
-		crenvk_renderphase_default_recreate(backend->defaultRenderphase, &backend->swapchain, device, physicalDevice, surface, backend->defaultRenderphase->renderpass->msaa, extent, customViewport, vsync);
-		crenvk_renderphase_picking_recreate(backend->pickingRenderphase, &backend->swapchain, device, physicalDevice, surface, graphicsQueue, extent);
-		crenvk_renderphase_ui_recreate(backend->uiRenderphase, &backend->swapchain, device, physicalDevice, surface, extent);
-
-		if (customViewport) {
-			crenvk_renderphase_viewport_recreate(backend->viewportRenderphase, &backend->swapchain, device, physicalDevice, surface, graphicsQueue, extent);
-		}
-
-		float aspect = framebufferSize.xy.x / framebufferSize.xy.y;
-		cren_camera_set_aspect_ratio(camera, aspect);
-
-		CRenCallback_ImageCount fnImageCount = (CRenCallback_ImageCount)callbacks->imageCount;
-		CRenCallback_Resize fnResize = (CRenCallback_Resize)callbacks->resize;
-		if (callbacks->resize != NULL) fnResize(ctx, framebufferSize.xy.x, framebufferSize.xy.y);
-		if (callbacks->imageCount != NULL) fnImageCount(ctx, backend->swapchain.swapchainImageCount);
-
-		// we must unset the resize flag
-		*hintResize = false;
+		internal_crenvk_resize(backend, ctx, callbacks, camera, customViewport, vsync, hintResize);
 	}
 
 	else if (res != VK_SUCCESS) {

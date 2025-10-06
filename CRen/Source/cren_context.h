@@ -59,6 +59,9 @@ CREN_API bool cren_are_validations_enabled(CRenContext* context);
 /// @brief returns the curernt status of vertical syncronization
 CREN_API bool cren_using_vsync(CRenContext* context);
 
+/// @brief returns the current msaa applyed
+CREN_API CRen_MSAA cren_get_msaa(CRenContext* context);
+
 /// @brief returns if scene is being rendered on a separate viewport
 CREN_API bool cren_using_custom_viewport(CRenContext* context);
 

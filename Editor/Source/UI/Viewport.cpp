@@ -13,9 +13,9 @@ namespace Cosmos
 	Viewport::~Viewport()
 	{
 		CRenVulkanBackend* renderer = (CRenVulkanBackend*)cren_get_vulkan_backend(mApp->GetRendererRef()->GetCRenContext());
-
 		vkDeviceWaitIdle(renderer->device.device);
 		crenvk_pipeline_destroy(renderer->device.device, mGrid.crenPipeline);
+
 		vkDestroyDescriptorPool(renderer->device.device, mGrid.descriptorPool, NULL);
 	}
 
@@ -290,7 +290,6 @@ namespace Cosmos
 		mGrid.crenPipeline = (vkPipeline*)malloc(sizeof(vkPipeline));
 		CREN_ASSERT(mGrid.crenPipeline != NULL, "Failed to allocate memory for grid pipeline");
 		
-		VkResult res = crenvk_pipeline_create(renderer->device.device, &pipeCI, mGrid.crenPipeline);
 		CREN_ASSERT(crenvk_pipeline_create(renderer->device.device, &pipeCI, mGrid.crenPipeline) == VK_SUCCESS, "Failed to create grid pipeline");
 		CREN_ASSERT(crenvk_pipeline_build(renderer->device.device, mGrid.crenPipeline) == VK_SUCCESS, "Failed to build grid pipeline");
 
