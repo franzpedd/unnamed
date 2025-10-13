@@ -6,7 +6,6 @@
 #include <SDL3/SDL_video.h>
 #include <SDL3/SDL_vulkan.h>
 #include <backends/imgui_impl_sdl3.h>
-#include "Window.h"
 
 namespace Cosmos
 {
@@ -46,9 +45,6 @@ namespace Cosmos
 		SDL_SetWindowIcon(mNativeWindow, iconSurface); // this only works on desktop
 		SDL_DestroySurface(iconSurface);
 		cren_stbimage_destroy(sIcon);
-
-		// enables a max frames so we don't use all resources
-		mApp->SetTargetFrameTime((GetRefreshRate() * 2), 1 / (GetRefreshRate() * 2));
 	}
 
 	Window::~Window()
@@ -140,16 +136,6 @@ namespace Cosmos
 					break;
 				}
 
-				case SDL_EVENT_WINDOW_DISPLAY_CHANGED:
-				{
-					if (event.window.windowID == SDL_GetWindowID(mNativeWindow)) {
-						float newRate = GetRefreshRate();
-						mApp->SetTargetFrameTime(newRate, 1.0 / newRate);
-					}
-
-					break;
-				}
-
 				default:
 				{
 					break;
@@ -187,20 +173,39 @@ namespace Cosmos
 		}
     }
 
+	unsigned long long Window::GetTimer()
+	{
+		return SDL_GetPerformanceCounter();
+	}
+
+	unsigned long long Window::GetTimerFrequency()
+	{
+		return SDL_GetPerformanceFrequency();
+	}
+
 	float Window::GetRefreshRate()
 	{
-		float rate = 60.0f; // 60 is in case SDL doesn't define
+		const float DEFAULT_REFRESH_RATE = 60.0f;
+
 		SDL_DisplayID display = SDL_GetDisplayForWindow(mNativeWindow);
 		if (display == 0) {
-			return rate;
+			CREN_LOG(CREN_LOG_SEVERITY_ERROR, "Failed to get display for window: %s", SDL_GetError());
+			return DEFAULT_REFRESH_RATE;
 		}
 
 		const SDL_DisplayMode* mode = SDL_GetCurrentDisplayMode(display);
-		if (mode && mode->refresh_rate > 0) {
-			rate = mode->refresh_rate;
+		if (!mode) {
+			CREN_LOG(CREN_LOG_SEVERITY_ERROR, "Failed to get current display mode: %s", SDL_GetError());
+			return DEFAULT_REFRESH_RATE;
 		}
 
-		return rate;
+		if (mode->refresh_rate > 0) {
+			CREN_LOG(CREN_LOG_SEVERITY_INFO, "Detected refresh rate: %f Hz", mode->refresh_rate);
+			return mode->refresh_rate;
+		}
+
+		CREN_LOG(CREN_LOG_SEVERITY_WARN, "Display reported invalid refresh rate: %f Hz", mode->refresh_rate);
+		return DEFAULT_REFRESH_RATE;
 	}
 
     float2 Window::GetWindowSize()

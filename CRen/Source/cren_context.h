@@ -26,8 +26,12 @@ typedef struct CRenCreateInfo
 extern "C" {
 #endif
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/// Context
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 /// @brief creates the cren context, initializing the library
-CREN_API CRenContext* cren_initialize(const CRenCreateInfo pCreateInfo);
+CREN_API CRenContext* cren_initialize(const CRenCreateInfo createInfo);
 
 /// @brief creates the renderer underneath the library, this is a separate function in order to callbacks to be properly assigned
 CREN_API void cren_create_renderer(CRenContext* context);
@@ -50,11 +54,24 @@ CREN_API void cren_minimize(CRenContext* context);
 /// @brief restores the renderer to it's last known size, resuming the rendering process
 CREN_API void cren_restore(CRenContext* context);
 
-/// @brief returns the cren main camera, we're only using one right now
-CREN_API CRenCamera* cren_get_camera(CRenContext* context);
+/// @brief create and register internally and returns an id
+CREN_API uint32_t cren_create_id(CRenContext* context);
+
+/// @brief register an id, returns true if successfully registered
+CREN_API bool cren_register_id(CRenContext* context, uint32_t id);
+
+/// @brief unregister an id, returns true if successfully unregistered
+CREN_API bool cren_unregister_id(CRenContext* context, uint32_t id);
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/// Getters/Setters
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// @brief returns if validation errors are enabled
 CREN_API bool cren_are_validations_enabled(CRenContext* context);
+
+/// @brief returns the cren main camera, we're only using one right now
+CREN_API CRenCamera* cren_get_main_camera(CRenContext* context);
 
 /// @brief returns the curernt status of vertical syncronization
 CREN_API bool cren_using_vsync(CRenContext* context);
@@ -86,9 +103,9 @@ CREN_API float2 cren_get_framebuffer_size(CRenContext* context);
 /// @brief set's the new framebuffer size (changes the current size wich will be noticded uppon render function and resized)
 CREN_API void cren_set_framebuffer_size(CRenContext* context, const float2 size);
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Callbacks
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/// Callbacks
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// @brief sets the user defined pointer address
 CREN_API void cren_set_user_pointer(CRenContext* context, void* pointer);

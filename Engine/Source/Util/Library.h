@@ -9,7 +9,7 @@
 namespace Cosmos
 {
     template<typename Key, typename Value>
-    class COSMOS_API Library
+    class Library // template class should not be exported, no COSMOS_API
     {
     public:
         

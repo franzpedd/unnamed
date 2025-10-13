@@ -49,6 +49,8 @@ set(SOURCES
     Source/Core/Renderer.h Source/Core/Renderer.cpp
     Source/Core/Window.h Source/Core/Window.cpp
     #
+    Source/Scene/Components.h Source/Scene/Components.cpp
+    Source/Scene/Entity.h Source/Scene/Entity.cpp
     Source/Scene/World.h Source/Scene/World.cpp
     #
     Source/UI/Gizmos.h Source/UI/Gizmos.cpp
@@ -58,6 +60,7 @@ set(SOURCES
     Source/UI/WidgetTypes.h
     #
     Source/Util/Container.h
+    Source/Util/Datafile.h
     Source/Util/ID.h
     Source/Util/Library.h
     Source/Util/Memory.h
@@ -79,7 +82,7 @@ set_target_properties(Engine PROPERTIES FOLDER "Projects")
 
 # ------------------------------------------------------------------------------------------------------------- dependencies
 find_package(Vulkan REQUIRED)
-target_link_libraries(Engine PRIVATE CRen ctoolbox SDL3::SDL3 Vulkan::Vulkan)
+target_link_libraries(Engine PRIVATE CRen ctoolbox vecmath SDL3::SDL3 Vulkan::Vulkan)
 
 # must copy the SDL3 into the build folder
 add_custom_command(TARGET Engine POST_BUILD

@@ -55,6 +55,14 @@ namespace Cosmos
 		/// @brief creates the vulkan surface, populates it and returns it to the renderer
 		void CreateSurface(void* instance, void* surface);
 
+		/// @brief returns the internal clock timer
+		unsigned long long GetTimer();
+
+		/// @brief returns the internal clock timer frequency
+		unsigned long long GetTimerFrequency();
+		
+	public:
+
 		/// @brief returns the monitor window is currently in refresh-rate, usefull for frame cap and resource management
 		float GetRefreshRate();
 

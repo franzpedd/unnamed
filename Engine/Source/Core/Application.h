@@ -64,14 +64,8 @@ namespace Cosmos
 		/// @brief returns a reference to the gui class
 		inline Unique<GUI>& GetGUIRef() { return mGUI; }
 
-		/// @brief sets the time between loop itarations, this comes from window refresh rate and changes when SDL_EVENT_WINDOW_DISPLAY_CHANGED happens
-		inline void SetTargetFrameTime(double targetFPS, double frameTimer) { mTargetFPS = targetFPS; mTargetFrameTime = frameTimer; }
-
 		/// @brief returns the average frames per second
 		inline double GetAverageFPS() { return mAverageFPS; }
-
-		/// @brief returns the target frames per second
-		inline double GetTargetFPS() { return mTargetFPS; }
 
 	public:
 
@@ -128,7 +122,34 @@ namespace Cosmos
 
 		double mTimeStep = 0.0;
 		double mAverageFPS = 0;
-		double mTargetFPS = 0.0f;
-		double mTargetFrameTime = 0.0f;
+	};
+
+	class COSMOS_API FrameLimiter
+	{
+	public:
+
+		/// @brief constructor
+		FrameLimiter(double targetFPS)
+		{
+			mTargetDuration = std::chrono::nanoseconds(static_cast<int64_t>(1e9 / targetFPS));
+			mFrameStart = std::chrono::steady_clock::now();
+		}
+
+		/// @brief stales the cpu if necessary
+		inline void Wait()
+		{
+			mFrameStart += mTargetDuration;
+
+			// hybrid approach: sleep + busy-wait for precision
+			auto now = std::chrono::steady_clock::now();
+			auto remaining = mFrameStart - now;
+
+			if (remaining > std::chrono::microseconds(2000)) std::this_thread::sleep_for(remaining - std::chrono::microseconds(1500));
+			while (std::chrono::steady_clock::now() < mFrameStart) std::this_thread::yield();
+		}
+
+	private:
+		std::chrono::steady_clock::time_point mFrameStart;
+		std::chrono::nanoseconds mTargetDuration;
 	};
 }

@@ -15,7 +15,17 @@ namespace Cosmos::UIWidget
 {
 	COSMOS_API ID GetID(const char* name)
 	{
-		return (ID)ImGui::GetID("##MyDockspace");
+		return (ID)ImGui::GetID(name);
+	}
+
+	COSMOS_API void PushID(int32_t id)
+	{
+		ImGui::PushID(id);
+	}
+
+	COSMOS_API void PopID()
+	{
+		ImGui::PopID();
 	}
 
 	COSMOS_API bool BeginContext(const char* name, bool* open, ContextFlags flags)
@@ -169,6 +179,16 @@ namespace Cosmos::UIWidget
 		ImGui::PopItemWidth();
 	}
 
+	COSMOS_API bool BeginPopupContextWindow(const char* label, PopupFlags flags)
+	{
+		return ImGui::BeginPopupContextWindow(label, (ImGuiPopupFlags)flags);
+	}
+
+	COSMOS_API void EndPopup()
+	{
+		ImGui::EndPopup();
+	}
+
 	COSMOS_API void Text(const char* fmt, ...)
 	{
 		va_list args;
@@ -212,6 +232,11 @@ namespace Cosmos::UIWidget
 	COSMOS_API bool SliderFloat(const char* label, float* v, float vmin, float vmax, const char* format, SliderFlags flags)
 	{
 		return ImGui::SliderFloat(label, v, vmin, vmax, format, (ImGuiSliderFlags)flags);
+	}
+
+	COSMOS_API bool MenuItem(const char* label, const char* shortcut, bool selected, bool enabled)
+	{
+		return ImGui::MenuItem(label, shortcut, selected, enabled);
 	}
 }
 

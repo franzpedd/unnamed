@@ -20,15 +20,20 @@ namespace Cosmos
         using TimePoint = std::chrono::time_point<Clock>;
         using Duration = std::chrono::duration<double>;
 
+        // time tracking
         TimePoint previousTime = Clock::now();
         double accumulator = 0.0;
         const double FIXED_TIMESTEP = 1.0 / 60.0;
-        const int MAX_UPDATES = 8;
+        const int MAX_UPDATES = 10;
 
-        // FPS tracking
+        // fps tracking
         int frameCount = 0;
         double fpsAccumulator = 0.0;
         mAverageFPS = 0.0;
+
+        // fps limiter
+        double targetFPS = mWindow->GetRefreshRate() * 2.0;
+        FrameLimiter frameLimiter(targetFPS);
 
         while (!mWindow->ShouldClose())
         {
@@ -39,7 +44,7 @@ namespace Cosmos
             mTimeStep = std::chrono::duration_cast<Duration>(currentTime - previousTime).count();
             previousTime = currentTime;
 
-            if (mTimeStep > 0.1) mTimeStep = 0.1; // clamp
+            if (mTimeStep > 0.05) mTimeStep = 0.05;
 
             // update window events
             mWindow->OnUpdate();
@@ -70,27 +75,13 @@ namespace Cosmos
                 updateCount++;
             }
 
-            // interpolation
-            double alpha = accumulator / FIXED_TIMESTEP;
+            // render with interpolation
+            mRenderer->OnRender(accumulator / FIXED_TIMESTEP);
 
-            // render
-            mRenderer->OnRender(alpha);
-
-            // automatic frame cap sleep
-            TimePoint frameEnd = Clock::now();
-            double frameDuration = std::chrono::duration_cast<Duration>(frameEnd - frameStart).count();
-
+            // use frame limiter instead of manual sleep
             if (!mRenderer->GetVSync()) {
-                if (frameDuration < mTargetFrameTime) {
-                    auto sleepTime = std::chrono::duration<double>(mTargetFrameTime - frameDuration);
-                    std::this_thread::sleep_for(sleepTime);
-                }
+                frameLimiter.Wait();
             }
-        }
-
-        // final FPS
-        if (frameCount > 0 && fpsAccumulator > 0.0) {
-            mAverageFPS = (double)(frameCount) / fpsAccumulator;
         }
 
         Shutdown();

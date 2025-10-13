@@ -3,12 +3,14 @@
 #include "cren_error.h"
 #include "Vulkan/crenvk_context.h"
 #include <memm/memm.h>
+#include <ctoolbox/idgen.h>
 
 struct CRenContext
 {
-    // needed info
+    // core info
 	CRenCreateInfo createInfo;
     CRenCamera* camera;
+	idgen* idgen;
 
     // hints
     bool currentlyMinimized;
@@ -49,7 +51,11 @@ CREN_API CRenContext* cren_initialize(const CRenCreateInfo createInfo)
 	context->msaa = context->createInfo.msaa;
 	
 	context->camera = cren_camera_create(CREN_CAMERA_TYPE_FREE_LOOK, (float)createInfo.width / (float)createInfo.height, createInfo.api);
-	
+	CREN_ASSERT(context->camera != NULL, "Faield to create CRen's main camera");
+
+	context->idgen = idgen_create(1U, UINT32_MAX - 1);
+	CREN_ASSERT(context->idgen != NULL, "Failed to create CRen's id generator");
+
 	return context;
 }
 
@@ -70,6 +76,9 @@ CREN_API void cren_create_renderer(CRenContext* context)
 
 CREN_API void cren_shutdown(CRenContext* context)
 {
+	CREN_ASSERT(context != NULL, "CRen context is NULL and this should not occur");
+
+	idgen_destroy(context->idgen);
 	cren_camera_destroy(context->camera);
 
 	#ifdef CREN_BUILD_WITH_VULKAN
@@ -120,16 +129,34 @@ CREN_API void cren_restore(CRenContext* context)
 	context->currentlyMinimized = 0; // vulkan will pickup the change automatically
 }
 
-CREN_API CRenCamera* cren_get_camera(CRenContext* context)
+CREN_API uint32_t cren_create_id(CRenContext* context)
+{
+	if (!context) return 0;
+	return idgen_next(context->idgen);
+}
+
+CREN_API bool cren_register_id(CRenContext* context, uint32_t id)
+{
+	if (!context) return false;
+	return idgen_register(context->idgen, id);
+}
+
+CREN_API bool cren_unregister_id(CRenContext* context, uint32_t id)
+{
+	if (!context) return false;
+	return idgen_unregister(context->idgen, id);
+}
+
+CREN_API bool cren_are_validations_enabled(CRenContext* context)
+{
+	if (!context) return false;
+	return context->createInfo.validations;
+}
+
+CREN_API CRenCamera* cren_get_main_camera(CRenContext* context)
 {
 	if (!context) return NULL;
 	return context->camera;
-}
-
-CREN_API bool cren_are_validations_enabled(CRenContext *context)
-{
-    if (!context) return false;
-	return context->createInfo.validations;
 }
 
 bool cren_using_vsync(CRenContext* context)

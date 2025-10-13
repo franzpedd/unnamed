@@ -81,6 +81,8 @@ CREN_API CRenCamera* cren_camera_create(CRen_CameraType type, float initialAspec
 		CREN_LOG(CREN_LOG_SEVERITY_FATAL, "The camera system is only functional under vulkan right now");
 	}
 
+	 camera->shouldMove = camera->movingBackward = camera->movingForward = camera->movingLeft = camera->movingRight = false;
+
 	// update initial view
 	internal_camera_update_view_matrix(camera);
 
@@ -216,4 +218,10 @@ CREN_API void cren_camera_pressing_speed_modifier(CRenCamera* camera, bool statu
 {
 	if (!camera) return;
 	camera->modifierPressed = status;
+}
+
+CREN_API float3 cren_camera_get_position(CRenCamera* camera)
+{
+	if (!camera) return (float3){ 0.0f, 0.0f, 0.0f };
+	return camera->position;
 }

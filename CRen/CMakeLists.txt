@@ -34,6 +34,7 @@ set(SOURCES
     Source/Vulkan/crenvk_core.h Source/Vulkan/crenvk_core.c
     Source/Vulkan/crenvk_context.h Source/Vulkan/crenvk_context.c
     Source/Vulkan/crenvk_pipeline.h Source/Vulkan/crenvk_pipeline.c
+    Source/Vulkan/crenvk_primitives.h Source/Vulkan/crenvk_primitives.c
     Source/Vulkan/crenvk_renderphase.h Source/Vulkan/crenvk_renderphase.c
     #
     Source/cren_callbacks.h
@@ -42,6 +43,7 @@ set(SOURCES
     Source/cren_defines.h
     Source/cren_error.h Source/cren_error.c
     Source/cren_platform.h Source/cren_platform.c
+    Source/cren_primitives.h Source/cren_primitives.c
     Source/cren_types.h
     Source/cren.h
 )

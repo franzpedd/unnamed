@@ -5,7 +5,7 @@ namespace Cosmos
 	Dockspace::Dockspace(Cosmos::Application* app)
 		: Cosmos::Widget("Dockspace", true), mApp(app) 
 	{
-		mFlags = static_cast<UIWidget::ContextFlags>(
+		mFlags = (UIWidget::ContextFlags)(
 			UIWidget::ContextFlags_NoTitleBar
 			| UIWidget::ContextFlags_NoResize
 			| UIWidget::ContextFlags_NoMove

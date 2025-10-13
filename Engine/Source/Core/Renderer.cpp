@@ -6,7 +6,7 @@
 namespace Cosmos
 {
     Renderer::Renderer(Application* app, const char* appName, unsigned int appVersion, bool customViewport, bool validations, bool vsync, const char* assetsPath, CRen_RendererAPI api, CRen_MSAA msaa)
-        : mApp(app)
+        : mApp(app), mAPI(api)
     {
         // initialization
         CRenCreateInfo ci = { 0 };
@@ -72,10 +72,13 @@ namespace Cosmos
         
         // initialize the renderer
         cren_create_renderer(mContext);
+
+        mWorld = new World(mApp->GetRendererRef()); // loading a default world
     }
 
     Renderer::~Renderer()
     {
+        mWorld->Destroy();
         cren_shutdown(mContext);
     }
 

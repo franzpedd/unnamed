@@ -45,6 +45,9 @@ CREN_API void cren_camera_move(CRenCamera* camera, CRen_CameraDirection dir, boo
 /// @brief sets/unsets the camera's speed modifier
 CREN_API void cren_camera_pressing_speed_modifier(CRenCamera* camera, bool status);
 
+/// @brief returns the camera's current 3d position
+CREN_API float3 cren_camera_get_position(CRenCamera* camera);
+
 #ifdef __cplusplus 
 }
 #endif

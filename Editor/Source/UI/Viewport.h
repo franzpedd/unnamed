@@ -43,17 +43,14 @@ namespace Cosmos
 		/// @brief displays the settings window, with various debug information about the editor
 		void DrawSettings();
 
-		/// @brief create and setup the grid resources
-		void CreateGridResources();
-
-		/// @brief draws useful information about the entity, project and etc
-		void DrawGeneralInfo();
-
 		/// @brief draws the entity list, usefull for debug and easy access to all entities on the scene
 		void DrawEntityList();
 
 		/// @brief draw's a statistics subwindow at top-right of the viewport
 		void DrawStatistics();
+
+		/// @brief create and setup the grid resources
+		void CreateGridResources();
 
 	private:
 
@@ -74,13 +71,12 @@ namespace Cosmos
 		{
 			enum MenuOption // this is menus that exists on the viewport
 			{ 
-				General, 
 				EntityList,
 
 				MenuOption_Max
 			}; 
-			bool menusVisible[MenuOption_Max];
-			bool visible;
+			bool menusVisible[MenuOption_Max] = { false };
+			bool visible = false;
 		} mSettings;
 
 		struct Statistics 

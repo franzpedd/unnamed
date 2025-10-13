@@ -75,8 +75,10 @@ namespace Cosmos
 
 namespace Cosmos::UIWidget
 {
-	/// @brief returns the id for a given window name
+	/// @brief ids
 	COSMOS_API ID GetID(const char* name);
+	COSMOS_API void PushID(int32_t id);
+	COSMOS_API void PopID();
 
 	/// @brief window contexts
 	COSMOS_API bool BeginContext(const char* name, bool* open = nullptr, ContextFlags flags = ContextFlags_None);
@@ -115,6 +117,10 @@ namespace Cosmos::UIWidget
 	COSMOS_API void PushItemWidth(float width);
 	COSMOS_API void PopItemWidth();
 
+	/// @brief popups
+	COSMOS_API bool BeginPopupContextWindow(const char* label, PopupFlags flags = PopupFlags_None);
+	COSMOS_API void EndPopup();
+
 	/// @brief various standart widgets
 	COSMOS_API void Text(const char* fmt, ...);
 	COSMOS_API void SeparatorText(const char* label);
@@ -124,6 +130,7 @@ namespace Cosmos::UIWidget
 	COSMOS_API void Image(uint64_t TexID, const float2& size = { 0.0f, 0.0f }, const float2& uv0 = { 0.0f, 0.0f }, const float2& uv1 = { 1.0f, 1.0f });
 	COSMOS_API void SetTooltip(const char* fmt, ...);
 	COSMOS_API bool SliderFloat(const char* label, float* v, float vmin, float vmax, const char* format = "%.3f", SliderFlags flags = SliderFlags_None);
+	COSMOS_API bool MenuItem(const char* label, const char* shortcut = nullptr, bool selected = false, bool enabled = true);
 }
 
 namespace Cosmos::WidgetExtended

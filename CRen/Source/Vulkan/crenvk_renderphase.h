@@ -153,7 +153,7 @@ CREN_API void crenvk_renderphase_viewport_update(vkViewportRenderphase* phase, v
 
 #ifdef __cplusplus 
 }
-
 #endif
+
 #endif // CREN_BUILD_WITH_VULKAN
 #endif // CRENVK_RENDERPHASE

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/Defines.h"
+#include "Scene/World.h"
 #include "Util/Memory.h"
 #include <cren.h>
 
@@ -24,6 +25,9 @@ namespace Cosmos
         
         /// @brief returns the renderer api used
         inline CRen_RendererAPI GetAPI() { return mAPI; }
+
+        /// @brief returns the world currently loaded in
+        inline World* GetWorld() { return mWorld; }
         
     public:
 
@@ -63,5 +67,6 @@ namespace Cosmos
         Application* mApp = nullptr;
         CRenContext* mContext = nullptr;
         CRen_RendererAPI mAPI;
+        World* mWorld = nullptr;
     };
 }

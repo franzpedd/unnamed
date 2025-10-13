@@ -1,5 +1,4 @@
 #include "UI/Viewport.h"
-#include "Viewport.h"
 
 namespace Cosmos
 {
@@ -92,41 +91,11 @@ namespace Cosmos
 
 	void Viewport::OnButtonPress(Cosmos::Input::Buttoncode buttoncode, Cosmos::Input::Keymod mod)
 	{
-		//// check for entity selection
-		//if (buttoncode == Cosmos::Input::Buttoncode::BUTTON_LEFT && mod == Cosmos::Input::Keymod::KEYMOD_NONE) {
-		//	//CRenContext* context = mApp->GetRendererRef().GetContext();
-		//	//
-		//	//float2 cursorPos = mApp->GetWindowRef().GetCursorPosition(true);
-		//	//
-		//	//bool clickedInViewport = true;
-		//	//clickedInViewport &= cursorPos.x >= context->viewportPos.x && cursorPos.x <= (context->viewportPos.x + context->viewportSize.x);
-		//	//clickedInViewport &= cursorPos.y >= context->viewportPos.y && cursorPos.y <= (context->viewportPos.y + context->viewportSize.y);
-		//	//
-		//	//if (clickedInViewport) {
-		//	//	//printf("Reading at pixel %f, %f \n", cursorPos.x, cursorPos.y);
-		//	//	//unsigned long long id = cren_vulkan_picking_read_pixel(context, cursorPos.x, cursorPos.y);
-		//	//	//COSMOS_LOG(LogSeverity::Info, "ID %lld", id);
-		//	//}
-		//	//
-		//	//// check if cursor position is inside viewport
-		//	//float2 cursorPos;
-		//	//mApp->GetWindowRef().GetViewportCursorPosition(context->viewportPos.x, context->viewportPos.y, context->viewportSize.x, context->viewportSize.y, &cursorPos.x, &cursorPos.y);
-		//	//
-		//	//if (clickedInViewport) {
-		//	//	COSMOS_LOG(LogSeverity::Info, "Reading pixel at: %f, %f", cursorPos.x, cursorPos.y);
-		//	//	
-		//	//	unsigned long long id = cren_vulkan_picking_read_pixel(context, cursorPos.x, cursorPos.y);
-		//	//	COSMOS_LOG(LogSeverity::Info, "ID %lld", id);
-		//	//	
-		//	//	if (id == 0) return;
-		//	//	
-		//	//	Entity* entity = mApp->GetWorldRef().FindEntityByID(id);
-		//	//	if (!entity) return;
-		//	//	
-		//	//	if (!ImGui::IsKeyDown(ImGuiKey_LeftCtrl)) mSelectedEntities.clear();
-		//	//	mSelectedEntities.push_back(entity);
-		//	//}
-		//}
+		if (buttoncode == Input::BUTTON_LEFT && mod == Input::Keymod::KEYMOD_NONE)
+		{
+			float2 cursorPos = mApp->GetWindowRef()->GetCursorPos();
+			CREN_LOG(CREN_LOG_SEVERITY_TRACE, "Clicked on %dx%d", (int)cursorPos.xy.x, (int)cursorPos.xy.y);
+		}
 	}
 
 	void Viewport::DrawMenu(float xpos, float ypos)
@@ -221,31 +190,29 @@ namespace Cosmos
 
 	void Viewport::DrawContextMenu()
 	{
-		//if (ImGui::BeginPopupContextWindow(nullptr, ImGuiPopupFlags_MouseButtonRight)) {
-		//	ImGui::SeparatorText(ICON_LC_BRUSH " Context Menu");
-		//
-		//	if (ImGui::MenuItem(ICON_LC_PLUS " Add Entity")) {
-		//		mApp->GetWorldRef().CreateEntity();
-		//	}
-		//
-		//	ImGui::EndPopup();
-		//}
+		if (UIWidget::BeginPopupContextWindow(nullptr, UIWidget::PopupFlags_MouseButtonRight))
+		{
+			UIWidget::SeparatorText(ICON_LC_SHAPES " Context Menu");
+
+			if (UIWidget::MenuItem(ICON_LC_PLUS "Add Entity")); {
+				mApp->GetRendererRef()->GetWorld()->CreateEntity("Empty Entity");
+			}
+
+			UIWidget::EndPopup();
+		}
 	}
 
 	void Viewport::DrawSettings()
 	{
 		if (!mSettings.visible) return;
-		static Settings::MenuOption selected = Settings::MenuOption::General;
+		static Settings::MenuOption selected = Settings::MenuOption::EntityList;
 		
 		UIWidget::BeginContext("Settings", &mSettings.visible);
 
 		UIWidget::BeginChildContext("LeftMenu", float2{ UIWidget::GetContentRegionAvail().xy.x * 0.30f, 0 }, UIWidget::ChildFlags_Borders);
 		{
-			UIWidget::SeparatorText(ICON_FA_BARS " Settings Menu");
-			if (UIWidget::Selectable("General Info", selected == Settings::MenuOption::General)) selected = Settings::MenuOption::General;
-
 			UIWidget::SeparatorText(ICON_LC_BUG " Debug Info");
-			if (UIWidget::Selectable("Entity List", selected == Settings::MenuOption::General)) selected = Settings::MenuOption::EntityList;
+			if (UIWidget::Selectable("Entity List", selected == Settings::MenuOption::EntityList)) selected = Settings::MenuOption::EntityList;
 		}
 		UIWidget::EndChildContext();
 		
@@ -255,7 +222,6 @@ namespace Cosmos
 		{
 			switch (selected)
 			{
-				case Settings::MenuOption::General: { DrawGeneralInfo(); break; }
 				case Settings::MenuOption::EntityList: { DrawEntityList(); break; }
 			}
 		}
@@ -264,16 +230,49 @@ namespace Cosmos
 		UIWidget::EndContext();
 	}
 
+	void Viewport::DrawEntityList()
+	{
+		UIWidget::SeparatorText("All entities presents in the current loaded world are listed below:");
+		int localID = 0;
+		static int selectedEntityIndex = 0;
+
+		for (const auto& entity : mApp->GetRendererRef()->GetWorld()->GetEntityLibraryRef().GetAllRef()) {
+			UIWidget::PushID(localID++);
+			UIWidget::Text("%d", entity.second->GetIDValue());
+			UIWidget::SameLine();
+			
+			if (UIWidget::Selectable(entity.second->GetName(), selectedEntityIndex == localID)) {
+				selectedEntityIndex = localID;
+			}
+
+			UIWidget::PopID();
+		}
+	}
+
+	void Viewport::DrawStatistics()
+	{
+		float2 mousePos = mApp->GetWindowRef()->GetCursorPos();
+		float3 cameraPos = cren_camera_get_position(mApp->GetRendererRef()->GetMainCamera());
+		
+		UIWidget::SetNextWindowSize({ 250.0f, 75.0f });
+		UIWidget::BeginContext("##Statistics", &mStatistics.visible, (UIWidget::ContextFlags)(UIWidget::ContextFlags_NoBackground | UIWidget::ContextFlags_NoDecoration));
+		UIWidget::Text("Avg FPS %d", (int)mApp->GetAverageFPS());
+		UIWidget::Text(ICON_LC_MOUSE_POINTER " Pos %dx%d", (int)mousePos.xy.x, (int)mousePos.xy.y);
+		UIWidget::Text(ICON_LC_CAMERA        " Pos (%.2f, %.2f, %.2f)", cameraPos.xyz.x, cameraPos.xyz.y, cameraPos.xyz.z);
+		
+		UIWidget::EndContext();
+	}
+
 	void Viewport::CreateGridResources()
 	{
 		CRenContext* context = mApp->GetRendererRef()->GetCRenContext();
 		CRenVulkanBackend* renderer = (CRenVulkanBackend*)cren_get_vulkan_backend(context);
-		
+
 		// create grid pipeline
 		char vert[CREN_PATH_MAX_SIZE], frag[CREN_PATH_MAX_SIZE];
 		cren_get_path("shaders/compiled/grid.vert.spv", mApp->GetAssetsDir(), 0, vert, sizeof(vert));
 		cren_get_path("shaders/compiled/grid.frag.spv", mApp->GetAssetsDir(), 0, frag, sizeof(frag));
-		
+
 		vkPipelineCreateInfo pipeCI = { 0 };
 		pipeCI.renderpass = renderer->viewportRenderphase->renderpass;
 		pipeCI.vertexShader = crenvk_pipeline_create_shader(renderer->device.device, "Grid.vert", vert, SHADER_TYPE_VERTEX);
@@ -286,10 +285,10 @@ namespace Cosmos
 		pipeCI.bindings[0].descriptorCount = 1;
 		pipeCI.bindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 		pipeCI.bindings[0].pImmutableSamplers = NULL;
-		
+
 		mGrid.crenPipeline = (vkPipeline*)malloc(sizeof(vkPipeline));
 		CREN_ASSERT(mGrid.crenPipeline != NULL, "Failed to allocate memory for grid pipeline");
-		
+
 		CREN_ASSERT(crenvk_pipeline_create(renderer->device.device, &pipeCI, mGrid.crenPipeline) == VK_SUCCESS, "Failed to create grid pipeline");
 		CREN_ASSERT(crenvk_pipeline_build(renderer->device.device, mGrid.crenPipeline) == VK_SUCCESS, "Failed to build grid pipeline");
 
@@ -297,30 +296,30 @@ namespace Cosmos
 		VkDescriptorPoolSize poolSize = {};
 		poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 		poolSize.descriptorCount = CREN_CONCURRENTLY_RENDERED_FRAMES;
-		
+
 		VkDescriptorPoolCreateInfo descPoolCI = {};
 		descPoolCI.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 		descPoolCI.poolSizeCount = 1;
 		descPoolCI.pPoolSizes = &poolSize;
 		descPoolCI.maxSets = CREN_CONCURRENTLY_RENDERED_FRAMES;
 		CREN_ASSERT(vkCreateDescriptorPool(renderer->device.device, &descPoolCI, nullptr, &mGrid.descriptorPool) == VK_SUCCESS, "Failed to create descriptor pool");
-		
+
 		std::vector<VkDescriptorSetLayout> layouts(CREN_CONCURRENTLY_RENDERED_FRAMES, mGrid.crenPipeline->descriptorSetLayout);
-		
+
 		VkDescriptorSetAllocateInfo descSetAllocInfo = {};
 		descSetAllocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 		descSetAllocInfo.descriptorPool = mGrid.descriptorPool;
 		descSetAllocInfo.descriptorSetCount = CREN_CONCURRENTLY_RENDERED_FRAMES;
 		descSetAllocInfo.pSetLayouts = layouts.data();
 		CREN_ASSERT(vkAllocateDescriptorSets(renderer->device.device, &descSetAllocInfo, mGrid.descriptorSets) == VK_SUCCESS, "Failed to allocate descriptor sets");
-		
+
 		for (size_t i = 0; i < CREN_CONCURRENTLY_RENDERED_FRAMES; i++) {
 			vkBuffer* crenBuffer = (vkBuffer*)shashtable_lookup(renderer->buffersLib, "Camera");
 			VkDescriptorBufferInfo bufferInfo = { 0 };
 			bufferInfo.buffer = crenBuffer->buffers[i];
 			bufferInfo.offset = 0;
 			bufferInfo.range = sizeof(vkBufferCamera);
-		
+
 			VkWriteDescriptorSet descriptorWrite{};
 			descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			descriptorWrite.dstSet = mGrid.descriptorSets[i];
@@ -329,71 +328,8 @@ namespace Cosmos
 			descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 			descriptorWrite.descriptorCount = 1;
 			descriptorWrite.pBufferInfo = &bufferInfo;
-		
+
 			vkUpdateDescriptorSets(renderer->device.device, 1, &descriptorWrite, 0, nullptr);
 		}
 	}
-
-	void Viewport::DrawGeneralInfo()
-	{
-		UIWidget::SeparatorText(ICON_FA_INFO_CIRCLE " About the project: Cosmos");
-		UIWidget::Text("Cosmos is a framework that allows the developer to create applications for desktop and mobile");
-		UIWidget::Text("It is but a wish of mine to develop games with it");
-		UIWidget::Text("It's hosted on");
-		UIWidget::SameLine();
-		UIWidget::URLText("github repository ##CosmosGit", "https://github.com/franzpedd/unnamed");
-		
-		UIWidget::SeparatorText(ICON_FA_INFO_CIRCLE " About the project: CRen");
-		UIWidget::Text("CRen is currently developed by franzpedd (Edson Pirassol Junior) as a Computer Engineering Bachelor's degree final thesis");
-		UIWidget::Text("It's hosted on");
-		UIWidget::SameLine();
-		UIWidget::URLText("github repository ##CrenGit", "https://github.com/franzpedd/unnamed/tree/main/cren");
-		UIWidget::SameLine();
-		UIWidget::Text(" and its a 3D renderer written with the Vulkan rendering API using minimal dependencies, ideally none at some point");
-		
-		UIWidget::SeparatorText(ICON_FA_INFO_CIRCLE " About the project: Engine");
-		UIWidget::Text("A 3D Engine that uses, among other libraries the CRen library.");
-		UIWidget::Text("Ideally it should be able to handle the gameplay loop, physics, sound, networking and glue everything together");
-		UIWidget::Text("This project is not part of the final thesis, therefore it can use thirdparty dependencies, if they're permissive");
-		
-		UIWidget::SeparatorText(ICON_FA_INFO_CIRCLE " About the project: Editor");
-		UIWidget::Text("Editor is an application that uses Cosmos and CRen combined in order to provide a Level Builder for games developed with the Engine");
-		UIWidget::Text("It serves as the pourpuse of showing how to develop applications using the entire toolkit, wich is itself more than an Engine but a Framework entirely");
-		
-		UIWidget::SeparatorText(ICON_FA_INFO_CIRCLE " Considerations");
-		UIWidget::Text("Since CRen is not platform dependent, it can be used to ship any game or application to all platforms that Vulkan runs");
-		UIWidget::Text("Not only, the Engine uses SDL as the window manager, therefore it's possible to develop to mobile platforms");
-		UIWidget::Text("A project for Android Studio is available on the");
-		UIWidget::SameLine();
-		UIWidget::URLText("github repository ##AndroidGit", "https://github.com/franzpedd/unnamed/tree/main/project_android");
-	}
-
-	void Viewport::DrawEntityList()
-	{
-		//ImGui::SeparatorText("All Entities present in the world are listed below:");
-		//int idpush = 0;
-		//static int selected = 0;
-		//for (auto& item : mApp->GetWorldRef().GetEntityLibraryRef().GetAllRefs()) {
-		//	ImGui::PushID(idpush++);
-		//	ImGui::Text("%ld:", item.second->GetComponent<Cosmos::IDComponent>()->id.value);
-		//	ImGui::SameLine();
-		//	if (ImGui::Selectable(item.second->GetComponent<Cosmos::NameComponent>()->name.c_str(), selected == idpush)) {
-		//		selected = idpush;
-		//	}
-		//
-		//	ImGui::PopID();
-		//}
-	}
-
-
-	void Viewport::DrawStatistics()
-	{
-		float2 mousePos = mApp->GetWindowRef()->GetCursorPos();
-
-		UIWidget::BeginContext("##Statistics", &mStatistics.visible, static_cast<UIWidget::ContextFlags>(UIWidget::ContextFlags_NoBackground | UIWidget::ContextFlags_NoDecoration));
-		UIWidget::Text("Mouse Pos %dx%d", (int)mousePos.xy.x, (int)mousePos.xy.y);
-		UIWidget::Text("Average/Target FPS %d/%d", (int)mApp->GetAverageFPS(), (int)mApp->GetTargetFPS());
-		UIWidget::EndContext();
-	}
-
 }

@@ -217,4 +217,21 @@ namespace Cosmos::UIWidget
 		SliderFlags_NoSpeedTweaks = 1 << 11,			// Disable keyboard modifiers altering tweak speed. Useful if you want to alter tweak speed yourself based on your own logic.
 		SliderFlags_AlwaysClamp = SliderFlags_ClampOnInput | SliderFlags_ClampZeroRange
 	};
+
+	enum PopupFlags : uint32_t
+	{
+		PopupFlags_None = 0,
+		PopupFlags_MouseButtonLeft = 0,					// For BeginPopupContext*(): open on Left Mouse release. Guaranteed to always be == 0 (same as ImGuiMouseButton_Left)
+		PopupFlags_MouseButtonRight = 1,				// For BeginPopupContext*(): open on Right Mouse release. Guaranteed to always be == 1 (same as ImGuiMouseButton_Right)
+		PopupFlags_MouseButtonMiddle = 2,				// For BeginPopupContext*(): open on Middle Mouse release. Guaranteed to always be == 2 (same as ImGuiMouseButton_Middle)
+		PopupFlags_MouseButtonMask_ = 0x1F,
+		PopupFlags_MouseButtonDefault_ = 1,
+		PopupFlags_NoReopen = 1 << 5,					// For OpenPopup*(), BeginPopupContext*(): don't reopen same popup if already open (won't reposition, won't reinitialize navigation)
+		//PopupFlags_NoReopenAlwaysNavInit = 1 << 6,	// For OpenPopup*(), BeginPopupContext*(): focus and initialize navigation even when not reopening.
+		PopupFlags_NoOpenOverExistingPopup = 1 << 7,	// For OpenPopup*(), BeginPopupContext*(): don't open if there's already a popup at the same level of the popup stack
+		PopupFlags_NoOpenOverItems = 1 << 8,			// For BeginPopupContextWindow(): don't return true when hovering items, only when hovering empty space
+		PopupFlags_AnyPopupId = 1 << 10,				// For IsPopupOpen(): ignore the ImGuiID parameter and test for any popup.
+		PopupFlags_AnyPopupLevel = 1 << 11,				// For IsPopupOpen(): search/test at any level of the popup stack (default test in the current level)
+		PopupFlags_AnyPopup = PopupFlags_AnyPopupId | PopupFlags_AnyPopupLevel,
+	};
 }

@@ -6,7 +6,10 @@
 #include "Core/Renderer.h"
 #include "Core/Window.h"
 
+#include "Scene/Components.h"
+#include "Scene/Entity.h"
 #include "Scene/World.h"
+
 
 #include "UI/Gizmos.h"
 #include "UI/GUI.h"
