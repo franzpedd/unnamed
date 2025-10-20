@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Util/Datafile.h"
+#include <cren.h>
 #include <vecmath/vecmath.h>
 
 // forward declarations
@@ -48,5 +49,7 @@ namespace Cosmos
 
 	public:
 
+		CRenQuad* quad = nullptr;
+		bool visible = true;
 	};
 }

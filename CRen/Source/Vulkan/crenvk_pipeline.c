@@ -7,7 +7,7 @@
 
 #include <memm/memm.h>
 
-#ifdef CREN_BUILD_WITH_VULKAN
+#if defined (CREN_BUILD_WITH_VULKAN)
 
 /// @brief creates an array of VkVertexInputBindingDescription based on parameters
 static VkVertexInputBindingDescription* internal_crenvk_pipeline_get_binding_descriptions(bool passingVertexData, uint32_t* bindingCount)

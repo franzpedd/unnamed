@@ -4,7 +4,7 @@
 
 namespace Cosmos
 {
-	Entity::Entity(const char* name, ID id)
+	Entity::Entity(const char* name, uint32_t id)
 		: mName(name), mID(id)
 	{
 	}

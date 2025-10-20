@@ -218,11 +218,8 @@ namespace Cosmos
 
     float2 Window::GetCursorPos()
 	{
-		float2 size = GetWindowSize();
     	float2 pos = { 0.0f, 0.0f };
-		
-    	SDL_GetMouseState(&pos.xy.x, &pos.xy.y);
-    	pos.xy.y = size.xy.y - pos.xy.y;
+		SDL_GetGlobalMouseState(&pos.xy.x, &pos.xy.y);
 		
     	return pos;
 	}

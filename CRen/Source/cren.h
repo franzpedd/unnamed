@@ -7,6 +7,7 @@
 #include "cren_defines.h"
 #include "cren_error.h"
 #include "cren_platform.h"
+#include "cren_primitives.h"
 #include "cren_types.h"
 
 #ifdef CREN_BUILD_WITH_VULKAN
@@ -14,6 +15,7 @@
 #include "Vulkan/crenvk_context.h"
 #include "Vulkan/crenvk_core.h"
 #include "Vulkan/crenvk_pipeline.h"
+#include "Vulkan/crenvk_primitives.h"
 #include "Vulkan/crenvk_renderphase.h"
 #endif
 

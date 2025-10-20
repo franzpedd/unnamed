@@ -170,4 +170,12 @@ namespace Cosmos
     {
         mGUI->OnDPIChange(scale);
     }
+
+    std::string Application::GetAssetPath(const char* subPath, bool removeExtension)
+    {
+        char result[CREN_PATH_MAX_SIZE];
+        cren_get_path(subPath, mAssetsPath, removeExtension, result, sizeof(result));
+
+        return std::string(result);
+    }
 }

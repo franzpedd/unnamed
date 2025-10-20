@@ -2,7 +2,6 @@
 
 #include "Core/Defines.h"
 #include "Components.h"
-#include "Util/ID.h"
 #include <any>
 #include <unordered_map>
 #include <typeindex>
@@ -14,7 +13,7 @@ namespace Cosmos
     public:
 
         /// @brief constructor
-        Entity(const char* name = "Empty Entity", ID id = 0);
+        Entity(const char* name = "Empty Entity", uint32_t id = 0);
 
         /// @brief destructor
         ~Entity();
@@ -23,7 +22,10 @@ namespace Cosmos
         inline const char* GetName() { return mName; }
 
         /// @brief returns the entity id
-        inline uint32_t GetIDValue() { return mID.GetValue(); }
+        inline uint32_t GetID() { return mID; }
+        
+        /// @brief sets the entity id
+        inline void SetID(uint32_t value) { mID = value; }
 
     public:
 
@@ -62,7 +64,7 @@ namespace Cosmos
 
         /// @brief erases the component from the entity
         template<typename T>
-        void RemoveComponent()
+        bool RemoveComponent()
         {
             auto it = mComponents.find(typeid(T));
             if (it != mComponents.end()) {
@@ -75,7 +77,7 @@ namespace Cosmos
     private:
 
         const char* mName = nullptr;
-        ID mID = {};
+        uint32_t mID = 0;
         std::unordered_map<std::type_index, std::any> mComponents;
     };
 }

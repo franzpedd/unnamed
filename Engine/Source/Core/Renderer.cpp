@@ -73,7 +73,7 @@ namespace Cosmos
         // initialize the renderer
         cren_create_renderer(mContext);
 
-        mWorld = new World(mApp->GetRendererRef()); // loading a default world
+        mWorld = new World(mApp, mApp->GetRendererRef()); // loading a default world
     }
 
     Renderer::~Renderer()
@@ -85,6 +85,7 @@ namespace Cosmos
     void Renderer::OnUpdate(float timestep)
     {
         cren_update(mContext, timestep);
+        mWorld->OnUpdate(timestep);
     }
 
     void Renderer::OnRender(float timestep)
@@ -114,13 +115,13 @@ namespace Cosmos
 
     CRenCamera* Renderer::GetMainCamera()
     {
-        return cren_get_camera(mContext);
+        return cren_get_main_camera(mContext);
     }
 
-    void Renderer::OnRenderCallback(int stage, double timestep)
+    void Renderer::OnRenderCallback(int stage, float timestep)
     {
-        //mApp->GetWorldRef().OnRender(stage);
         mApp->GetGUIRef()->OnRender(stage);
+        mWorld->OnRender(timestep, stage);
     }
 
     void Renderer::OnResizeCallback(int width, int height)

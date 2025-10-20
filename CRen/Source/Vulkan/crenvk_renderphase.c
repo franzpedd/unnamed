@@ -638,7 +638,7 @@ CREN_API void crenvk_renderphase_picking_update(vkPickingRenderphase* phase, voi
         float2 mousePos;
         mousePos.xy.x = f_clamp(cursorPos.xy.x, 0.0f, (float)vkBackend->swapchain.swapchainExtent.width);
         mousePos.xy.y = f_clamp(cursorPos.xy.y, 0.0f, (float)vkBackend->swapchain.swapchainExtent.height);
-
+        
         VkRect2D scissor = { 0 };
         scissor.offset = (VkOffset2D){ (int)mousePos.xy.x, (int)mousePos.xy.y };
         scissor.extent = (VkExtent2D){ 1, 1 };
@@ -742,6 +742,50 @@ CREN_API VkResult crenvk_renderphase_ui_create(VkDevice device, VkPhysicalDevice
         return res;
     }
 
+    // descriptor pool and descriptor set layout for UI image of things
+    VkDescriptorSetLayoutBinding binding[1] = { 0 };
+    binding[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    binding[0].descriptorCount = 1;
+    binding[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+    VkDescriptorSetLayoutCreateInfo descInfo = { 0 };
+    descInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    descInfo.bindingCount = 1;
+    descInfo.pBindings = binding;
+    res = vkCreateDescriptorSetLayout(device, &descInfo, NULL, &outPhase->descSetLayout);
+    if (res != VK_SUCCESS) {
+        CREN_LOG(CREN_LOG_SEVERITY_FATAL, "Failed to create ui descriptor set layout");
+        return res;
+    }
+
+    VkDescriptorPoolSize poolSizes[] =
+    {
+        { VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
+        { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
+        { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },
+        { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000 },
+        { VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000 },
+        { VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000 },
+        { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000 },
+        { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000 },
+        { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 },
+        { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 },
+        { VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 }
+    };
+
+    VkDescriptorPoolCreateInfo poolCI = { 0 };
+    poolCI.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    poolCI.pNext = NULL;
+    poolCI.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+    poolCI.maxSets = 1000 * 11U;
+    poolCI.poolSizeCount = 11U;
+    poolCI.pPoolSizes = poolSizes;
+    res = vkCreateDescriptorPool(device, &poolCI, NULL, &outPhase->descPool);
+    if (res != VK_SUCCESS) {
+        CREN_LOG(CREN_LOG_SEVERITY_FATAL, "Failed to create descriptor pool for the ui");
+        return res;
+    }
+
     return VK_SUCCESS;
 }
 
@@ -750,6 +794,9 @@ CREN_API void crenvk_renderphase_ui_destroy(vkUIRenderphase* phase, VkDevice dev
     vkDeviceWaitIdle(device);
 
     if (destroyRenderpass) crenvk_pipeline_renderpass_release(device, phase->renderpass);
+
+    vkDestroyDescriptorSetLayout(device, phase->descSetLayout, NULL);
+    vkDestroyDescriptorPool(device, phase->descPool, NULL);
 }
 
 CREN_API VkResult crenvk_renderphase_ui_framebuffers_create(vkUIRenderphase* phase, VkDevice device, VkExtent2D extent, VkImageView* swapchainViews, uint32_t swapchainViewsCount)

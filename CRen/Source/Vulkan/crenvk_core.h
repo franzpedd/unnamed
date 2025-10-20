@@ -107,7 +107,7 @@ CREN_API VkResult crenvk_device_create_buffer(VkDevice device, VkPhysicalDevice 
 CREN_API VkCommandBuffer crenvk_device_begin_commandbuffer_singletime(VkDevice device, VkCommandPool cmdPool);
 
 /// @brief ends the single-used command buffer
-CREN_API void crenvk_device_end_commandbuffer_singletime(VkDevice device, VkCommandPool cmdPool, VkCommandBuffer cmdBuffer, VkQueue queue);
+CREN_API VkResult crenvk_device_end_commandbuffer_singletime(VkDevice device, VkCommandPool cmdPool, VkCommandBuffer cmdBuffer, VkQueue queue);
 
 /// @brief returns what type of memory is the correct one, given filters an properties
 CREN_API uint32_t crenvk_device_find_memory_type(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties);

@@ -11,6 +11,9 @@ typedef struct CRenContext CRenContext;
 /// @brief opaque cren camera
 typedef struct CRenCamera CRenCamera;
 
+/// @brief opaque cren 2D texture
+typedef struct CRenTexture2D CRenTexture2D;
+
 /// @brief opaque cren quad primitive
 typedef struct CRenQuad CRenQuad;
 

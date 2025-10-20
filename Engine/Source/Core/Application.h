@@ -112,6 +112,11 @@ namespace Cosmos
 		/// @brief this is called by the window, the dots per inch has changed
 		void OnDPIChange(float scale);
 
+	public:
+
+		/// @brief utility to retrieve correct asset's location
+		std::string GetAssetPath(const char* subPath, bool removeExtension = false);
+
 	private:
 
 		ApplicationCreateInfo mApplicationCreateInfo;

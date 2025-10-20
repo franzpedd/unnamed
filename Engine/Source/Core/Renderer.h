@@ -57,7 +57,7 @@ namespace Cosmos
     protected:
 
         /// @brief the renderer has signaled it's time to render objects
-        void OnRenderCallback(int stage, double timestep);
+        void OnRenderCallback(int stage, float timestep);
 
         /// @brief the renderer was resized, must propagate this to any other renderer sub-class
         void OnResizeCallback(int width, int height);

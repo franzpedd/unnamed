@@ -25,7 +25,6 @@ namespace Cosmos
 		CRenVulkanBackend* renderer = (CRenVulkanBackend*)cren_get_vulkan_backend(context);
 
 		UIWidget::BeginContext("Viewport", nullptr, UIWidget::ContextFlags_NoScrollbar);
-
 		// update viewport position
 		float2 viewportPos = UIWidget::GetCurrentWindowPos();
 		cren_set_viewport_pos(context, viewportPos);
@@ -36,30 +35,29 @@ namespace Cosmos
 		// update viewport size, boundaries and camera aspect ratio
 		float2 viewportSize = UIWidget::GetCurrentWindowSize();
 		cren_set_viewport_size(context, viewportSize);
-		cren_camera_set_aspect_ratio(cren_get_camera(context), viewportSize.xy.x / viewportSize.xy.y);
+		cren_camera_set_aspect_ratio(cren_get_main_camera(context), viewportSize.xy.x / viewportSize.xy.y);
 
 		// widgets
-		DrawMenu(viewportPos.xy.x + 5.0f, viewportPos.xy.y + 5.0f);
-		DrawContextMenu();
+		DrawHorizontalMenu(viewportPos.xy.x + 5.0f, viewportPos.xy.y + 5.0f);
 		//mGizmo.OnUpdate(NULL); // modify this when entity-selection is enabled
 
+		DrawStatistics();
 		UIWidget::EndContext();
 
 		// update the settings window
 		DrawSettings();
-		DrawStatistics();
 	}
 
 	void Viewport::OnRender(int stage)
 	{
 		CRenVulkanBackend* renderer = (CRenVulkanBackend*)cren_get_vulkan_backend(mApp->GetRendererRef()->GetCRenContext());
-		
+
 		// draw grid
 		if (mGrid.visible && stage != CREN_RENDER_STAGE_PICKING) {
 			unsigned int currentFrame = renderer->swapchain.currentFrame;
 			VkDeviceSize offsets[] = { 0 };
 			VkCommandBuffer cmdbuffer = renderer->viewportRenderphase->renderpass->commandBuffers[currentFrame];
-		
+
 			vkCmdBindPipeline(cmdbuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mGrid.crenPipeline->pipeline);
 			vkCmdBindDescriptorSets(cmdbuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mGrid.crenPipeline->layout, 0, 1, &mGrid.descriptorSets[currentFrame], 0, nullptr);
 			vkCmdDraw(cmdbuffer, 6, 1, 0, 0);
@@ -73,8 +71,8 @@ namespace Cosmos
 
 	void Viewport::OnKeyPress(Cosmos::Input::Keycode keycode, Cosmos::Input::Keymod mod, bool held)
 	{
-		CRenCamera* camera = cren_get_camera(mApp->GetRendererRef()->GetCRenContext());
-		
+		CRenCamera* camera = cren_get_main_camera(mApp->GetRendererRef()->GetCRenContext());
+
 		if (keycode == Cosmos::Input::KEYCODE_Z) {
 			if (cren_camera_can_move(camera)) {
 				mApp->GetWindowRef()->ToogleCursor(false);
@@ -82,7 +80,7 @@ namespace Cosmos
 				cren_camera_enable_move(camera, false);
 				return;
 			}
-		
+
 			mApp->GetWindowRef()->ToogleCursor(true);
 			mApp->GetGUIRef()->ToggleCursor(true);
 			cren_camera_enable_move(camera, true);
@@ -93,120 +91,158 @@ namespace Cosmos
 	{
 		if (buttoncode == Input::BUTTON_LEFT && mod == Input::Keymod::KEYMOD_NONE)
 		{
-			float2 cursorPos = mApp->GetWindowRef()->GetCursorPos();
-			CREN_LOG(CREN_LOG_SEVERITY_TRACE, "Clicked on %dx%d", (int)cursorPos.xy.x, (int)cursorPos.xy.y);
+			// creating a new empty entity
+			bool areaWithinViewport = true; // I should modify this to be inside the viewport
+			static bool alreadyCreated = false; // just creating one entity for now, developing at it's peak
+			if (mVerticalMenu.selectedOption == VerticalMenu::MenuOption::AddEntity && areaWithinViewport && !alreadyCreated) {
+
+				// using 0,0,0 for now but I should address this
+				mApp->GetRendererRef()->GetWorld()->CreateEntity("New Entity", {0.0f, 0.0f, 0.0f});
+				alreadyCreated = true;
+			}
 		}
 	}
 
-	void Viewport::DrawMenu(float xpos, float ypos)
+	void Viewport::DrawHorizontalMenu(float xpos, float ypos)
 	{
 		static const float4 activeCol = { 1.0f, 1.0f, 1.0f, 0.5f };
-		static unsigned int selectedGizmos = 0;
-		static const Gizmos::Mode modes[4] = { Gizmos::Mode::Undefined, Gizmos::Mode::Translate, Gizmos::Mode::Rotate, Gizmos::Mode::Scale };
-		static const std::string texts[4] = { ICON_LC_MOUSE_POINTER_2, ICON_LC_MOVE_3D, ICON_LC_ROTATE_3D, ICON_LC_SCALE_3D };
-		static const std::string tooltips[4] = { "Selection", "Translation", "Rotation", "Scale" };
 
 		UIWidget::SetNextWindowPos({ xpos + 15.0f, ypos + 35.0f });
-		
-		UIWidget::BeginChildContext("##ViewportMenubar");
-		
-		for (unsigned short i = 0; i < 4; i++) {
 
-			bool coloredButton = selectedGizmos == i;
-			if (coloredButton) { UIWidget::PushStyleColor(UIWidget::StyleColor_Button, activeCol); }
-		
-			if (UIWidget::Button(texts[i].c_str())) {
-				mGizmo.SetMode(modes[i]);
-				selectedGizmos = i;
+		UIWidget::BeginChildContext("##ViewportMenubar");
+
+		///////////////////////////////////////////////////////////////////////////////////////////// horizontal menu
+
+		// gizmo manipulation
+		{
+			for (uint8_t i = 0; i < HorizontalMenu::MenuOption::MenuOption_Max; i++) {
+				bool coloredButton = mHorizontalMenu.selectedOption == i;
+				if (coloredButton) UIWidget::PushStyleColor(UIWidget::StyleColor_Button, activeCol);
+
+				if (UIWidget::Button(mHorizontalMenu.icon[i])) {
+					if (mHorizontalMenu.selectedOption == i) {
+						mHorizontalMenu.selectedOption = HorizontalMenu::MenuOption::Unselected;
+					}
+
+					else {
+						mHorizontalMenu.selectedOption = (HorizontalMenu::MenuOption)i;
+					}
+				}
+
+				if (coloredButton) { UIWidget::PopStyleColor(); }
+				if (UIWidget::IsItemHovered(UIWidget::HoveredFlags_AllowWhenDisabled)) UIWidget::SetTooltip("%s", mHorizontalMenu.tooltip[i]);
+
+				UIWidget::SameLine();
+				UIWidget::SetCursorPosX(UIWidget::GetCursorPosX() - 5.0f);
 			}
-		
-			if (coloredButton) { UIWidget::PopStyleColor(); }
-			if (UIWidget::IsItemHovered(UIWidget::HoveredFlags_AllowWhenDisabled)) { UIWidget::SetTooltip("%s", tooltips[i].c_str()); }
-		
+		}
+
+		UIWidget::Separator(1.0f, true);
+		UIWidget::SameLine();
+
+		bool selectedButton = false;
+
+		// grid snapping value
+		{
+			UIWidget::PushItemWidth(50.0f);
+			UIWidget::PushStyleVar(UIWidget::StyleVar_ScrollbarPadding, 2.0f);
+			UIWidget::SetCursorPosX(UIWidget::GetCursorPosX() - 5.0f);
+
+			
+			float snapping = mGizmo.GetSnappingValue();
+			if (UIWidget::SliderFloat("##Snapping", &snapping, 0.005f, 10.0f, "%.2f")) { mGizmo.SetSnappingValue(snapping); }
+
+			UIWidget::PopStyleVar();
+			UIWidget::PopItemWidth();
+
+			if (UIWidget::IsItemHovered(UIWidget::HoveredFlags_AllowWhenDisabled)) { UIWidget::SetTooltip("Grid snapping value"); }
+		}
+
+		UIWidget::SameLine();
+
+		// grid snapping enable/disable
+		{
+			bool selectedSnapping = mGizmo.GetSnapping();
+			selectedButton = selectedSnapping;
+			if (selectedSnapping) {
+				UIWidget::PushStyleColor(UIWidget::StyleColor_Button, activeCol);
+			}
+
+			UIWidget::SetCursorPosX(UIWidget::GetCursorPosX() - 5.0f);
+
+			if (UIWidget::Button(ICON_LC_MAGNET)) { mGizmo.SetSnapping(!mGizmo.GetSnapping()); }
+
+			if (selectedButton) { UIWidget::PopStyleColor(); }
+
+			if (UIWidget::IsItemHovered(UIWidget::HoveredFlags_AllowWhenDisabled)) { UIWidget::SetTooltip("Enables/Disables snapping with the grid"); }
+
+		}
+
+		// grid visibility
+		{
+			UIWidget::SameLine();
+
+			static bool selectedGrid = true;
+			selectedButton = selectedGrid;
+			if (selectedButton) { UIWidget::PushStyleColor(UIWidget::StyleColor_Button, activeCol); }
+
+			UIWidget::SetCursorPosX(UIWidget::GetCursorPosX() - 5.0f);
+
+			if (UIWidget::Button(ICON_LC_GRID_3X3)) {
+				mGrid.visible = !mGrid.visible;
+				selectedGrid = !selectedGrid;
+			}
+
+			if (selectedButton) { UIWidget::PopStyleColor(); }
+			if (UIWidget::IsItemHovered(UIWidget::HoveredFlags_AllowWhenDisabled)) { UIWidget::SetTooltip("Enables/Disables grid on viewport"); }
+
 			UIWidget::SameLine();
 			UIWidget::SetCursorPosX(UIWidget::GetCursorPosX() - 5.0f);
+			UIWidget::Separator(1.0f, true);
 		}
-		
-		UIWidget::Separator(1.0f, true);
-		UIWidget::SameLine();
-		
-		// grid
-		UIWidget::PushItemWidth(50.0f);
-		UIWidget::PushStyleVar(UIWidget::StyleVar_ScrollbarPadding, 2.0f);
-		UIWidget::SetCursorPosX(UIWidget::GetCursorPosX() - 5.0f);
-		
-		bool selectedButton = false;
-		float snapping = mGizmo.GetSnappingValue();
-		if (UIWidget::SliderFloat("##Snapping", &snapping, 0.005f, 10.0f, "%.2f")) { mGizmo.SetSnappingValue(snapping); }
-		
-		UIWidget::PopStyleVar();
-		UIWidget::PopItemWidth();
-		
-		if (UIWidget::IsItemHovered(UIWidget::HoveredFlags_AllowWhenDisabled)) { UIWidget::SetTooltip("Grid snapping value"); }
-		
-		UIWidget::SameLine();
-		
-		bool selectedSnapping = mGizmo.GetSnapping();
-		selectedButton = selectedSnapping;
-		if (selectedSnapping) {
-			UIWidget::PushStyleColor(UIWidget::StyleColor_Button, activeCol);
-		}
-		
-		UIWidget::SetCursorPosX(UIWidget::GetCursorPosX() - 5.0f);
-		
-		if (UIWidget::Button(ICON_LC_MAGNET)) { mGizmo.SetSnapping(!mGizmo.GetSnapping()); }
-		
-		if (selectedButton) { UIWidget::PopStyleColor(); }
-		
-		if (UIWidget::IsItemHovered(UIWidget::HoveredFlags_AllowWhenDisabled)) { UIWidget::SetTooltip("Enables/Disables snapping with the grid"); }
-		
-		UIWidget::SameLine();
-		
-		static bool selectedGrid = true;
-		selectedButton = selectedGrid;
-		if (selectedButton) { UIWidget::PushStyleColor(UIWidget::StyleColor_Button, activeCol); }
-		
-		UIWidget::SetCursorPosX(UIWidget::GetCursorPosX() - 5.0f);
-		
-		if (UIWidget::Button(ICON_LC_GRID_3X3)) {
-			mGrid.visible = !mGrid.visible;
-			selectedGrid = !selectedGrid;
-		}
-		
-		if (selectedButton) { UIWidget::PopStyleColor(); }
-		if (UIWidget::IsItemHovered(UIWidget::HoveredFlags_AllowWhenDisabled)) { UIWidget::SetTooltip("Enables/Disables grid on viewport"); }
-		
-		UIWidget::SameLine();
-		UIWidget::SetCursorPosX(UIWidget::GetCursorPosX() - 5.0f);
-		UIWidget::Separator(1.0f, true);
-		
+
+
 		// debug
-		UIWidget::SameLine();
-		UIWidget::SetCursorPosX(UIWidget::GetCursorPosX() - 5.0f);
-		if (UIWidget::Button(ICON_LC_SETTINGS)) { mSettings.visible = !mSettings.visible; }
-		
-		UIWidget::EndChildContext();
-	}
-
-	void Viewport::DrawContextMenu()
-	{
-		if (UIWidget::BeginPopupContextWindow(nullptr, UIWidget::PopupFlags_MouseButtonRight))
 		{
-			UIWidget::SeparatorText(ICON_LC_SHAPES " Context Menu");
+			UIWidget::SameLine();
+			UIWidget::SetCursorPosX(UIWidget::GetCursorPosX() - 5.0f);
 
-			if (UIWidget::MenuItem(ICON_LC_PLUS "Add Entity")); {
-				mApp->GetRendererRef()->GetWorld()->CreateEntity("Empty Entity");
+			if (UIWidget::Button(ICON_LC_SETTINGS)) {
+				mSettings.visible = !mSettings.visible;
 			}
-
-			UIWidget::EndPopup();
 		}
+
+		///////////////////////////////////////////////////////////////////////////////////////////// vertical menu
+
+		// entity manipulation
+		{
+			for (uint8_t i = 0; i < VerticalMenu::MenuOption::MenuOption_Max; i++) {
+				bool coloredButton = mVerticalMenu.selectedOption == i;
+				if (coloredButton) UIWidget::PushStyleColor(UIWidget::StyleColor_Button, activeCol);
+
+				if (UIWidget::Button(mVerticalMenu.icon[i])) {
+					if (mVerticalMenu.selectedOption == i) {
+						mVerticalMenu.selectedOption = VerticalMenu::MenuOption::Unselected;
+					}
+
+					else {
+						mVerticalMenu.selectedOption = (VerticalMenu::MenuOption)i;
+					}
+				}
+
+				if (coloredButton) { UIWidget::PopStyleColor(); }
+				if (UIWidget::IsItemHovered(UIWidget::HoveredFlags_AllowWhenDisabled)) UIWidget::SetTooltip("%s", mVerticalMenu.tooltip[i]);
+			}
+		}
+
+		UIWidget::EndChildContext();
 	}
 
 	void Viewport::DrawSettings()
 	{
 		if (!mSettings.visible) return;
 		static Settings::MenuOption selected = Settings::MenuOption::EntityList;
-		
+
 		UIWidget::BeginContext("Settings", &mSettings.visible);
 
 		UIWidget::BeginChildContext("LeftMenu", float2{ UIWidget::GetContentRegionAvail().xy.x * 0.30f, 0 }, UIWidget::ChildFlags_Borders);
@@ -215,18 +251,18 @@ namespace Cosmos
 			if (UIWidget::Selectable("Entity List", selected == Settings::MenuOption::EntityList)) selected = Settings::MenuOption::EntityList;
 		}
 		UIWidget::EndChildContext();
-		
+
 		UIWidget::SameLine();
 
 		UIWidget::BeginChildContext("RightContent", float2{ 0.0f, 0.0f }, UIWidget::ChildFlags_Borders, UIWidget::ContextFlags_HorizontalScrollbar);
 		{
 			switch (selected)
 			{
-				case Settings::MenuOption::EntityList: { DrawEntityList(); break; }
+			case Settings::MenuOption::EntityList: { DrawEntityList(); break; }
 			}
 		}
 		UIWidget::EndChildContext();
-		
+
 		UIWidget::EndContext();
 	}
 
@@ -238,9 +274,9 @@ namespace Cosmos
 
 		for (const auto& entity : mApp->GetRendererRef()->GetWorld()->GetEntityLibraryRef().GetAllRef()) {
 			UIWidget::PushID(localID++);
-			UIWidget::Text("%d", entity.second->GetIDValue());
+			UIWidget::Text("%d", entity.second->GetID());
 			UIWidget::SameLine();
-			
+
 			if (UIWidget::Selectable(entity.second->GetName(), selectedEntityIndex == localID)) {
 				selectedEntityIndex = localID;
 			}
@@ -251,16 +287,30 @@ namespace Cosmos
 
 	void Viewport::DrawStatistics()
 	{
+		// let's 'glue' the statis to the right-side
+		float2 vpPos = cren_get_viewport_pos(mApp->GetRendererRef()->GetCRenContext());
+		float2 vpSize = cren_get_viewport_size(mApp->GetRendererRef()->GetCRenContext());
+		UIWidget::SetNextWindowPos({ vpPos.xy.x + (vpSize.xy.x - 200.0f), vpPos.xy.y + 40.0f });
 		float2 mousePos = mApp->GetWindowRef()->GetCursorPos();
 		float3 cameraPos = cren_camera_get_position(mApp->GetRendererRef()->GetMainCamera());
 		
-		UIWidget::SetNextWindowSize({ 250.0f, 75.0f });
-		UIWidget::BeginContext("##Statistics", &mStatistics.visible, (UIWidget::ContextFlags)(UIWidget::ContextFlags_NoBackground | UIWidget::ContextFlags_NoDecoration));
-		UIWidget::Text("Avg FPS %d", (int)mApp->GetAverageFPS());
-		UIWidget::Text(ICON_LC_MOUSE_POINTER " Pos %dx%d", (int)mousePos.xy.x, (int)mousePos.xy.y);
-		UIWidget::Text(ICON_LC_CAMERA        " Pos (%.2f, %.2f, %.2f)", cameraPos.xyz.x, cameraPos.xyz.y, cameraPos.xyz.z);
+		UIWidget::BeginChildContext("##Statistics", { 230.0f, 125.0f }, UIWidget::ChildFlags_None);
 		
-		UIWidget::EndContext();
+		UIWidget::Text(ICON_LC_FLAME		 " [%.2f]", (float)mApp->GetAverageFPS());
+		if (UIWidget::IsItemHovered(UIWidget::HoveredFlags_AllowWhenDisabled)) UIWidget::SetTooltip("Average frames / second");
+		
+		UIWidget::Text(ICON_LC_MOUSE_POINTER " [%.2f, %.2f]", mousePos.xy.x, mousePos.xy.y);
+		if (UIWidget::IsItemHovered(UIWidget::HoveredFlags_AllowWhenDisabled)) UIWidget::SetTooltip("Cursor position, relative to monitor");
+		
+		UIWidget::Text(ICON_LC_CAMERA        " [%.2f, %.2f, %.2f]", cameraPos.xyz.x, cameraPos.xyz.y, cameraPos.xyz.z);
+		if (UIWidget::IsItemHovered(UIWidget::HoveredFlags_AllowWhenDisabled)) UIWidget::SetTooltip("Camera 3D position in the world");
+		
+		UIWidget::Text(ICON_LC_RATIO		 " [%.2f, %.2f]", vpPos.xy.x, vpPos.xy.y);
+		if (UIWidget::IsItemHovered(UIWidget::HoveredFlags_AllowWhenDisabled)) UIWidget::SetTooltip("Viewport position, relative to monitor");
+		
+		UIWidget::Text(ICON_LC_PROPORTIONS	 " [%.2f, %.2f]", vpSize.xy.x, vpSize.xy.y);
+		if (UIWidget::IsItemHovered(UIWidget::HoveredFlags_AllowWhenDisabled)) UIWidget::SetTooltip("Viewport size");
+		UIWidget::EndChildContext();
 	}
 
 	void Viewport::CreateGridResources()

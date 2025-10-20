@@ -2,31 +2,56 @@
 
 #include "Core/Application.h"
 #include "Entity.h"
+#include "Components.h"
 
 namespace Cosmos
 {
-	World::World(Unique<Renderer>& renderer)
-		: mRenderer(renderer)
+	World::World(Application* app, Unique<Renderer>& renderer)
+		: mApp(app), mRenderer(renderer)
 	{
+	}
+
+	World::~World()
+	{
+		Destroy();
 	}
 
 	bool World::AddEntity(Entity* entity)
 	{
 		if (!entity) return false;
-		return mEntities.Insert(entity->GetIDValue(), entity);
+		if (mEntities.Contains(entity->GetID())) {
+			CREN_LOG(CREN_LOG_SEVERITY_ERROR, "Attempting to add an entity to a World that already contains such id registered");
+			return false;
+		}
+
+		return mEntities.Insert(entity->GetID(), entity);
 	}
 
-	bool World::CreateEntity(const char* name)
+	bool World::CreateEntity(const char* name, const float3& pos)
 	{
-		ID id = mIDGenerator.Create();
-		
-		if (mEntities.Contains(id.GetValue())) {
-			mIDGenerator.Destroy(id);
+		uint32_t id = cren_create_id(mRenderer->GetCRenContext());
+		if (id == 0) {
+			CREN_LOG(CREN_LOG_SEVERITY_ERROR, "The renderer could not create a unique ID");
+			return false;
+		}
+
+		if (mEntities.Contains(id)) {
+			CREN_LOG(CREN_LOG_SEVERITY_ERROR, "This world already has an entity with such ID");
 			return false;
 		}
 		
 		Entity* newEnt = new Entity(name, id);
-		mEntities.Insert(id.GetValue(), newEnt);
+
+		// add components
+		newEnt->AddComponent<TransformComponent>();
+		newEnt->GetComponent<TransformComponent>()->translation = pos;
+		newEnt->GetComponent<TransformComponent>()->rotation = { 0.0f, 0.0f, 0.0f };
+		newEnt->GetComponent<TransformComponent>()->scale = { 0.25f, 0.25f, 0.25f };
+
+		newEnt->AddComponent<EditorComponent>();
+		newEnt->GetComponent<EditorComponent>()->quad = cren_quad_create(mRenderer->GetCRenContext(), mApp->GetAssetPath("textures/entity.png").c_str(), id);
+
+		mEntities.Insert(id, newEnt);
 		return true;
 	}
 
@@ -39,8 +64,23 @@ namespace Cosmos
 		}
 		
 		Entity* entity = found.value();
+		if (!entity) {
+			CREN_LOG(CREN_LOG_SEVERITY_WARN, "Trying to delete an entity with invalid id: %d", idValue);
+			return false;
+		}
 		
-		// destroy it's components here
+		// destroy components
+		if(entity->HasComponent<EditorComponent>()) 
+		{
+			if (entity->GetComponent<EditorComponent>()->quad) {
+				cren_quad_destroy(mRenderer->GetCRenContext(), entity->GetComponent<EditorComponent>()->quad);
+			}
+			entity->RemoveComponent<EditorComponent>();
+		}
+
+		if (entity->HasComponent<TransformComponent>()) {
+			entity->RemoveComponent<TransformComponent>();
+		}
 		
 		mEntities.Erase(idValue);
 		delete entity;
@@ -77,6 +117,39 @@ namespace Cosmos
 	Entity* World::FindEntityByID(uint32_t idValue)
 	{
 		return mEntities.Get(idValue).value_or(nullptr);
+	}
+
+	void World::OnUpdate(float timestep)
+	{
+		// not doing anything for now
+	}
+
+	void World::OnRender(float timestep, int32_t stage)
+	{
+		CRenContext* context = mRenderer->GetCRenContext();
+
+		for (auto& [id, entity] : mEntities) {
+			
+			// validation
+			if (id == 0 || !entity) continue;
+
+			// model matrix TODO: apply timestep?
+			TransformComponent* transformComponent = entity->GetComponent<TransformComponent>();
+			if (!transformComponent) continue;
+
+			// editor component
+			EditorComponent* editorComponent = entity->GetComponent<EditorComponent>();
+			if (editorComponent) {
+				if (editorComponent->visible) {
+					CRenQuad* quad = editorComponent->quad;
+					if (quad) {
+						fmat4 modelMatrix = transformComponent->GetTransform();
+						fmat4 identityMatrix = fmat4_identity();
+						cren_quad_render(context, quad, (CRen_RenderStage)stage, modelMatrix);
+					}
+				}
+			}
+		}
 	}
 
 	bool World::Destroy()

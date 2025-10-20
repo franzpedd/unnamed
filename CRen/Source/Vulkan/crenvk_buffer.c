@@ -5,6 +5,8 @@
 #include <memm/memm.h>
 #include <string.h>
 
+#if defined (CREN_BUILD_WITH_VULKAN)
+
 CREN_API vkBuffer* crenvk_buffer_create(VkDevice device, VkPhysicalDevice physicalDevice, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags memoryProperties, uint32_t frameCount)
 {
     if (size == 0 || frameCount == 0) {
@@ -206,3 +208,5 @@ CREN_API void crenvk_buffer_command_copy(VkCommandBuffer commandBuffer, vkBuffer
     copyRegion.size = (size == VK_WHOLE_SIZE) ? srcBuffer->size - srcOffset : size;
     vkCmdCopyBuffer(commandBuffer, srcBuffer->buffers[srcFrameIndex], dstBuffer->buffers[dstFrameIndex], 1, &copyRegion);
 }
+
+#endif // CREN_BUILD_WITH_VULKAN

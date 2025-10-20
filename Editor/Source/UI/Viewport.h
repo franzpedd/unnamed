@@ -34,11 +34,8 @@ namespace Cosmos
 
 	private:
 
-		/// @brief displays a menu within the viewport
-		void DrawMenu(float xpos, float ypos);
-
-		/// @brief displays a menu when a mouse right click occurs inside the viewport
-		void DrawContextMenu();
+		/// @brief displays a horizontal menu inside the viewport
+		void DrawHorizontalMenu(float xpos, float ypos);
 
 		/// @brief displays the settings window, with various debug information about the editor
 		void DrawSettings();
@@ -78,6 +75,38 @@ namespace Cosmos
 			bool menusVisible[MenuOption_Max] = { false };
 			bool visible = false;
 		} mSettings;
+
+		struct HorizontalMenu
+		{
+			enum MenuOption
+			{
+				Unselected = -1,
+				Gizmo_Selection,
+				Gizmo_Translate,
+				Gizmo_Rotate,
+				Gizmo_Scale,
+
+				MenuOption_Max
+			};
+
+			const char* icon[4] = { ICON_LC_MOUSE_POINTER_2, ICON_LC_MOVE_3D, ICON_LC_ROTATE_3D, ICON_LC_SCALE_3D };
+			const char* tooltip[4] = { "Selection", "Translation", "Rotation", "Scale" };
+			MenuOption selectedOption = Gizmo_Selection;
+		} mHorizontalMenu;
+
+		struct VerticalMenu
+		{
+			enum MenuOption {
+				Unselected = -1,
+				AddEntity,
+
+				MenuOption_Max
+			};
+
+			const char* icon[1] = { ICON_LC_SQUARE };
+			const char* tooltip[1] = { "Add Entity" };
+			MenuOption selectedOption = Unselected;
+		} mVerticalMenu;
 
 		struct Statistics 
 		{

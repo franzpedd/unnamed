@@ -53,7 +53,7 @@ CREN_API CRenContext* cren_initialize(const CRenCreateInfo createInfo)
 	context->camera = cren_camera_create(CREN_CAMERA_TYPE_FREE_LOOK, (float)createInfo.width / (float)createInfo.height, createInfo.api);
 	CREN_ASSERT(context->camera != NULL, "Faield to create CRen's main camera");
 
-	context->idgen = idgen_create(1U, UINT32_MAX - 1);
+	context->idgen = idgen_create(1);
 	CREN_ASSERT(context->idgen != NULL, "Failed to create CRen's id generator");
 
 	return context;
@@ -192,11 +192,25 @@ CREN_API void cren_set_mousepos(CRenContext* context, const float2 pos)
 	context->mousePos = pos;
 }
 
+CREN_API float2 cren_get_viewport_pos(CRenContext* context)
+{
+	if (!context) return (float2){ 0.0f, 0.0f };
+	if (!context->usingCustomViewport) return (float2) { 0.0f, 0.0f };
+	return context->viewportPos;
+}
+
 CREN_API void cren_set_viewport_pos(CRenContext* context, const float2 pos)
 {
 	if (!context) return;
 	if (!context->usingCustomViewport) return;
 	context->viewportPos = pos;
+}
+
+CREN_API float2 cren_get_viewport_size(CRenContext* context)
+{
+	if (!context) return (float2) { 0.0f, 0.0f };
+	if (!context->usingCustomViewport) return (float2) { 0.0f, 0.0f };
+	return context->viewportSize;
 }
 
 CREN_API void cren_set_viewport_size(CRenContext* context, const float2 size)

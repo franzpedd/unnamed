@@ -7,6 +7,8 @@
 #include <vecmath/vecmath.h>
 #include <string.h>
 
+#if defined (CREN_BUILD_WITH_VULKAN)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Instance
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -439,26 +441,33 @@ VkCommandBuffer crenvk_device_begin_commandbuffer_singletime(VkDevice device, Vk
     return commandBuffer;
 }
 
-void crenvk_device_end_commandbuffer_singletime(VkDevice device, VkCommandPool cmdPool, VkCommandBuffer cmdBuffer, VkQueue queue)
+VkResult crenvk_device_end_commandbuffer_singletime(VkDevice device, VkCommandPool cmdPool, VkCommandBuffer cmdBuffer, VkQueue queue)
 {
-    vkEndCommandBuffer(cmdBuffer);
+    VkResult res = vkEndCommandBuffer(cmdBuffer);
+    if (res != VK_SUCCESS) {
+        CREN_LOG(CREN_LOG_SEVERITY_ERROR, "Failed to end command buffer recording");
+        return res;
+    }
 
     VkSubmitInfo submitInfo = { 0 };
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &cmdBuffer;
 
-    VkResult res = vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE);
+    res = vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE);
     if (res != VK_SUCCESS) {
         CREN_LOG(CREN_LOG_SEVERITY_ERROR, "Failed to submit command buffer to queue");
+        return res;
     }
 
     res = vkQueueWaitIdle(queue);
     if (res != VK_SUCCESS) {
         CREN_LOG(CREN_LOG_SEVERITY_ERROR, "Failed to await queue response from sent command buffer");
+        return res;
     }
 
     vkFreeCommandBuffers(device, cmdPool, 1, &cmdBuffer);
+    return VK_SUCCESS;
 }
 
 uint32_t crenvk_device_find_memory_type(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties)
@@ -962,3 +971,5 @@ void crenvk_swapchain_destroy(vkSwapchain* swapchain, VkDevice device)
 
     vkDestroySwapchainKHR(device, swapchain->swapchain, NULL);
 }
+
+#endif // CREN_BUILD_WITH_VULKAN

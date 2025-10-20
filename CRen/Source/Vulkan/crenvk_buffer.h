@@ -21,6 +21,16 @@ typedef struct vkBufferCamera
 	align_as(16) fmat4 proj;
 } vkBufferCamera;
 
+/// @brief cren quad buffer
+typedef struct vkQuadBufferParams
+{
+	align_as(4) uint32_t billboard;	    // hints to always faces the camera
+	align_as(4) float uv_rotation;		// rotates the uv/texture
+	align_as(8) float2 lockAxis;	    // controls wich axis to lock
+	align_as(8) float2 uv_offset;	    // used to offset the uv/texture
+	align_as(8) float2 uv_scale;	    // used to scale the uv/texture
+} vkQuadBufferParams;
+
 /// @brief cren general buffer
 typedef struct vkBuffer
 {

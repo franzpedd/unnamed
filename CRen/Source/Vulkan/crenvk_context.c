@@ -5,7 +5,7 @@
 #include "crenvk_buffer.h"
 #include <memm/memm.h>
 
-#ifdef CREN_BUILD_WITH_VULKAN
+#if defined (CREN_BUILD_WITH_VULKAN)
 
 /// @brief handles the resize code, used internally
 static void internal_crenvk_resize(CRenVulkanBackend* backend, CRenContext* context, const CRenCallbacks* callbacks, CRenCamera* camera, bool customViewport, bool vsync, bool* hintResize)

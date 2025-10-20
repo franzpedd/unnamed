@@ -88,11 +88,17 @@ CREN_API void* cren_get_vulkan_backend(CRenContext* context);
 /// @brief returns the mouse position, this must be previously set to be correct
 CREN_API float2 cren_get_mousepos(CRenContext* context);
 
-/// @brief setsthe mouse position, this must be properly configured
+/// @brief sets the mouse position, this must be properly configured
 CREN_API void cren_set_mousepos(CRenContext* context, const float2 pos);
+
+/// @breif returns the viewport position
+CREN_API float2 cren_get_viewport_pos(CRenContext* context);
 
 /// @brief sets the viewport position internally, this is used when a custom viewport is active, no effect otherwise
 CREN_API void cren_set_viewport_pos(CRenContext* context, const float2 pos);
+
+/// @brief returns the viewport size
+CREN_API float2 cren_get_viewport_size(CRenContext* context);
 
 /// @brief sets the viewport size, this is used when a custom viewport is active, no effect otherwise
 CREN_API void cren_set_viewport_size(CRenContext* context, const float2 size);

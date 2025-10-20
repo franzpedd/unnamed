@@ -9,6 +9,14 @@
 #include "crenvk_core.h"
 #include "crenvk_pipeline.h"
 
+#ifdef __cplusplus 
+extern "C" {
+#endif
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Default
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 /// @brief default renderphase
 typedef struct vkDefaultRenderphase
 {
@@ -26,58 +34,6 @@ typedef struct vkDefaultRenderphase
     VkFormat depthFormat;
 
 } vkDefaultRenderphase;
-
-/// @brief picking renderphase, holding information about the object's id on the framebuffer
-typedef struct vkPickingRenderphase
-{
-    vkRenderpass* renderpass;
-    vkPipeline* pipeline;
-
-    VkFormat surfaceFormat;
-    VkFormat depthFormat;
-    uint32_t imageSize;
-
-    VkImage depthImage;
-    VkDeviceMemory depthMemory;
-    VkImageView depthView;
-    VkImage* colorImage;
-    VkDeviceMemory* colorMemory;
-    VkImageView* colorView;
-    uint32_t colorImageCount;
-} vkPickingRenderphase;
-
-/// @brief user-interface renderphase, very simple but "incomplete" since multiple choices of UI may be choosen, like ImGui, Nuklear and they might require more objects, this is enough for ImGui though
-typedef struct vkUIRenderphase
-{
-    vkRenderpass* renderpass;
-} vkUIRenderphase;
-
-/// @brief optional viewport renderphase, uses it's own resources for managing the scene more appropriately, only drawing the scene on itself instead of the main renderphase
-typedef struct vkViewportRenderphase
-{
-    vkRenderpass* renderpass;
-
-    VkImage colorImage;
-    VkDeviceMemory colorMemory;
-    VkImageView colorView;
-
-    VkImage depthImage;
-    VkDeviceMemory depthMemory;
-    VkImageView depthView;
-
-    VkSampler sampler;
-    VkDescriptorPool descriptorPool;
-    VkDescriptorSetLayout descriptorSetLayout;
-    VkDescriptorSet descriptorSet;
-} vkViewportRenderphase;
-
-#ifdef __cplusplus 
-extern "C" {
-#endif
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Default
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// @brief creates the main/default renderphase object
 CREN_API VkResult crenvk_renderphase_default_create(VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, VkFormat format, VkSampleCountFlagBits msaa, bool finalPhase, vkDefaultRenderphase* outPhase);
@@ -98,6 +54,25 @@ CREN_API void crenvk_renderphase_default_update(vkDefaultRenderphase* phase, voi
 // Picking
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/// @brief picking renderphase, holding information about the object's id on the framebuffer
+typedef struct vkPickingRenderphase
+{
+    vkRenderpass* renderpass;
+    vkPipeline* pipeline;
+
+    VkFormat surfaceFormat;
+    VkFormat depthFormat;
+    uint32_t imageSize;
+
+    VkImage depthImage;
+    VkDeviceMemory depthMemory;
+    VkImageView depthView;
+    VkImage* colorImage;
+    VkDeviceMemory* colorMemory;
+    VkImageView* colorView;
+    uint32_t colorImageCount;
+} vkPickingRenderphase;
+
 /// @brief creates the picking renderphase
 CREN_API VkResult crenvk_renderphase_picking_create(VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, vkPickingRenderphase* outPhase);
 
@@ -117,6 +92,14 @@ CREN_API void crenvk_renderphase_picking_update(vkPickingRenderphase* phase, voi
 // UI
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/// @brief user-interface renderphase, very simple but "incomplete" since multiple choices of UI may be choosen, like ImGui, Nuklear and they might require more objects, this is enough for ImGui though
+typedef struct vkUIRenderphase
+{
+    vkRenderpass* renderpass;
+    VkDescriptorPool descPool;
+    VkDescriptorSetLayout descSetLayout;
+} vkUIRenderphase;
+
 /// @brief creates the ui renderphase
 CREN_API VkResult crenvk_renderphase_ui_create(VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, VkFormat format, VkSampleCountFlagBits msaa, bool finalPhase, vkUIRenderphase* outPhase);
 
@@ -135,6 +118,25 @@ CREN_API void crenvk_renderphase_ui_update(vkUIRenderphase* phase, void* context
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Viewport
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/// @brief optional viewport renderphase, uses it's own resources for managing the scene more appropriately, only drawing the scene on itself instead of the main renderphase
+typedef struct vkViewportRenderphase
+{
+    vkRenderpass* renderpass;
+
+    VkImage colorImage;
+    VkDeviceMemory colorMemory;
+    VkImageView colorView;
+
+    VkImage depthImage;
+    VkDeviceMemory depthMemory;
+    VkImageView depthView;
+
+    VkSampler sampler;
+    VkDescriptorPool descriptorPool;
+    VkDescriptorSetLayout descriptorSetLayout;
+    VkDescriptorSet descriptorSet;
+} vkViewportRenderphase;
 
 /// @brief creates the viewport renderphase
 CREN_API VkResult crenvk_renderphase_viewport_create(VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, VkFormat format, VkSampleCountFlagBits msaa, vkViewportRenderphase* outPhase);

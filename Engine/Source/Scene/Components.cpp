@@ -11,7 +11,7 @@ namespace Cosmos
 	void TransformComponent::Save(Entity* entity, Datafile& dataFile)
 	{
 		if (entity->HasComponent<TransformComponent>()) {
-			std::string uuid = std::to_string(entity->GetIDValue());
+			std::string uuid = std::to_string(entity->GetID());
 			auto* component = entity->GetComponent<TransformComponent>();
 			auto& place = dataFile[uuid]["Transform"];
 
