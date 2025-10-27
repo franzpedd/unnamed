@@ -180,7 +180,7 @@ CREN_API VkResult crenvk_buffer_copy(vkBuffer* buffer, uint32_t frameIndex, cons
     return VK_SUCCESS;
 }
 
-CREN_API VkResult crenvk_buffer_flush(VkDevice device, vkBuffer* buffer, uint32_t frameIndex, VkDeviceSize size, VkDeviceSize offset)
+CREN_API VkResult crenvk_buffer_flush(VkDevice device, vkBuffer* buffer, uint32_t frameIndex, VkDeviceSize size, VkDeviceSize nonCoherentAtomSize, VkDeviceSize offset)
 {
     if (!buffer || frameIndex >= buffer->frameCount) return VK_ERROR_INITIALIZATION_FAILED;
 
@@ -188,14 +188,25 @@ CREN_API VkResult crenvk_buffer_flush(VkDevice device, vkBuffer* buffer, uint32_
     {
         VkMappedMemoryRange memoryRange = { VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE };
         memoryRange.memory = buffer->memories[frameIndex];
-        memoryRange.offset = offset;
-        memoryRange.size = (size == VK_WHOLE_SIZE) ? buffer->size - offset : size;
+
+        VkDeviceSize atomSize = nonCoherentAtomSize;
+        VkDeviceSize alignedOffset = offset & ~(atomSize - 1);
+        VkDeviceSize end = offset + size;
+        VkDeviceSize alignedEnd = (end + atomSize - 1) & ~(atomSize - 1);
+        VkDeviceSize alignedSize = alignedEnd - alignedOffset;
+
+        // clamp to buffer size
+        if (alignedOffset + alignedSize > buffer->size) {
+            alignedSize = buffer->size - alignedOffset;
+        }
+
+        memoryRange.offset = alignedOffset;
+        memoryRange.size = alignedSize;
 
         return vkFlushMappedMemoryRanges(device, 1, &memoryRange);
     }
 
-    // host coherent memory doesn't need explicit flushing
-    return VK_SUCCESS; 
+    return VK_SUCCESS;
 }
 
 CREN_API void crenvk_buffer_command_copy(VkCommandBuffer commandBuffer, vkBuffer* srcBuffer, uint32_t srcFrameIndex, vkBuffer* dstBuffer, uint32_t dstFrameIndex, VkDeviceSize size, VkDeviceSize srcOffset, VkDeviceSize dstOffset)

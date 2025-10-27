@@ -39,6 +39,7 @@ typedef struct vkDevice {
     int presentQueueIndex;
     VkQueue computeQueue;
     int computeQueueIndex;
+    VkDeviceSize atomSize;
 } vkDevice;
 
 /// @brief cren vulkan swapchain details

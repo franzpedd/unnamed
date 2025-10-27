@@ -41,6 +41,24 @@ CREN_API void cren_quad_render(CRenContext* context, CRenQuad* quad, CRen_Render
 /// @brief returns the quad's id
 CREN_API uint32_t cren_quad_get_id(CRenContext* context, CRenQuad* quad);
 
+/// @brief returns if the quad is acting like a billboard
+CREN_API bool cren_quad_get_billboard(CRenContext* context, CRenQuad* quad);
+
+/// @brief makes the quad act like a billboard
+CREN_API void cren_quad_set_billboard(CRenContext* context, CRenQuad* quad, bool value);
+
+/// @brief returns if the quad x axis is currently locked
+CREN_API bool cren_quad_get_lock_axis_x(CRenContext* context, CRenQuad* quad);
+
+/// @brief locks/unlocks the x axis of a quad
+CREN_API void cren_quad_set_lock_axis_x(CRenContext* context, CRenQuad* quad, bool lock);
+
+/// @brief returns if the quad y axis is currently locked
+CREN_API bool cren_quad_get_lock_axis_y(CRenContext* context, CRenQuad* quad);
+
+/// @brief locks/unlocks the y axis of a quad
+CREN_API void cren_quad_set_lock_axis_y(CRenContext* context, CRenQuad* quad, bool lock);
+
 #ifdef __cplusplus 
 }
 #endif

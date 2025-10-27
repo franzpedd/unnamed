@@ -85,6 +85,8 @@ namespace Cosmos::UIWidget
 	COSMOS_API void EndContext();
 	COSMOS_API bool BeginChildContext(const char* name, const float2& size = { 0.0f, 0.0f }, ContextChildFlags flags = ChildFlags_None, ContextFlags = ContextFlags_None);
 	COSMOS_API void EndChildContext();
+	COSMOS_API void BeginDisabled(bool disabled = true);
+	COSMOS_API void EndDisabled();
 	COSMOS_API uint32_t Dockspace(ID id, const float2& size = { 0.0f, 0.0f });
 
 	/// @brief context and window info

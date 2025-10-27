@@ -146,12 +146,12 @@ namespace Cosmos
 
 	void Window::ToogleCursor(bool hide)
 	{
-		if (hide) {
-			SDL_HideCursor();
-		}
+		SDL_SetWindowRelativeMouseMode(mNativeWindow, hide);
 
-		else {
-			SDL_ShowCursor();
+		if (!hide) {
+			int w, h;
+			SDL_GetWindowSize(mNativeWindow, &w, &h);
+			SDL_WarpMouseInWindow(mNativeWindow, w / 2, h / 2);
 		}
 	}
 

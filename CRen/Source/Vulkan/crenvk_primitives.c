@@ -405,7 +405,7 @@ CREN_API VkResult crenvk_quad_create_from_path(CRenVulkanBackend* backend, const
     }
     quad->buffer = NULL;
     quad->descriptorPool = VK_NULL_HANDLE;
-    quad->params.billboard = 1;
+    quad->params.billboard = 0.0f;
     quad->params.uv_rotation = 0.0f;
     quad->params.lockAxis.xy.x = 0.0f;
     quad->params.lockAxis.xy.y = 0.0f;
@@ -413,23 +413,26 @@ CREN_API VkResult crenvk_quad_create_from_path(CRenVulkanBackend* backend, const
     quad->params.uv_offset.xy.y = 0.0f;
     quad->params.uv_scale.xy.x = 1.0f;
     quad->params.uv_scale.xy.y = 1.0f;
-    //
+
     VkResult result = VK_SUCCESS;
     vkBuffer* staging = NULL;
     VkCommandBuffer cmd = VK_NULL_HANDLE;
 
-    // structured error handling
     do {
-        // create GPU buffer for quad parameters
-        quad->buffer = crenvk_buffer_create(backend->device.device, backend->device.physicalDevice, sizeof(vkQuadBufferParams), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, CREN_CONCURRENTLY_RENDERED_FRAMES);
+        VkDeviceSize alignedBufferSize = (sizeof(BufferQuad) + backend->device.atomSize - 1) & ~(backend->device.atomSize - 1);
+
+        quad->buffer = crenvk_buffer_create(backend->device.device, backend->device.physicalDevice, alignedBufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT, CREN_CONCURRENTLY_RENDERED_FRAMES);
+
         if (!quad->buffer) {
             CREN_LOG(CREN_LOG_SEVERITY_ERROR, "Failed to create GPU buffer for quad: %s", albedoPath);
             result = VK_ERROR_INITIALIZATION_FAILED;
             break;
         }
 
-        // create staging buffer
-        staging = crenvk_buffer_create(backend->device.device, backend->device.physicalDevice, sizeof(vkQuadBufferParams), VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, CREN_CONCURRENTLY_RENDERED_FRAMES);
+        quad->buffer->originalDataSize = sizeof(BufferQuad);
+
+        staging = crenvk_buffer_create(backend->device.device, backend->device.physicalDevice, sizeof(BufferQuad), VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, CREN_CONCURRENTLY_RENDERED_FRAMES);
+
         if (!staging) {
             CREN_LOG(CREN_LOG_SEVERITY_ERROR, "Failed to create staging buffer for quad: %s", albedoPath);
             result = VK_ERROR_INITIALIZATION_FAILED;
@@ -444,9 +447,10 @@ CREN_API VkResult crenvk_quad_create_from_path(CRenVulkanBackend* backend, const
                 break;
             }
 
-            crenvk_buffer_copy(staging, i, &quad->params, sizeof(vkQuadBufferParams), 0);
+            crenvk_buffer_copy(staging, i, &quad->params, sizeof(BufferQuad), 0);
             crenvk_buffer_unmap(backend->device.device, staging, i);
         }
+        if (result != VK_SUCCESS) break;
 
         // copy staging to GPU buffer
         vkRenderpass* renderpass = usingCustomViewport ? backend->viewportRenderphase->renderpass : backend->defaultRenderphase->renderpass;
@@ -458,7 +462,7 @@ CREN_API VkResult crenvk_quad_create_from_path(CRenVulkanBackend* backend, const
         }
 
         for (uint32_t i = 0; i < CREN_CONCURRENTLY_RENDERED_FRAMES; i++) {
-            crenvk_buffer_command_copy(cmd, staging, i, quad->buffer, i, sizeof(vkQuadBufferParams), 0, 0);
+            crenvk_buffer_command_copy(cmd, staging, i, quad->buffer, i, sizeof(BufferQuad), 0, 0);
         }
 
         result = crenvk_device_end_commandbuffer_singletime(backend->device.device, renderpass->commandPool, cmd, backend->device.graphicsQueue);
@@ -515,7 +519,7 @@ CREN_API VkResult crenvk_quad_create_from_path(CRenVulkanBackend* backend, const
 
         // success - assign output parameter
         *out_quad = quad;
-        quad = NULL; // prevent cleanup
+        quad = NULL;
 
     } while (0);
 
@@ -541,14 +545,14 @@ CREN_API void crenvk_quad_destroy(CRenVulkanBackend* backend, CRenVKQuad* quad)
 CREN_API void crenvk_quad_update(CRenVulkanBackend* backend, CRenVKQuad* quad)
 {
     if (!backend || !quad) return;
-
+    
     if (quad->buffer) {
         for(uint32_t i = 0; i < CREN_CONCURRENTLY_RENDERED_FRAMES; i++) {
-            void* where = quad->buffer->mappedPointers[i];
-
-            if (where) {
-                memcpy(where, &quad->buffer, sizeof(vkQuadBufferParams));
-            }
+            
+            crenvk_buffer_map(backend->device.device, quad->buffer, i);
+            crenvk_buffer_copy(quad->buffer, i, &quad->params, sizeof(BufferQuad), 0);
+            crenvk_buffer_flush(backend->device.device, quad->buffer, i, sizeof(BufferQuad), backend->device.atomSize, 0);
+            crenvk_buffer_unmap(backend->device.device, quad->buffer, i);
         }
     }
 }
@@ -586,10 +590,10 @@ CREN_API void crenvk_quad_render(CRenVulkanBackend* backend, CRenVKQuad* quad, C
 
     pipelineLayout = crenPipe->layout;
 
-    vkBufferPushConstant constants = { 0 };
+    BufferConstant constants = { 0 };
     constants.id = id;
     constants.model = modelMatrix;
-    vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(vkBufferPushConstant), &constants);
+    vkCmdPushConstants(cmdBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(BufferConstant), &constants);
 
     vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &quad->descriptorSets[currentFrame], 0, NULL);
     vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, crenPipe->pipeline);
@@ -605,7 +609,7 @@ CREN_API void crenvk_quad_update_descriptors(CRenVulkanBackend* backend, CRenVKQ
         VkDescriptorBufferInfo camInfo = { 0 };
         camInfo.buffer = cameraBuffer->buffers[i];
         camInfo.offset = 0;
-        camInfo.range = sizeof(vkBufferCamera);
+        camInfo.range = sizeof(BufferCamera);
 
         VkWriteDescriptorSet camDesc = { 0 };
         camDesc.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -621,7 +625,7 @@ CREN_API void crenvk_quad_update_descriptors(CRenVulkanBackend* backend, CRenVKQ
         VkDescriptorBufferInfo quadInfo = { 0 };
         quadInfo.buffer = quad->buffer->buffers[i];
         quadInfo.offset = 0;
-        quadInfo.range = sizeof(vkQuadBufferParams);
+        quadInfo.range = sizeof(BufferQuad);
 
         VkWriteDescriptorSet quadDesc = { 0 };
         quadDesc.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;

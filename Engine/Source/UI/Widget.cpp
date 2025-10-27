@@ -48,6 +48,16 @@ namespace Cosmos::UIWidget
 		ImGui::EndChild();
 	}
 
+	COSMOS_API void BeginDisabled(bool disabled)
+	{
+		ImGui::BeginDisabled(disabled);
+	}
+
+	COSMOS_API void EndDisabled()
+	{
+		ImGui::EndDisabled();
+	}
+
 	COSMOS_API uint32_t Dockspace(ID id, const float2& size)
 	{
 		return ImGui::DockSpace(id, { size.xy.x, size.xy.y });

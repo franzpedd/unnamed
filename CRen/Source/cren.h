@@ -1,6 +1,7 @@
 #ifndef CREN_INCLUDED
 #define CREN_INCLUDED
 
+#include "cren_buffer.h"
 #include "cren_callbacks.h"
 #include "cren_camera.h"
 #include "cren_context.h"

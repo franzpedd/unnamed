@@ -37,6 +37,7 @@ set(SOURCES
     Source/Vulkan/crenvk_primitives.h Source/Vulkan/crenvk_primitives.c
     Source/Vulkan/crenvk_renderphase.h Source/Vulkan/crenvk_renderphase.c
     #
+    Source/cren_buffer.h
     Source/cren_callbacks.h
     Source/cren_camera.h Source/cren_camera.c
     Source/cren_context.h Source/cren_context.c

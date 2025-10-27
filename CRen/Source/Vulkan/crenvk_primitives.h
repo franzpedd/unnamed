@@ -41,7 +41,7 @@ CREN_API void crenvk_texture2d_destroy(CRenVulkanBackend* backend, CRenVKTexture
 /// @brief this structure holds all necessary data for a vulkan quad
 typedef struct CRenVKQuad
 {
-	vkQuadBufferParams params;
+	BufferQuad params;
 	vkBuffer* buffer;
 	VkDescriptorPool descriptorPool;
 	VkDescriptorSet descriptorSets[CREN_CONCURRENTLY_RENDERED_FRAMES];

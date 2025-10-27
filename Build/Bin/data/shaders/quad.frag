@@ -4,7 +4,7 @@
 // includes
 #include "include/fun.glsl"
 #include "include/ubo_camera.glsl"
-#include "include/ubo_sprite.glsl"
+#include "include/ubo_quad.glsl"
 #include "include/push_constant.glsl"
 
 // mesh samplers
@@ -19,7 +19,7 @@ layout(location = 0) out vec4 outColor;
 // entrypoint
 void main()
 {
-    outColor = texture(colorMapSampler, TransformUV(inFragTexCoord, spriteParams.uv_offset, spriteParams.uv_scale, radians(spriteParams.uv_rotation)));
+    outColor = texture(colorMapSampler, TransformUV(inFragTexCoord, quadParams.uv_offset, quadParams.uv_scale, radians(quadParams.uv_rotation)));
 
     // discard full transparent pixels
     if(outColor.a == 0.0) {

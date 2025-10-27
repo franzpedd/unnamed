@@ -144,7 +144,6 @@ namespace Cosmos
 					CRenQuad* quad = editorComponent->quad;
 					if (quad) {
 						fmat4 modelMatrix = transformComponent->GetTransform();
-						fmat4 identityMatrix = fmat4_identity();
 						cren_quad_render(context, quad, (CRen_RenderStage)stage, modelMatrix);
 					}
 				}

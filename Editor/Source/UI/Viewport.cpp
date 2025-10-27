@@ -91,14 +91,25 @@ namespace Cosmos
 	{
 		if (buttoncode == Input::BUTTON_LEFT && mod == Input::Keymod::KEYMOD_NONE)
 		{
-			// creating a new empty entity
-			bool areaWithinViewport = true; // I should modify this to be inside the viewport
-			static bool alreadyCreated = false; // just creating one entity for now, developing at it's peak
-			if (mVerticalMenu.selectedOption == VerticalMenu::MenuOption::AddEntity && areaWithinViewport && !alreadyCreated) {
+			CRenContext* context = mApp->GetRendererRef()->GetCRenContext();
+			float2 mousePos = cren_get_mousepos(context);
+			float2 viewportPos = cren_get_viewport_pos(context);
+			float2 viewportSize = cren_get_viewport_size(context);
+			float2 adjustedMousePos = { mousePos.xy.x - viewportPos.xy.x, mousePos.xy.y - viewportPos.xy.y }; // adjust mouse position relative to viewport
 
-				// using 0,0,0 for now but I should address this
-				mApp->GetRendererRef()->GetWorld()->CreateEntity("New Entity", {0.0f, 0.0f, 0.0f});
-				alreadyCreated = true;
+			bool areaWithinViewport = true;
+			static bool firstEntity = true;
+			
+			if (mVerticalMenu.selectedOption == VerticalMenu::MenuOption::AddEntity && areaWithinViewport && firstEntity) {
+
+				CRenCamera* camera = mApp->GetRendererRef()->GetMainCamera();
+				fmat4 inversePerspective = cren_camera_get_perspective_inverse(camera);
+				fmat4 inverseView = cren_camera_get_view_inverse(camera);
+				fray ray = fray_from_screen_point_vulkan(&adjustedMousePos, &viewportSize, &inversePerspective, &inverseView);
+				//float3 worldPos = fray_get_point(&ray, 10.0f);
+				float3 worldPos = { 0.0f, 0.0f, 0.0f };
+				mApp->GetRendererRef()->GetWorld()->CreateEntity("New Entity", worldPos);
+				firstEntity = false;
 			}
 		}
 	}
@@ -147,7 +158,6 @@ namespace Cosmos
 			UIWidget::PushItemWidth(50.0f);
 			UIWidget::PushStyleVar(UIWidget::StyleVar_ScrollbarPadding, 2.0f);
 			UIWidget::SetCursorPosX(UIWidget::GetCursorPosX() - 5.0f);
-
 			
 			float snapping = mGizmo.GetSnappingValue();
 			if (UIWidget::SliderFloat("##Snapping", &snapping, 0.005f, 10.0f, "%.2f")) { mGizmo.SetSnappingValue(snapping); }
@@ -271,6 +281,7 @@ namespace Cosmos
 		UIWidget::SeparatorText("All entities presents in the current loaded world are listed below:");
 		int localID = 0;
 		static int selectedEntityIndex = 0;
+		static Entity* selectedEntity = NULL;
 
 		for (const auto& entity : mApp->GetRendererRef()->GetWorld()->GetEntityLibraryRef().GetAllRef()) {
 			UIWidget::PushID(localID++);
@@ -279,9 +290,69 @@ namespace Cosmos
 
 			if (UIWidget::Selectable(entity.second->GetName(), selectedEntityIndex == localID)) {
 				selectedEntityIndex = localID;
+				if (entity.second) selectedEntity = entity.second;
 			}
 
 			UIWidget::PopID();
+		}
+
+		UIWidget::SeparatorText("Entity Properties");
+
+		// draw entity properties
+		if (selectedEntity)
+		{
+			UIWidget::BeginChildContext("##Entity Properties");
+			{
+				CRenContext* cren = mApp->GetRendererRef()->GetCRenContext();
+
+				if (selectedEntity->HasComponent<TransformComponent>()) {
+
+					TransformComponent* component = selectedEntity->GetComponent<TransformComponent>();
+
+					UIWidget::Text("T: ");
+					UIWidget::SameLine();
+					WidgetExtended::Float3Controller("Translation", &component->translation.xyz.x, &component->translation.xyz.y, &component->translation.xyz.z);
+
+					UIWidget::Text("R: ");
+					UIWidget::SameLine();
+					WidgetExtended::Float3Controller("Rotation", &component->rotation.xyz.x, &component->rotation.xyz.y, &component->rotation.xyz.z);
+
+					UIWidget::Text("S: ");
+					UIWidget::SameLine();
+					WidgetExtended::Float3Controller("Scale", &component->scale.xyz.x, &component->scale.xyz.y, &component->scale.xyz.z);
+				}
+
+				if (selectedEntity->HasComponent<EditorComponent>()) {
+
+					EditorComponent* component = selectedEntity->GetComponent<EditorComponent>();
+
+					bool billboard = cren_quad_get_billboard(cren, component->quad);
+
+					if (WidgetExtended::Checkbox("Enable", &billboard)) {
+						cren_quad_set_billboard(cren, component->quad, billboard);
+					}
+
+					UIWidget::SetTooltip("Makes the Sprite to always face the camera");
+					UIWidget::SameLine();
+
+					bool xLocked = cren_quad_get_lock_axis_x(cren, component->quad);
+					bool yLocked = cren_quad_get_lock_axis_y(cren, component->quad);
+
+					if (WidgetExtended::Checkbox("Lock X", &xLocked)) {
+						cren_quad_set_lock_axis_x(cren, component->quad, xLocked);
+					}
+
+					UIWidget::SetTooltip("Prevent the X axis to rotate");
+					UIWidget::SameLine();
+
+					if (WidgetExtended::Checkbox("Lock Y", &yLocked)) {
+						cren_quad_set_lock_axis_y(cren, component->quad, yLocked);
+					}
+
+					UIWidget::SetTooltip("Prevent the Y axis to rotate");
+				}
+			}
+			UIWidget::EndChildContext();
 		}
 	}
 
@@ -368,7 +439,7 @@ namespace Cosmos
 			VkDescriptorBufferInfo bufferInfo = { 0 };
 			bufferInfo.buffer = crenBuffer->buffers[i];
 			bufferInfo.offset = 0;
-			bufferInfo.range = sizeof(vkBufferCamera);
+			bufferInfo.range = sizeof(BufferCamera);
 
 			VkWriteDescriptorSet descriptorWrite{};
 			descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;

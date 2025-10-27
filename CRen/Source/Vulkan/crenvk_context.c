@@ -106,7 +106,7 @@ CREN_API CRenVulkanBackend crenvk_initialize(CRenContext* context, unsigned int 
     }
 
     // buffers
-    vkBuffer* cameraBuffer = crenvk_buffer_create(backend.device.device, backend.device.physicalDevice, sizeof(vkBufferCamera), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, CREN_CONCURRENTLY_RENDERED_FRAMES);
+    vkBuffer* cameraBuffer = crenvk_buffer_create(backend.device.device, backend.device.physicalDevice, sizeof(BufferCamera), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, CREN_CONCURRENTLY_RENDERED_FRAMES);
 	CREN_ASSERT(cameraBuffer != NULL, "Failed to create camera buffer");
 
     backend.buffersLib = shashtable_init();
@@ -158,15 +158,14 @@ CREN_API void crenvk_terminate(CRenVulkanBackend* backend)
 CREN_API void crenvk_update(CRenVulkanBackend* backend, float timestep, CRenCamera* camera)
 {
 	// send information about the camera to the gpu camera buffer
-	fmat4 view = cren_camera_get_view(camera);
-	vkBufferCamera cameraData = { 0 };
-	cameraData.view = view;
-	cameraData.viewInverse = fmat4_inverse(&view);
+	BufferCamera cameraData = { 0 };
+	cameraData.view = cren_camera_get_view(camera);
+    cameraData.viewInverse = cren_camera_get_view_inverse(camera);
 	cameraData.proj = cren_camera_get_perspective(camera);
-	cameraData.proj.data[1][1] *= -1.0f; // flip y because vulkan
+	cameraData.proj.data[1][1] *= -1.0f;
 	
 	vkBuffer* cameraBuffer = (vkBuffer*)shashtable_lookup(backend->buffersLib, "Camera");
-	crenvk_buffer_copy(cameraBuffer, backend->swapchain.currentFrame, &cameraData, sizeof(vkBufferCamera), 0);
+	crenvk_buffer_copy(cameraBuffer, backend->swapchain.currentFrame, &cameraData, sizeof(BufferCamera), 0);
 }
 
 CREN_API void crenvk_render(void* context, CRenVulkanBackend* backend, float timestep, const CRenCallbacks* callbacks, CRenCamera* camera, bool* hintResize)

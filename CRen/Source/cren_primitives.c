@@ -175,5 +175,89 @@ CREN_API void cren_quad_render(CRenContext* context, CRenQuad* quad, CRen_Render
 
 CREN_API uint32_t cren_quad_get_id(CRenContext* context, CRenQuad* quad)
 {
+    if (!context) return 0;
     return quad ? quad->id : 0;
+}
+
+CREN_API bool cren_quad_get_billboard(CRenContext* context, CRenQuad* quad)
+{
+    if (!context) return false;
+
+    if (quad) {
+        if (quad->backend) {
+            return quad->backend->params.billboard == 1.0f ? true : false;
+        }
+   }
+
+    return false;
+}
+
+CREN_API void cren_quad_set_billboard(CRenContext* context, CRenQuad* quad, bool value)
+{
+    if (!context) return;
+    if (quad) {
+        if (quad->backend) {
+            if (value) {
+                quad->backend->params.billboard = 1.0f;
+            }
+
+            else {
+                quad->backend->params.billboard = 0.0f;
+            }
+
+            cren_quad_update(context, quad);
+        }
+    }
+}
+
+CREN_API bool cren_quad_get_lock_axis_x(CRenContext* context, CRenQuad* quad)
+{
+    if (!context) return false;
+    if (quad) {
+        return quad->backend->params.lockAxis.xy.x == 1.0f ? true : false;
+    }
+
+    return false;
+}
+
+CREN_API void cren_quad_set_lock_axis_x(CRenContext* context, CRenQuad* quad, bool lock)
+{
+    if (!context) return;
+    if (quad) {
+        if (lock) {
+            quad->backend->params.lockAxis.xy.x = 1.0f;
+        }
+
+        else {
+            quad->backend->params.lockAxis.xy.x = 0.0f;
+        }
+
+        cren_quad_update(context, quad);
+    }
+}
+
+CREN_API bool cren_quad_get_lock_axis_y(CRenContext* context, CRenQuad* quad)
+{
+    if (!context) return false;
+    if (quad) {
+        return quad->backend->params.lockAxis.xy.y == 1.0f ? true : false;
+    }
+
+    return false;
+}
+
+CREN_API void cren_quad_set_lock_axis_y(CRenContext* context, CRenQuad* quad, bool lock)
+{
+    if (!context) return;
+    if (quad) {
+        if (lock) {
+            quad->backend->params.lockAxis.xy.y = 1.0f;
+        }
+
+        else {
+            quad->backend->params.lockAxis.xy.y = 0.0f;
+        }
+
+        cren_quad_update(context, quad);
+    }
 }

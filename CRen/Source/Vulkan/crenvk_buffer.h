@@ -3,38 +3,14 @@
 #ifdef CREN_BUILD_WITH_VULKAN
 
 #include "cren_defines.h"
-#include <vecmath/vecmath.h>
+#include "cren_buffer.h"
 #include <vulkan/vulkan.h>
-
-/// @brief cren push-constant buffer
-typedef struct vkBufferPushConstant 
-{
-	align_as(4) uint32_t id;
-	align_as(16) fmat4 model;
-} vkBufferPushConstant;
-
-/// @brief cren camera buffer
-typedef struct vkBufferCamera 
-{
-	align_as(16) fmat4 view;
-	align_as(16) fmat4 viewInverse;
-	align_as(16) fmat4 proj;
-} vkBufferCamera;
-
-/// @brief cren quad buffer
-typedef struct vkQuadBufferParams
-{
-	align_as(4) uint32_t billboard;	    // hints to always faces the camera
-	align_as(4) float uv_rotation;		// rotates the uv/texture
-	align_as(8) float2 lockAxis;	    // controls wich axis to lock
-	align_as(8) float2 uv_offset;	    // used to offset the uv/texture
-	align_as(8) float2 uv_scale;	    // used to scale the uv/texture
-} vkQuadBufferParams;
 
 /// @brief cren general buffer
 typedef struct vkBuffer
 {
     VkDeviceSize size;
+	VkDeviceSize originalDataSize;
     VkBufferUsageFlags usage;
     VkMemoryPropertyFlags memoryProperties;
 
@@ -67,7 +43,7 @@ CREN_API VkResult crenvk_buffer_unmap(VkDevice device, vkBuffer* buffer, uint32_
 CREN_API VkResult crenvk_buffer_copy(vkBuffer* buffer, uint32_t frameIndex, const void* data, VkDeviceSize size, VkDeviceSize offset);
 
 /// @brief flushes a buffer
-CREN_API VkResult crenvk_buffer_flush(VkDevice device, vkBuffer* buffer, uint32_t frameIndex, VkDeviceSize size, VkDeviceSize offset);
+CREN_API VkResult crenvk_buffer_flush(VkDevice device, vkBuffer* buffer, uint32_t frameIndex, VkDeviceSize size, VkDeviceSize nonCoherentAtomSize, VkDeviceSize offset);
 
 /// @brief copies a gpu buffer within gpu
 CREN_API void crenvk_buffer_command_copy(VkCommandBuffer commandBuffer, vkBuffer* srcBuffer, uint32_t srcFrameIndex, vkBuffer* dstBuffer, uint32_t dstFrameIndex, VkDeviceSize size, VkDeviceSize srcOffset, VkDeviceSize dstOffset);

@@ -340,7 +340,7 @@ CREN_API VkResult crenvk_pipeline_create_quad(shashtable* pipelines, vkRenderpas
 	// push constant
 	ci.pushConstantsCount = 1;
 	ci.pushConstants[0].offset = 0;
-	ci.pushConstants[0].size = sizeof(vkBufferPushConstant);
+	ci.pushConstants[0].size = sizeof(BufferConstant);
 	ci.pushConstants[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 
 	// bindings
@@ -400,7 +400,7 @@ CREN_API VkResult crenvk_pipeline_create_quad(shashtable* pipelines, vkRenderpas
 	// push constant
 	ci.pushConstantsCount = 1;
 	ci.pushConstants[0].offset = 0;
-	ci.pushConstants[0].size = sizeof(vkBufferPushConstant);
+	ci.pushConstants[0].size = sizeof(BufferConstant);
 	ci.pushConstants[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 
 	// bindings

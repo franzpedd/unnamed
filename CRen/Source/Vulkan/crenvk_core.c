@@ -311,6 +311,9 @@ void crenvk_device_create(vkDevice* device, VkInstance instance, bool validation
     
     // create logical device
     internal_crenvk_create_logical_device(device->physicalDevice, device->surface, &device->device, &device->graphicsQueue, &device->presentQueue, &device->computeQueue, &device->graphicsQueueIndex, &device->presentQueueIndex, &device->computeQueueIndex, validations);
+    
+    // save atom size
+    device->atomSize = device->physicalDeviceProperties.limits.nonCoherentAtomSize;
 }
 
 void crenvk_device_destroy(vkDevice* device, VkInstance instance)

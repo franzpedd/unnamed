@@ -20,8 +20,10 @@ struct CRenCamera
 	float modifierSpeed;
 
 	// math
-	fmat4 perspective;
 	fmat4 view;
+	fmat4 viewInverse;
+	fmat4 perspective;
+	fmat4 perspectiveInverse;
 	float3 rotation;
 	float3 position;
 	float3 scale;
@@ -65,6 +67,7 @@ CREN_API CRenCamera* cren_camera_create(CRen_CameraType type, float initialAspec
 	camera->modifierSpeed = 2.5f;
 
 	camera->perspective = fmat4_identity();
+	camera->perspectiveInverse = fmat4_identity();
 	camera->view = fmat4_identity();
 	camera->rotation = (float3){ 0.0f, 0.0f, 0.0f };
 	camera->position = (float3){ 0.0f, 1.0f, 0.0f };
@@ -76,6 +79,7 @@ CREN_API CRenCamera* cren_camera_create(CRen_CameraType type, float initialAspec
 	if (camera->api == CREN_RENDERER_API_VULKAN_1_1 || camera->api == CREN_RENDERER_API_VULKAN_1_2 || camera->api == CREN_RENDERER_API_VULKAN_1_3) {
 		CREN_LOG(CREN_LOG_SEVERITY_INFO, "This math function needs verifing");
 		camera->perspective = fmat4_perspective_vulkan(to_fradians(camera->fov), initialAspectRatio, camera->near, camera->far);
+		camera->perspectiveInverse = fmat4_inverse(&camera->perspective);
 	}
 	else {
 		CREN_LOG(CREN_LOG_SEVERITY_FATAL, "The camera system is only functional under vulkan right now");
@@ -136,12 +140,15 @@ CREN_API void cren_camera_update(CRenCamera* camera, float timestep)
 
 	// update view matrix
 	internal_camera_update_view_matrix(camera);
+
+	camera->viewInverse = fmat4_inverse(&camera->view);
 }
 
 CREN_API void cren_camera_set_aspect_ratio(CRenCamera* camera, float aspect)
 {
 	if (camera->api == CREN_RENDERER_API_VULKAN_1_1 || camera->api == CREN_RENDERER_API_VULKAN_1_2 || camera->api == CREN_RENDERER_API_VULKAN_1_3) {
 		camera->perspective = fmat4_perspective_vulkan(to_fradians(camera->fov), aspect, camera->near, camera->far);
+		camera->perspectiveInverse = fmat4_inverse(&camera->perspective);
 	}
 
 	else {
@@ -183,10 +190,22 @@ CREN_API fmat4 cren_camera_get_view(CRenCamera* camera)
 	return camera->view;
 }
 
+CREN_API fmat4 cren_camera_get_view_inverse(CRenCamera* camera)
+{
+	if (!camera) return fmat4_identity();
+	return camera->viewInverse;
+}
+
 CREN_API fmat4 cren_camera_get_perspective(CRenCamera* camera)
 {
 	if (!camera) return fmat4_identity();
 	return camera->perspective;
+}
+
+CREN_API fmat4 cren_camera_get_perspective_inverse(CRenCamera* camera)
+{
+	if (!camera) return fmat4_identity();
+	return camera->perspectiveInverse;
 }
 
 CREN_API bool cren_camera_can_move(CRenCamera* camera)

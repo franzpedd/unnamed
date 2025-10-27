@@ -30,8 +30,14 @@ CREN_API void cren_camera_rotate(CRenCamera* camera, float3 dir);
 /// @brief returns the camera's view matrix
 CREN_API fmat4 cren_camera_get_view(CRenCamera* camera);
 
+/// @brief returns the camera's inverse view matrix
+CREN_API fmat4 cren_camera_get_view_inverse(CRenCamera* camera);
+
 /// @brief returns the camera's perspective projection matrix
 CREN_API fmat4 cren_camera_get_perspective(CRenCamera* camera);
+
+/// @brief returns the camera's inverse perspective projection matrix
+CREN_API fmat4 cren_camera_get_perspective_inverse(CRenCamera* camera);
 
 /// @brief returns if camera can currently move
 CREN_API bool cren_camera_can_move(CRenCamera* camera);

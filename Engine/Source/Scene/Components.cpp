@@ -48,16 +48,28 @@ namespace Cosmos
 
 	fmat4 TransformComponent::GetTransform()
 	{
-		fmat4 identity = fmat4_identity();
 		float3 rotRad = { to_fradians(rotation.xyz.x), to_fradians(rotation.xyz.y), to_fradians(rotation.xyz.z) };
 		fquat q = fquat_from_euler(&rotRad);
+		fmat4 rotMat = fquat_to_fmat4_rowmajor(&q);
 
-		fmat4 rmat = fquat_to_fmat4_colmajor(&q);
-		fmat4 smat = fmat4_scale_colmajor(&rmat, &scale);
-		fmat4 tmat = fmat4_translate_colmajor(&identity, &translation);
+		fmat4 result = fmat4_identity();
+		result.matrix.m00 = rotMat.matrix.m00 * scale.xyz.x;
+		result.matrix.m01 = rotMat.matrix.m01 * scale.xyz.x;
+		result.matrix.m02 = rotMat.matrix.m02 * scale.xyz.x;
 
-		fmat4 rtmat = fmat4_mul(&rmat, &tmat); // (rotate * translate)
-		return fmat4_mul(&smat, &rtmat); // scale * (rotate * translate)
+		result.matrix.m10 = rotMat.matrix.m10 * scale.xyz.y;
+		result.matrix.m11 = rotMat.matrix.m11 * scale.xyz.y;
+		result.matrix.m12 = rotMat.matrix.m12 * scale.xyz.y;
+
+		result.matrix.m20 = rotMat.matrix.m20 * scale.xyz.z;
+		result.matrix.m21 = rotMat.matrix.m21 * scale.xyz.z;
+		result.matrix.m22 = rotMat.matrix.m22 * scale.xyz.z;
+
+		result.matrix.m30 = translation.xyz.x;
+		result.matrix.m31 = translation.xyz.y;
+		result.matrix.m32 = translation.xyz.z;
+
+		return result;
 	}
 
 	EditorComponent::EditorComponent()
