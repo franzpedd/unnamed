@@ -1,0 +1,15 @@
+<h2>cren_set_mousepos</h2>
+<p><strong>File:</strong> cren_context.h</p>
+<p><strong>Type:</strong> C Function</p>
+<h3>Description</h3>
+<p>Informs the renderer where the cursor is, this is used internally for picking renderphase optimization(the only pixel rendered is underneath the cursor position).</p>
+
+<pre><code class="language-c">CREN_API void cren_set_mousepos(CRenContext* context, const float2 pos);
+</code></pre>
+
+<h3>Parameters</h3>
+<h4>context:</h4>
+<p>CRen's context memory address.</p>
+
+<h4>pos:</h4>
+<p>The cursor's current position.</p>

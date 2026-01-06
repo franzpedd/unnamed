@@ -1,0 +1,35 @@
+<h2>BufferConstant</h2>
+<p><strong>File:</strong> cren_buffer.h</p>
+<p><strong>Type:</strong> C Struct</p>
+
+<h3>Description</h3>
+<p>
+    Stores quad data accessible via a Uniform Buffer Object (UBO), offering optimal performance for scene-wide constants.
+    Data is uploaded once per quad.
+</p>
+
+<pre><code class="language-c">typedef struct BufferQuad
+{
+    align_as(4) float billboard;
+    align_as(4) float uv_rotation;
+    align_as(8) float2 lockAxis;
+    align_as(8) float2 uv_offset;
+    align_as(8) float2 uv_scale;
+} BufferQuad;
+</code></pre>
+
+<h3>Members</h3>
+<h4>billboard:</h4>
+<p>If 1.0f enables the quad to act as a billboard (always facing the camera), acts like an in-place quad otherwise. </p>
+
+<h4>uv_rotation:</h4>
+<p>Rotation of the UV-Coordinates, for mapping with the 2D texture.</p>
+
+<h4>lockAxis:</h4>
+<p>When using billboad, allow the locking of axis but still acting like a billboard. (If both axis are locked it'll stay in-place)</p>
+
+<h4>uv_offset:</h4>
+<p>Allows to offset the UV-Coordinates in order to add freedom to adjust textures in-renderer.</p>
+
+<h4>uv_scale:</h4>
+<p>Allows to scale the UV-Coordinates in order to add freedom to adjust textures in-renderer.</p>

@@ -1,0 +1,15 @@
+<h2>cren_initialize</h2>
+<p><strong>File:</strong> cren_context.h</p>
+<p><strong>Type:</strong> C Function</p>
+<h3>Description</h3>
+<p>Initializes the CRen library.</p>
+
+<pre><code class="language-c">CREN_API CRenContext* cren_initialize(const CRenCreateInfo createInfo);
+</code></pre>
+
+<h3>Parameters</h3>
+<h4>createInfo:</h4>
+<p>Struct containing all the hints for the library initialization.</p>
+
+<h3>Return</h3>
+Returns the CRenContext, an opaque object used for various functions, NULL if the creation has failed. The terminal will contain more info if it has failed.

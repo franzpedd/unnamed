@@ -1,0 +1,15 @@
+<h2>cren_get_msaa</h2>
+<p><strong>File:</strong> cren_context.h</p>
+<p><strong>Type:</strong> C Function</p>
+<h3>Description</h3>
+<p>CRen render has support for MSAA (Multisample Anti-Aliasing), this will return how many samples is currently set.</p>
+
+<pre><code class="language-c">CREN_API CRen_MSAA cren_get_msaa(CRenContext* context);
+</code></pre>
+
+<h3>Parameters</h3>
+<h4>context:</h4>
+<p>CRen's context memory address.</p>
+
+<h3>Return</h3>
+Either of the following: CREN_MSAA_X1 <strong>(Turned-Off)</strong>, CREN_MSAA_X2, CREN_MSAA_X4, CREN_MSAA_X8, CREN_MSAA_X16, CREN_MSAA_X32 or CREN_MSAA_X64.

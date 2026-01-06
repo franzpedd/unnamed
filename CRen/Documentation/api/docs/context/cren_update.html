@@ -1,0 +1,15 @@
+<h2>cren_update</h2>
+<p><strong>File:</strong> cren_context.h</p>
+<p><strong>Type:</strong> C Function</p>
+<h3>Description</h3>
+<p>Updates the current frame-logic, like camera calculations but not the render-logic, for that there's a separate function.</p>
+
+<pre><code class="language-c">CREN_API void cren_update(CRenContext* context, float timestep);
+</code></pre>
+
+<h3>Parameters</h3>
+<h4>context:</h4>
+<p>CRen's context memory address.</p>
+
+<h4>timestep:</h4>
+<p>Time elapsed since last frame in seconds.</p>

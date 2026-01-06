@@ -89,8 +89,8 @@ namespace Cosmos
 				MenuOption_Max
 			};
 
-			const char* icon[4] = { ICON_LC_MOUSE_POINTER_2, ICON_LC_MOVE_3D, ICON_LC_ROTATE_3D, ICON_LC_SCALE_3D };
-			const char* tooltip[4] = { "Selection", "Translation", "Rotation", "Scale" };
+			const char* icon[MenuOption_Max] = { ICON_LC_MOUSE_POINTER_2, ICON_LC_MOVE_3D, ICON_LC_ROTATE_3D, ICON_LC_SCALE_3D };
+			const char* tooltip[MenuOption_Max] = { "Selection", "Translation", "Rotation", "Scale" };
 			MenuOption selectedOption = Gizmo_Selection;
 		} mHorizontalMenu;
 
@@ -103,8 +103,8 @@ namespace Cosmos
 				MenuOption_Max
 			};
 
-			const char* icon[1] = { ICON_LC_SQUARE };
-			const char* tooltip[1] = { "Add Entity" };
+			const char* icon[MenuOption_Max] = { ICON_LC_SQUARE };
+			const char* tooltip[MenuOption_Max] = { "Add Entity" };
 			MenuOption selectedOption = Unselected;
 		} mVerticalMenu;
 

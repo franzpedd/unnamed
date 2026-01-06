@@ -1,0 +1,18 @@
+<h2>cren_set_resize_callback</h2>
+<p><strong>File:</strong> cren_context.h</p>
+<p><strong>Type:</strong> C Function</p>
+<h3>Description</h3> 
+<p>
+    This function assigns a callback to be executed once the renderer has applyed the resizing event, (sent via functions: cren_resize/cren_minimize/cren_restore/cren_maximize/),
+    Usefull when user wants to further resize something after the renderer was resized, but it's not a necessary callback to be set.
+</p>
+
+<pre><code class="language-c">CREN_API void cren_set_resize_callback(CRenContext* context, CRenCallback_Resize callback);
+</code></pre>
+
+<h3>Parameters</h3>
+<h4>context:</h4>
+<p>CRen's context memory address.</p>
+
+<h4>callback:</h4>
+<p>The callback function to be called.</p>

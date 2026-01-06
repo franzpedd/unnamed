@@ -69,6 +69,9 @@ namespace Cosmos
 		/// @brief returns the window's size
 		float2 GetWindowSize();
 
+		/// @brief returns the window's position
+		float2 GetWindowPos();
+
 		/// @brief returns the cursor position
 		float2 GetCursorPos();
 

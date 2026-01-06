@@ -1,0 +1,18 @@
+<h2>cren_set_draw_ui_raw_data_callback</h2>
+<p><strong>File:</strong> cren_context.h</p>
+<p><strong>Type:</strong> C Function</p>
+<h3>Description</h3> 
+<p>
+    This function assigns a callback to be executed when it's time to draw UI objects (usually after the world objects or the UI would be behind it).
+    Most user interfaces bundles all of it's "widgets" together into a "raw" data, this function works like render for objects.
+</p>
+
+<pre><code class="language-c">CREN_API void cren_set_draw_ui_raw_data_callback(CRenContext* context, CRenCallback_DrawUIRawData callback);
+</code></pre>
+
+<h3>Parameters</h3>
+<h4>context:</h4>
+<p>CRen's context memory address.</p>
+
+<h4>callback:</h4>
+<p>The callback function to be called.</p>

@@ -1,0 +1,19 @@
+<h2>cren_camera_set_speed_modifier</h2>
+<p><strong>File:</strong> cren_camera.h</p>
+<p><strong>Type:</strong> C Function</p>
+<h3>Description</h3>
+<p>Sets/unsets the camera speed multiplier modifier.</p>
+
+<pre><code class="language-c">CREN_API void cren_camera_set_speed_modifier(CRenCamera* camera, bool status, float value)
+</code></pre>
+
+<h3>Parameters</h3>
+<h4>camera:</h4>
+<p>Camera's memory address.</p>
+
+<h4>status:</h4>
+<p>true to enable apply speed modifier, false to disable</p>
+
+<h4>value:</h4>
+<p>The velocity modifier, should be more than 1.0f to be faster and less than 1.0f to be slower</p>
+

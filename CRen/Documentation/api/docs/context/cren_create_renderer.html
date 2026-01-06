@@ -1,0 +1,15 @@
+<h2>cren_create_renderer</h2>
+<p><strong>File:</strong> cren_context.h</p>
+<p><strong>Type:</strong> C Function</p>
+<h3>Description</h3>
+<p>
+    Creates the renderer in the backend, right now it only supports Vulkan. 
+    This is a separte function to initialize because the cren_set_create_vulkan_surface_callback must be defined right now.
+</p>
+
+<pre><code class="language-c">CREN_API void cren_create_renderer(CRenContext* context);
+</code></pre>
+
+<h3>Parameters</h3>
+<h4>context:</h4>
+<p>CRen's context memory address.</p>

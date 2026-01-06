@@ -1,0 +1,27 @@
+<h2>BufferConstant</h2>
+<p><strong>File:</strong> cren_buffer.h</p>
+<p><strong>Type:</strong> C Struct</p>
+
+<h3>Description</h3>
+<p>
+    Stores camera data accessible across all shaders via a Uniform Buffer Object (UBO), offering optimal performance for scene-wide constants.
+    Data is uploaded once per frame and reused globally.
+</p>
+
+<pre><code class="language-c">typedef struct BufferCamera
+{
+    align_as(16) fmat4 view;
+    align_as(16) fmat4 viewInverse;
+    align_as(16) fmat4 proj;
+} BufferCamera;
+</code></pre>
+
+<h3>Members</h3>
+<h4>view:</h4>
+<p>The camera's view matrix.</p>
+
+<h4>viewInverse:</h4>
+<p>The camera's view inverse matrix, this is calculated on CPU and maintaned internally because is faster.</p>
+
+<h4>proj:</h4>
+<p>The camera's projection matrix, calculated on CPU as it's faster.</p>

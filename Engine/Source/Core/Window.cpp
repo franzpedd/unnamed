@@ -101,6 +101,9 @@ namespace Cosmos
 
 				case SDL_EVENT_MOUSE_MOTION:
 				{
+					float2 pos = { event.motion.x, event.motion.y };
+					cren_set_mousepos(mApp->GetRendererRef()->GetCRenContext(), pos);
+
 					mApp->OnMouseMove((double)event.motion.xrel, (double)event.motion.yrel);
 					break;
 				}
@@ -215,6 +218,14 @@ namespace Cosmos
 
         return {(float)width, (float)height};
     }
+
+	float2 Window::GetWindowPos()
+	{
+		int x, y;
+
+		SDL_GetWindowPosition(mNativeWindow, &x, &y);
+		return { (float)x, (float)y };
+	}
 
     float2 Window::GetCursorPos()
 	{

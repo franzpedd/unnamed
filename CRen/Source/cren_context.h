@@ -12,7 +12,7 @@ typedef struct CRenCreateInfo
 {
 	const char* appName;
 	const char* assetsPath;
-	CRen_Renderer api;
+	CRen_RendererAPI api;
 	uint32_t appVersion;
 	uint32_t width;
 	uint32_t height;
@@ -54,24 +54,15 @@ CREN_API void cren_minimize(CRenContext* context);
 /// @brief restores the renderer to it's last known size, resuming the rendering process
 CREN_API void cren_restore(CRenContext* context);
 
-/// @brief create and register internally and returns an id
-CREN_API uint32_t cren_create_id(CRenContext* context);
-
-/// @brief register an id, returns true if successfully registered
-CREN_API bool cren_register_id(CRenContext* context, uint32_t id);
-
-/// @brief unregister an id, returns true if successfully unregistered
-CREN_API bool cren_unregister_id(CRenContext* context, uint32_t id);
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Getters/Setters
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-/// @brief returns if validation errors are enabled
-CREN_API bool cren_are_validations_enabled(CRenContext* context);
-
 /// @brief returns the cren main camera, we're only using one right now
 CREN_API CRenCamera* cren_get_main_camera(CRenContext* context);
+
+/// @brief returns if validation errors are enabled
+CREN_API bool cren_are_validations_enabled(CRenContext* context);
 
 /// @brief returns the curernt status of vertical syncronization
 CREN_API bool cren_using_vsync(CRenContext* context);
@@ -108,6 +99,22 @@ CREN_API float2 cren_get_framebuffer_size(CRenContext* context);
 
 /// @brief set's the new framebuffer size (changes the current size wich will be noticded uppon render function and resized)
 CREN_API void cren_set_framebuffer_size(CRenContext* context, const float2 size);
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/// Fun
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/// @brief attempts to pick an object on the screen based on screen coordinates
+CREN_API uint32_t cren_pick_object(CRenContext* context, float2 screenCoord);
+
+/// @brief create and register internally and returns an id
+CREN_API uint32_t cren_create_id(CRenContext* context);
+
+/// @brief register an id, returns true if successfully registered
+CREN_API bool cren_register_id(CRenContext* context, uint32_t id);
+
+/// @brief unregister an id, returns true if successfully unregistered
+CREN_API bool cren_unregister_id(CRenContext* context, uint32_t id);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Callbacks

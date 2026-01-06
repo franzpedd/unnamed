@@ -1,0 +1,21 @@
+<h2>cren_quad_render</h2>
+<p><strong>File:</strong> cren_primitives.h</p>
+<p><strong>Type:</strong> C Function</p>
+<h3>Description</h3>
+<p>Renders the quad, sending the draw command to the gpu.</p>
+
+<pre><code class="language-c">CREN_API void cren_quad_render(CRenContext* context, CRenQuad* quad, CRen_RenderStage stage, const fmat4 modelMatrix);
+</code></pre>
+
+<h3>Params</h3>
+<h4>context:</h4>
+<p>CRen's context memory address.</p>
+
+<h4>quad:</h4>
+<p>The address of the opaque quad object.</p>
+
+<h4>stage:</h4>
+<p>The current render stage (picking or default), the callback to render will contain this info.</p>
+
+<h4>modelMatrix:</h4>
+<p>The quad model matrix, defining the quad's position, rotation and scale.</p>

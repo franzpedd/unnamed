@@ -1,0 +1,27 @@
+<h2>cren_stbimage_load_from_file</h2>
+<p><strong>File:</strong> cren_error.h</p>
+<p><strong>Type:</strong> C Function</p>
+<h3>Description</h3>
+<p>This function is a wrapper of stb_load so it's not needed to expose stb outside the library.</p>
+
+<pre><code class="language-c">CREN_API uint8_t* cren_stbimage_load_from_file(const char* path, int desiredChannels, int* outWidth, int* outHeight, int* outChannels);
+</code></pre>
+
+<h3>Parameters</h3>
+<h4>path:</h4>
+<p>Image's path on disk.</p>
+
+<h4>desiredChannels:</h4>
+<p>How many channels to read from the image. 1 = R, 2 = RG, 3 = RGB, 4 = RGBA.</p>
+
+<h4>outWidth:</h4>
+<p>Address to an integer to store image's width once loaded.</p>
+
+<h4>outHeight:</h4>
+<p>Address to an integer to store image's height once loaded.</p>
+
+<h4>outChannels:</h4>
+<p>Address to an integer to store image's channels amount once loaded.</p>
+
+<h3>Return</h3>
+The binary (char*/uint8_t*) that represents such image.

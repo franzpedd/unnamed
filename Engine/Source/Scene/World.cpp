@@ -50,8 +50,10 @@ namespace Cosmos
 
 		newEnt->AddComponent<EditorComponent>();
 		newEnt->GetComponent<EditorComponent>()->quad = cren_quad_create(mRenderer->GetCRenContext(), mApp->GetAssetPath("textures/entity.png").c_str(), id);
+		cren_quad_set_billboard(mRenderer->GetCRenContext(), newEnt->GetComponent<EditorComponent>()->quad, true);
 
 		mEntities.Insert(id, newEnt);
+		CREN_LOG(CREN_LOG_SEVERITY_INFO, "Created object %d at %.2f/%.2f/%.2f", id, pos.xyz.x, pos.xyz.y, pos.xyz.z);
 		return true;
 	}
 

@@ -535,12 +535,12 @@ CREN_API VkResult crenvk_renderphase_picking_create_framebuffers(vkPickingRender
         (
             cmdBuffer,
             phase->colorImage[i],
-            VK_ACCESS_TRANSFER_READ_BIT,
-            VK_ACCESS_MEMORY_READ_BIT,
-            VK_IMAGE_LAYOUT_UNDEFINED, // must get from last render pass (undefined also works)
-            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, // must set for next render pass
-            VK_PIPELINE_STAGE_TRANSFER_BIT,
-            VK_PIPELINE_STAGE_TRANSFER_BIT,
+            0,
+            VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+            VK_IMAGE_LAYOUT_UNDEFINED,
+            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+            VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
             subresourceRange
         );
 
@@ -630,27 +630,18 @@ CREN_API void crenvk_renderphase_picking_update(vkPickingRenderphase* phase, voi
     viewport.maxDepth = 1.0f;
     vkCmdSetViewport(cmdBuffer, 0, 1, &viewport);
 
-    // if a viewport is in use, we just want to render the pixel undeneath the mousepos. This skips all other fragment computation
-    if (usingViewport) {
-
-        // these must be previously treated to handle viewport
-        float2 cursorPos = cren_get_mousepos((CRenContext*)context);
-        float2 mousePos;
-        mousePos.xy.x = f_clamp(cursorPos.xy.x, 0.0f, (float)vkBackend->swapchain.swapchainExtent.width);
-        mousePos.xy.y = f_clamp(cursorPos.xy.y, 0.0f, (float)vkBackend->swapchain.swapchainExtent.height);
-        
-        VkRect2D scissor = { 0 };
-        scissor.offset = (VkOffset2D){ (int)mousePos.xy.x, (int)mousePos.xy.y };
-        scissor.extent = (VkExtent2D){ 1, 1 };
-        vkCmdSetScissor(cmdBuffer, 0, 1, &scissor);
+    float2 screenCoord = cren_get_mousepos((CRenContext*)context);
+    float2 winSize = { (float)vkBackend->swapchain.swapchainExtent.width, (float)vkBackend->swapchain.swapchainExtent.height };
+    if (cren_using_custom_viewport((CRenContext*)context)) {
+        winSize = cren_get_viewport_size((CRenContext*)context);
     }
+    uint32_t fbX = (uint32_t)(screenCoord.xy.x * vkBackend->swapchain.swapchainExtent.width / winSize.xy.x);
+    uint32_t fbY = (uint32_t)(screenCoord.xy.y * vkBackend->swapchain.swapchainExtent.height / winSize.xy.y);
 
-    else {
-        VkRect2D scissor = { 0 };
-        scissor.offset = (VkOffset2D){ 0, 0 };
-        scissor.extent = vkBackend->swapchain.swapchainExtent;
-        vkCmdSetScissor(cmdBuffer, 0, 1, &scissor);
-    }
+    VkRect2D scissor = { 0 };
+    scissor.offset = (VkOffset2D){ (int)fbX, (int)fbY };
+    scissor.extent = (VkExtent2D){ 1, 1 };
+    vkCmdSetScissor(cmdBuffer, 0, 1, &scissor);
 
     if (callback != NULL) {
         callback(context, (CRen_RenderStage)CREN_RENDER_STAGE_PICKING, timestep);
@@ -663,6 +654,7 @@ CREN_API void crenvk_renderphase_picking_update(vkPickingRenderphase* phase, voi
     CREN_ASSERT(vkEndCommandBuffer(cmdBuffer) == VK_SUCCESS, "Failed to finish picking renderphase command buffer");
 
 }
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // UI
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

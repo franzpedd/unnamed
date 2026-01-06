@@ -1,0 +1,22 @@
+<h2>cren_register_id</h2>
+<p><strong>File:</strong> cren_context.h</p>
+<p><strong>Type:</strong> C Function</p>
+<h3>Description</h3>
+<p>Register an id into the tracking system.</p>
+
+<pre><code class="language-c">CREN_API bool cren_register_id(CRenContext* context, uint32_t id);
+</code></pre>
+
+<h3>Parameters</h3>
+<h4>context:</h4>
+<p>CRen's context memory address.</p>
+
+<h4>id:</h4>
+<p>The id to be registered.</p>
+
+<h3>Return</h3>
+Returns true if successfully registered, false if either the context was not initialized or the id is already registered.
+
+<div class="warning">
+    <strong>Warn:</strong> As of right now this function is not thread-safe, <strong>DON'T CALL IT FROM DIFFERENT THREADS</strong>.
+</div>

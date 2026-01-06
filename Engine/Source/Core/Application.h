@@ -107,7 +107,7 @@ namespace Cosmos
 		void OnMouseScroll(double xoffset, double yoffset);
 
 		/// @brief this is called by the window, signaling the mouse was moved to a new location
-		void OnMouseMove(double xpos, double ypos);
+		void OnMouseMove(double xoffset, double yoffset);
 
 		/// @brief this is called by the window, the dots per inch has changed
 		void OnDPIChange(float scale);

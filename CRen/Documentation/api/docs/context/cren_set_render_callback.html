@@ -1,0 +1,19 @@
+<h2>cren_set_render_callback</h2>
+<p><strong>File:</strong> cren_context.h</p>
+<p><strong>Type:</strong> C Function</p>
+<h3>Description</h3> 
+<p>
+    This function assigns a callback to be executed during Vulkan's command buffer recording for rendering.
+    It provides some control over the draw process, allowing you to decide which objects to render (since the drawing is a function per object) and, most importantly, 
+    the exact timing of when the drawing commands are issued within the frame's command sequence.
+</p>
+
+<pre><code class="language-c">CREN_API void cren_set_render_callback(CRenContext* context, CRenCallback_Render callback);
+</code></pre>
+
+<h3>Parameters</h3>
+<h4>context:</h4>
+<p>CRen's context memory address.</p>
+
+<h4>callback:</h4>
+<p>The callback function to be called.</p>

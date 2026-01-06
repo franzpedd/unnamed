@@ -1,0 +1,15 @@
+<h2>cren_camera_get_view_inverse</h2>
+<p><strong>File:</strong> cren_camera.h</p>
+<p><strong>Type:</strong> C Function</p>
+<h3>Description</h3>
+<p>Gets the current camera inverse view matrix, this is faster than geting the view and inversing it's already internally handled.</p>
+
+<pre><code class="language-c">CREN_API fmat4 cren_camera_get_view_inverse(CRenCamera* camera);
+</code></pre>
+
+<h3>Parameters</h3>
+<h4>camera:</h4>
+<p>Camera's memory address.</p>
+
+<h3>Return</h3>
+Returns the last/current camera's inverse view matrix.

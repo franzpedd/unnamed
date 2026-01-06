@@ -1,0 +1,36 @@
+<h2>cren_defines.h</h2>
+
+<h3>Overview</h3>
+<p>
+    Defines all library-wide macros and includes core standard library headers.
+</p>
+
+<h3>Code implementation</h3>
+Code implementation can be found <a target="_blank" rel="noopener noreferrer" href="https://github.com/franzpedd/unnamed/blob/main/CRen/Source/cren_defines.h">here</a>
+
+<h3>Definitions</h3>
+
+<h4>Concurrently rendered frames:</h4>
+<pre><code class="language-c">#define CREN_CONCURRENTLY_RENDERED_FRAMES 2</code></pre>
+<p>
+    Define the number of frames that can be in-flight simultaneously, how many frames worth of resources is maintain concurrently to prevent CPU and GPU from waiting on each other.<br>
+    - Prevents Stalls: Without pipelining, CPU must wait for GPU to finish before starting next frame;<br>
+    - Hides Latency: GPU can work on frame N while CPU prepares frame N+1;
+</p>
+
+<h4>Path maximum size</h4>
+<pre><code class="language-c">#define CREN_PATH_MAX_SIZE 128</code></pre>
+<p>
+    Paths to data files like textures, fonts and any resource must be at most this size, you may overwrite this if necessary.
+</p>
+
+<h4>Compile-time array size calculator</h4>
+<pre><code class="language-c">#define CREN_STATIC_ARRAY_SIZE(ARR) ((int)(sizeof(ARR) / sizeof(*(ARR))))</code></pre>
+<p>
+    Calculates the number of elements in a static (fixed-size) array. (Does NOT work with pointers).
+</p>
+
+<div class="todo">
+    <strong>Expand:</strong> Currently there are floating macros accross the API that could live here.
+</div>
+

@@ -1,0 +1,21 @@
+<h2>cren_quad_create</h2>
+<p><strong>File:</strong> cren_primitives.h</p>
+<p><strong>Type:</strong> C Function</p>
+<h3>Description</h3>
+<p>Creates a CRenQuad object, a 2D plane that can be used for many pourpuses.</p>
+
+<pre><code class="language-c">CREN_API CRenQuad* cren_quad_create(CRenContext* context, const char* albedoPath, uint32_t id);
+</code></pre>
+
+<h3>Params</h3>
+<h4>context:</h4>
+<p>CRen's context memory address.</p>
+
+<h4>albedoPath:</h4>
+<p>The path to the texture's albedo.</p>
+
+<h4>id:</h4>
+<p>Associates an identifier to the quad, using cren_create_id() is a good way to fill this.</p>
+
+<h3>Return</h3>
+<p>The address of the opaque object, used to track this particular resource.</p>

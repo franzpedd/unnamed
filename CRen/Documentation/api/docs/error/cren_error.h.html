@@ -1,0 +1,44 @@
+<h2>cren_error.h</h2>
+
+<h3>Overview</h3>
+<p>
+    Defines helper functions and macros for error-tracking.
+</p>
+
+<h3>Code implementation</h3>
+Code implementation can be found <a target="_blank" rel="noopener noreferrer" href="https://github.com/franzpedd/unnamed/blob/main/CRen/Source/cren_error.h">here</a>
+
+<h3>Macro</h3>
+
+<pre><code class="language-c">#ifdef CREN_LOG_DISABLED
+    #define CREN_LOG(...)
+    #define CREN_ASSERT(condition, msg) ((void)0)
+#else
+    #define CREN_LOG(severity, ...) cren_log_message(severity, __FILE__, __LINE__, __VA_ARGS__);
+    #define CREN_ASSERT(condition, ...) if (!(condition)) { cren_log_message(CREN_LOG_SEVERITY_FATAL, __FILE__, __LINE__, __VA_ARGS__); }
+#endif
+</code></pre>
+<p>
+    If <strong>CREN_LOG_DISABLED</strong> is defined, errors will be skipped but applications will be faster.
+</p>
+
+<h3>Parameters</h3>
+<h4>condition:</h4>
+<p>Given a boolean condition, if that's false the assertion will be trown. <strong>(ASSERT ONLY)</strong></p>
+
+<h4>msg:</h4>
+<p>A text string message about the assertion. <strong>(ASSERT ONLY)</strong></p>
+
+<h4>severity:</h4>
+<p>The severity of the log message. <strong>(LOG ONLY)</strong></p>
+
+<h4>...:</h4>
+<p>The formated string message about the log message. <strong>(LOG ONLY)</strong></p>
+
+<div class="todo">
+    <strong>Enhance:</strong> Provide error handling for level types.
+</div>
+
+<div class="todo">
+    <strong>Separate:</strong> Make assertions be enabled independent.
+</div>

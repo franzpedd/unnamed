@@ -1,0 +1,26 @@
+<h2>align_as</h2>
+<p><strong>File:</strong> cren_defines.h</p>
+<p><strong>Type:</strong> C Macro</p>
+<h3>Description</h3>
+<p>
+    The preprocessor checks which compiler is being used:<br>
+    - Checks if compiling as C++11 or newer;<br>
+    - Checks if it's Microsoft Visual C++;<br>
+    - Checks if it's GCC or Clang;<br>
+    - If none of the above, falls back to the C11 standard;
+</p>
+
+<pre><code class="language-c">#if defined(__cplusplus) && __cplusplus >= 201103L
+    #define align_as(X) alignas(X)  // C++11 native
+#elif defined(_MSC_VER)
+    #define align_as(X) __declspec(align(X))
+#elif defined(__GNUC__) || defined(__clang__)
+    #define align_as(X) __attribute__((aligned(X)))
+#else
+    #define align_as(X) _Alignas(X)  // C11 native
+#endif
+</code></pre>
+
+<h3>Parameters</h3>
+<h4>X:</h4>
+<p>Integer to align the object as, multiple of 2.</p>

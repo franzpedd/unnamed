@@ -38,7 +38,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL internal_crenvk_debug_callback(VkDebugUtil
     return VK_TRUE;
 }
 
-void crenvk_instance_create(CRenContext* context, vkInstance* instance, const char* appName, uint32_t appVersion, CRen_Renderer api, bool validations, CRenCallback_GetVulkanRequiredInstanceExtensions callback)
+void crenvk_instance_create(CRenContext* context, vkInstance* instance, const char* appName, uint32_t appVersion, CRen_RendererAPI api, bool validations, CRenCallback_GetVulkanRequiredInstanceExtensions callback)
 {
     if (!instance) return;
     
@@ -133,7 +133,7 @@ void crenvk_instance_destroy(vkInstance* instance)
     }
 }
 
-CREN_API uint32_t crenvk_encodeversion(CRen_Renderer api)
+CREN_API uint32_t crenvk_encodeversion(CRen_RendererAPI api)
 {
     uint32_t variant, major, minor, patch;
     switch (api)

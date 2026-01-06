@@ -1,0 +1,15 @@
+<h2>cren_pick_object</h2>
+<p><strong>File:</strong> cren_context.h</p>
+<p><strong>Type:</strong> C Function</p>
+<h3>Description</h3>
+<p>CRen uses a dedicated render phase to write unique ids into objects that can be used for pixel perfect selection with this function.</p>
+
+<pre><code class="language-c">CREN_API uint32_t cren_pick_object(CRenContext* context, float2 screenCoord);
+</code></pre>
+
+<h3>Parameters</h3>
+<h4>context:</h4>
+<p>CRen's context memory address.</p>
+
+<h4>screenCoord:</h4>
+<p>The pixel position on the screen to attempt picking.</p>

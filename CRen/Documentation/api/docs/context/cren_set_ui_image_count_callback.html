@@ -1,0 +1,17 @@
+<h2>cren_set_ui_image_count_callback</h2>
+<p><strong>File:</strong> cren_context.h</p>
+<p><strong>Type:</strong> C Function</p>
+<h3>Description</h3> 
+<p>
+    This function assigns a callback to be executed after the swapchain image count has changed, this is mostly(only) used for UI and exists to provide usability with Dear ImGui.
+</p>
+
+<pre><code class="language-c">CREN_API void cren_set_ui_image_count_callback(CRenContext* context, CRenCallback_ImageCount callback);
+</code></pre>
+
+<h3>Parameters</h3>
+<h4>context:</h4>
+<p>CRen's context memory address.</p>
+
+<h4>callback:</h4>
+<p>The callback function to be called.</p>

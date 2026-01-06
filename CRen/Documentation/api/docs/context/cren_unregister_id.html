@@ -1,0 +1,22 @@
+<h2>cren_unregister_id</h2>
+<p><strong>File:</strong> cren_context.h</p>
+<p><strong>Type:</strong> C Function</p>
+<h3>Description</h3>
+<p>Unregister an id into the tracking system, allowing it back to the pool of unused id's.</p>
+
+<pre><code class="language-c">CREN_API bool cren_unregister_id(CRenContext* context, uint32_t id);
+</code></pre>
+
+<h3>Parameters</h3>
+<h4>context:</h4>
+<p>CRen's context memory address.</p>
+
+<h4>id:</h4>
+<p>The id to be registered.</p>
+
+<h3>Return</h3>
+Returns true if successfully unregistered, false if the id was never registered or an error happened.
+
+<div class="warning">
+    <strong>Warn:</strong> As of right now this function is not thread-safe, <strong>DON'T CALL IT FROM DIFFERENT THREADS</strong>.
+</div>

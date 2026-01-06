@@ -1,0 +1,23 @@
+<h2>cren_load_file</h2>
+<p><strong>File:</strong> cren_error.h</p>
+<p><strong>Type:</strong> C Function</p>
+<h3>Description</h3>
+<p>Utility to load a file from device, usually used with cren_get_path.</p>
+
+<pre><code class="language-c">CREN_API unsigned int* cren_load_file(const char* path, size_t* outSize);
+</code></pre>
+
+<h3>Usage</h3>
+<pre><code class="language-c">const char* root = "../data";
+char defaultVert[CREN_PATH_MAX_SIZE];
+cren_get_path("shaders/compiled/quad.vert.spv", root, 0, defaultVert, sizeof(defaultVert));
+size_t spirvSize = 0;
+unsigned int* spirvCode = cren_load_file(defaultVert, &spirvSize);
+</code></pre>
+
+<h3>Params</h3>
+<h4>path:</h4>
+<p>The disk/device path of the asset.</p>
+
+<h4>outSize:</h4>
+<p>Address of a size_t object to hold asset's size in bytes after loaded.</p>

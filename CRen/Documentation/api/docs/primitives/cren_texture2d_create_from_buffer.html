@@ -1,0 +1,34 @@
+<h2>cren_texture2d_create_from_buffer</h2>
+<p><strong>File:</strong> cren_primitives.h</p>
+<p><strong>Type:</strong> C Function</p>
+<h3>Description</h3>
+<p>Creates a CRenTexture2D object, this is used when the image is sent via network, like Steam.</p>
+
+<pre><code class="language-c">CREN_API CRenTexture2D* cren_texture2d_create_from_buffer(CRenContext* context, uint8_t* buffer, size_t bufferLen, int32_t width, int32_t height, bool uiTexture);
+</code></pre>
+
+<h3>Params</h3>
+<h4>context:</h4>
+<p>CRen's context memory address.</p>
+
+<h4>buffer:</h4>
+<p>The texture's binary data.</p>
+
+<h4>bufferLen:</h4>
+<p>The texture's binary data size in bytes.</p>
+
+<h4>width:</h4>
+<p>The texture's width.</p>
+
+<h4>height:</h4>
+<p>The texture's height.</p>
+
+<h4>uiTexture:</h4>
+<p>If the image is designed to be used on the UI set this true, false otherwise.</p>
+
+<h3>Return</h3>
+<p>The address of the opaque object, used to track this particular resource.</p>
+
+<div class="todo">
+    <strong>Expose:</strong> Currently the CRenTexture2D object is opaque without functions to expose it's members. Currently this is used internally only but it will change.
+</div>

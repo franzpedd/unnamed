@@ -117,12 +117,12 @@ namespace Cosmos
         mGUI->OnKeyPress(keycode, mod, held);
         
         CRenCamera* cam = mRenderer->GetMainCamera();
-        if (cren_camera_can_move(cam)) {
+        if (cren_camera_get_lock(cam)) {
             if (keycode == Input::KEYCODE_W) cren_camera_move(cam, CREN_CAMERA_DIRECTION_FORWARD, true);
             if (keycode == Input::KEYCODE_S) cren_camera_move(cam, CREN_CAMERA_DIRECTION_BACKWARD, true);
             if (keycode == Input::KEYCODE_A) cren_camera_move(cam, CREN_CAMERA_DIRECTION_LEFT, true);
             if (keycode == Input::KEYCODE_D) cren_camera_move(cam, CREN_CAMERA_DIRECTION_RIGHT, true);
-            if (keycode == Input::KEYCODE_LSHIFT) cren_camera_pressing_speed_modifier(cam, true);
+            if (keycode == Input::KEYCODE_LSHIFT) cren_camera_set_speed_modifier(cam, true, 2.5f);
         }
     }
 
@@ -131,12 +131,12 @@ namespace Cosmos
         mGUI->OnKeyRelease(keycode);
         
         CRenCamera* cam = mRenderer->GetMainCamera();
-        if (cren_camera_can_move(cam)) {
+        if (cren_camera_get_lock(cam)) {
             if (keycode == Input::KEYCODE_W) cren_camera_move(cam, CREN_CAMERA_DIRECTION_FORWARD, false);
             if (keycode == Input::KEYCODE_S) cren_camera_move(cam, CREN_CAMERA_DIRECTION_BACKWARD, false);
             if (keycode == Input::KEYCODE_A) cren_camera_move(cam, CREN_CAMERA_DIRECTION_LEFT, false);
             if (keycode == Input::KEYCODE_D) cren_camera_move(cam, CREN_CAMERA_DIRECTION_RIGHT, false);
-            if (keycode == Input::KEYCODE_LSHIFT) cren_camera_pressing_speed_modifier(cam, false);
+            if (keycode == Input::KEYCODE_LSHIFT) cren_camera_set_speed_modifier(cam, false, 1.0f);
         }
     }
 
@@ -155,13 +155,13 @@ namespace Cosmos
         mGUI->OnMouseScroll(xoffset, yoffset);
     }
 
-    void Application::OnMouseMove(double xpos, double ypos)
+    void Application::OnMouseMove(double xoffset, double yoffset)
     {
-        mGUI->OnMouseMove(xpos, ypos);
+        mGUI->OnMouseMove(xoffset, yoffset);
         
         CRenCamera* cam = mRenderer->GetMainCamera();
-        if (cren_camera_can_move(cam)) {
-            float3 rot = { float(-ypos), float(-xpos), 0.0f };
+        if (cren_camera_get_lock(cam)) {
+            float3 rot = { float(-yoffset), float(-xoffset), 0.0f };
             cren_camera_rotate(cam, rot);
         }
     }

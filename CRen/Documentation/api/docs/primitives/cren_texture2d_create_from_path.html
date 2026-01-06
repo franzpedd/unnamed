@@ -1,0 +1,25 @@
+<h2>cren_texture2d_create_from_path</h2>
+<p><strong>File:</strong> cren_primitives.h</p>
+<p><strong>Type:</strong> C Function</p>
+<h3>Description</h3>
+<p>Creates a CRenTexture2D object, usually to be used on the used on an interface.</p>
+
+<pre><code class="language-c">CREN_API CRenTexture2D* cren_texture2d_create_from_path(CRenContext* context, const char* path, bool uiTexture);
+</code></pre>
+
+<h3>Params</h3>
+<h4>context:</h4>
+<p>CRen's context memory address.</p>
+
+<h4>path:</h4>
+<p>The texture's path on device's storage.</p>
+
+<h4>uiTexture:</h4>
+<p>If the image is designed to be used on the UI set this true, false otherwise.</p>
+
+<h3>Return</h3>
+<p>The address of the opaque object, used to track this particular resource.</p>
+
+<div class="todo">
+    <strong>Expose:</strong> Currently the CRenTexture2D object is opaque without functions to expose it's members. Currently this is used internally only but it will change.
+</div>

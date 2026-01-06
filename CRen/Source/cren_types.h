@@ -51,7 +51,7 @@ typedef enum CRen_CameraDirection
 } CRen_CameraDirection;
 
 /// @brief all kinds of errors severity exists, a fatal error will always trigger a crash
-typedef enum CRenLogSeverity
+typedef enum CRen_LogSeverity
 {
 	CREN_LOG_SEVERITY_TRACE,
 	CREN_LOG_SEVERITY_TODO,
@@ -68,7 +68,7 @@ typedef enum CRen_RendererAPI
 	CREN_RENDERER_API_VULKAN_1_1,
 	CREN_RENDERER_API_VULKAN_1_2,
 	CREN_RENDERER_API_VULKAN_1_3
-} CRen_Renderer;
+} CRen_RendererAPI;
 
 /// @brief how many samples per pixel the images has
 typedef enum CRen_MSAA

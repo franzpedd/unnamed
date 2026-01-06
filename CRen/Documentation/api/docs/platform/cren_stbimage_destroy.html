@@ -1,0 +1,12 @@
+<h2>cren_stbimage_destroy</h2>
+<p><strong>File:</strong> cren_error.h</p>
+<p><strong>Type:</strong> C Function</p>
+<h3>Description</h3>
+<p>This function is a wrapper of stbi_image_free so it's not needed to expose stb outside the library.</p>
+
+<pre><code class="language-c">CREN_API void cren_stbimage_destroy(uint8_t* ptr);
+</code></pre>
+
+<h3>Parameters</h3>
+<h4>ptr:</h4>
+<p>The address of the image's data.</p>

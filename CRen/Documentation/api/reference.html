@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRen Documentation</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/vs2015.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/c.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/cpp.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/cmake.min.js"></script>
+    
+    <style>
+        /* force dark theme for highlight.js */
+        .hljs {
+            background: #1e1e1e !important;
+            color: #abb2bf !important;
+        }
+        
+        /* esure code blocks have dark background */
+        .code-block {
+            background: #1e1e1e !important;
+        }
+        
+        .code-block pre {
+            background: #1e1e1e !important;
+        }
+        
+        .code-block pre code {
+            background: #1e1e1e !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="search-sidebar">
+            <div class="back-button">
+                <a href="../index.html" class="back-link">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Back to Home</span>
+                </a>
+            </div>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Search files or functions...">
+            </div>
+            <div class="explorer" id="explorer">
+                <!-- Files and functions will be inserted here -->
+            </div>
+        </div>
+        
+        <div class="content">
+            <div id="contentDisplay">
+                <h2>Select a file or function</h2>
+                <p>Select an item from the left to view details</p>
+            </div>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+    
+    <script>
+        // Initialize Highlight.js when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            // Configure Highlight.js
+            hljs.configure({
+                cssSelector: 'pre code',
+                languages: ['c', 'cpp'],
+                ignoreUnescapedHTML: true
+            });
+            
+            // Highlight all code blocks
+            hljs.highlightAll();
+            
+            // Set up observer for dynamically loaded content
+            const observer = new MutationObserver(() => {
+                document.querySelectorAll('pre code:not(.hljs)').forEach(block => {
+                    hljs.highlightElement(block);
+                });
+            });
+            
+            const contentDisplay = document.getElementById('contentDisplay');
+            if (contentDisplay) {
+                observer.observe(contentDisplay, {
+                    childList: true,
+                    subtree: true
+                });
+            }
+        });
+    </script>
+</body>
+</html>

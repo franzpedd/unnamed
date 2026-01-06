@@ -1,0 +1,19 @@
+<h2>cren_set_get_vulkan_instance_required_extensions_callback</h2>
+<p><strong>File:</strong> cren_context.h</p>
+<p><strong>Type:</strong> C Function</p>
+<h3>Description</h3> 
+<p>
+    This callback is required for Vulkan instance creation to query the necessary window system extensions (e.g., VK_KHR_xlib_surface or VK_KHR_wayland_surface).
+    While the required extensions can be auto-detected on Windows and Android, they cannot be reliably determined on Linux due to multiple possible display servers (X11, Wayland).
+    This platform-specific limitation necessitates the callback, though it may be removed in the future if a reliable auto-detection method becomes available for Linux.
+</p>
+
+<pre><code class="language-c">CREN_API void cren_set_get_vulkan_instance_required_extensions_callback(CRenContext* context, CRenCallback_GetVulkanRequiredInstanceExtensions callback);
+</code></pre>
+
+<h3>Parameters</h3>
+<h4>context:</h4>
+<p>CRen's context memory address.</p>
+
+<h4>callback:</h4>
+<p>The callback function to be called.</p>

@@ -1,0 +1,55 @@
+<h2>CRenCreateInfo</h2>
+<p><strong>File:</strong> cren_context.h</p>
+<p><strong>Type:</strong> C Struct</p>
+
+<h3>Description</h3>
+<p>
+    Contains all initialization parameters, resource requests, and bootstrapping requirements in a single data structure.
+</p>
+
+<pre><code class="language-c">typedef struct CRenCreateInfo
+{
+	const char* appName;
+	const char* assetsPath;
+	CRen_Renderer api;
+	uint32_t appVersion;
+	uint32_t width;
+	uint32_t height;
+	CRen_MSAA msaa;
+	bool validations;
+	bool vsync;
+	bool customViewport;
+} CRenCreateInfo;
+</code></pre>
+
+<h3>Members</h3>
+<h4>appName:</h4>
+<p>Your application/game name, it's used internally by the Vulkan initialization..</p>
+
+<h4>assetsPath:</h4>
+<p>Root path to where all your application/game assets are, must also include CRen's own assets inside of it.</p>
+
+<h4>api:</h4>
+<p>Which renderer API is going to be initialized, currently only vulkan version 1.1, 1.2 and 1.3 are available.</p>
+
+<h4>appVersion:</h4>
+<p>Numerical version for the application, you may want to use a macro for that, like:</p>
+<pre><code class="language-c">#define MAKE_VERSION(variant, major, minor, patch) ((((uint32_t)(variant)) << 29U) | (((uint32_t)(major)) << 22U) | (((uint32_t)(minor)) << 12U) | ((uint32_t)(patch)))</code></pre>
+
+<h4>width:</h4>
+<p>Initial renderer width, usually this should match the window initial width.</p>
+
+<h4>height:</h4>
+<p>Initial renderer height, usually this should match the window initial height.</p>
+
+<h4>msaa:</h4>
+<p>Multisample algorithm, could be from CREN_MSAA_X1, CREN_MSAA_X2 up to CREN_MSAA_X64 in power of two.</p>
+
+<h4>validations:</h4>
+<p>Enables/disables GPU logs about any error or information, this will make the application be slower but is excential when developing.</p>
+
+<h4>vsync:</h4>
+<p>Enables/disables vertical syncronization, which will match GPU to monitor refresh rate.</p>
+
+<h4>customViewport:</h4>
+<p>Hints the renderer the're will be a custom viewport, usually used on Engine Editors, that's quite a complex subject but it's used on Cosmos Engine as an example.</p>

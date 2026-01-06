@@ -74,16 +74,16 @@ namespace Cosmos
 		CRenCamera* camera = cren_get_main_camera(mApp->GetRendererRef()->GetCRenContext());
 
 		if (keycode == Cosmos::Input::KEYCODE_Z) {
-			if (cren_camera_can_move(camera)) {
+			if (cren_camera_get_lock(camera)) {
 				mApp->GetWindowRef()->ToogleCursor(false);
 				mApp->GetGUIRef()->ToggleCursor(false);
-				cren_camera_enable_move(camera, false);
+				cren_camera_set_lock(camera, false);
 				return;
 			}
 
 			mApp->GetWindowRef()->ToogleCursor(true);
 			mApp->GetGUIRef()->ToggleCursor(true);
-			cren_camera_enable_move(camera, true);
+			cren_camera_set_lock(camera, true);
 		}
 	}
 
@@ -95,21 +95,49 @@ namespace Cosmos
 			float2 mousePos = cren_get_mousepos(context);
 			float2 viewportPos = cren_get_viewport_pos(context);
 			float2 viewportSize = cren_get_viewport_size(context);
-			float2 adjustedMousePos = { mousePos.xy.x - viewportPos.xy.x, mousePos.xy.y - viewportPos.xy.y }; // adjust mouse position relative to viewport
+			float2 windowSize = mApp->GetWindowRef()->GetWindowSize();
+			float2 windowPos = mApp->GetWindowRef()->GetWindowPos();
 
-			bool areaWithinViewport = true;
-			static bool firstEntity = true;
+			// this is very hacky, but works in the current setup, the mouse coord is related with the viewport, borders are pre-defined
+			bool mouseWithinViewport = true;
+			constexpr float2 horizontalBorder = { 20.0f + 20.0f, 1346.0f };
+			constexpr float2 verticalBorder = { 20.0f + 20.0f, 748.0f };
+			mouseWithinViewport &= (mousePos.xy.x >= horizontalBorder.xy.x);
+			mouseWithinViewport &= (mousePos.xy.x <= horizontalBorder.xy.y);
+			mouseWithinViewport &= (mousePos.xy.y >= verticalBorder.xy.x);
+			mouseWithinViewport &= (mousePos.xy.y <= verticalBorder.xy.y);
+
+			if (!mouseWithinViewport) return;
+
+			// selecting entities
+			if (mVerticalMenu.selectedOption == VerticalMenu::MenuOption::Unselected) {
+
+				uint32_t idSelected = cren_pick_object(context, mousePos);
+				if (idSelected != 0) {
+					CREN_LOG(CREN_LOG_SEVERITY_TRACE, "Clicked on object %d", idSelected);
+				}
+			}
 			
-			if (mVerticalMenu.selectedOption == VerticalMenu::MenuOption::AddEntity && areaWithinViewport && firstEntity) {
+			// adding an entity
+			if (mVerticalMenu.selectedOption == VerticalMenu::MenuOption::AddEntity) {
 
 				CRenCamera* camera = mApp->GetRendererRef()->GetMainCamera();
-				fmat4 inversePerspective = cren_camera_get_perspective_inverse(camera);
-				fmat4 inverseView = cren_camera_get_view_inverse(camera);
-				fray ray = fray_from_screen_point_vulkan(&adjustedMousePos, &viewportSize, &inversePerspective, &inverseView);
-				//float3 worldPos = fray_get_point(&ray, 10.0f);
-				float3 worldPos = { 0.0f, 0.0f, 0.0f };
+				float3 cameraPos = cren_camera_get_position(camera);
+				float3 cameraFront = cren_camera_get_front(camera);
+
+				const float3 worldUp = { 0.0f, 1.0f, 0.0f }; // defined in camera.c
+				float3 worldPos = fray_screen_to_world_point_vulkan(
+					&mousePos,
+					&viewportSize,
+					1.0f,
+					to_fradians(cren_camera_get_fov(camera)),
+					cren_camera_get_aspect_ratio(camera),
+					&cameraPos,
+					&cameraFront,
+					&worldUp
+				);
+
 				mApp->GetRendererRef()->GetWorld()->CreateEntity("New Entity", worldPos);
-				firstEntity = false;
 			}
 		}
 	}
@@ -362,9 +390,10 @@ namespace Cosmos
 		float2 vpPos = cren_get_viewport_pos(mApp->GetRendererRef()->GetCRenContext());
 		float2 vpSize = cren_get_viewport_size(mApp->GetRendererRef()->GetCRenContext());
 		UIWidget::SetNextWindowPos({ vpPos.xy.x + (vpSize.xy.x - 200.0f), vpPos.xy.y + 40.0f });
-		float2 mousePos = mApp->GetWindowRef()->GetCursorPos();
+		float2 mousePos = cren_get_mousepos(mApp->GetRendererRef()->GetCRenContext());
 		float3 cameraPos = cren_camera_get_position(mApp->GetRendererRef()->GetMainCamera());
-		
+		float3 cameraFront = cren_camera_get_front(mApp->GetRendererRef()->GetMainCamera());
+
 		UIWidget::BeginChildContext("##Statistics", { 230.0f, 125.0f }, UIWidget::ChildFlags_None);
 		
 		UIWidget::Text(ICON_LC_FLAME		 " [%.2f]", (float)mApp->GetAverageFPS());
@@ -375,6 +404,9 @@ namespace Cosmos
 		
 		UIWidget::Text(ICON_LC_CAMERA        " [%.2f, %.2f, %.2f]", cameraPos.xyz.x, cameraPos.xyz.y, cameraPos.xyz.z);
 		if (UIWidget::IsItemHovered(UIWidget::HoveredFlags_AllowWhenDisabled)) UIWidget::SetTooltip("Camera 3D position in the world");
+
+		UIWidget::Text(ICON_LC_VIEW        " [%.2f, %.2f, %.2f]", cameraFront.xyz.x, cameraFront.xyz.y, cameraFront.xyz.z);
+		if (UIWidget::IsItemHovered(UIWidget::HoveredFlags_AllowWhenDisabled)) UIWidget::SetTooltip("Camera 3D front position in the world");
 		
 		UIWidget::Text(ICON_LC_RATIO		 " [%.2f, %.2f]", vpPos.xy.x, vpPos.xy.y);
 		if (UIWidget::IsItemHovered(UIWidget::HoveredFlags_AllowWhenDisabled)) UIWidget::SetTooltip("Viewport position, relative to monitor");

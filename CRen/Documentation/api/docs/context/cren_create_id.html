@@ -1,0 +1,22 @@
+<h2>cren_create_id</h2>
+<p><strong>File:</strong> cren_context.h</p>
+<p><strong>Type:</strong> C Function</p>
+<h3>Description</h3>
+<p>
+    CRen has a bounded, recyclable, memory efficient, O(1) for checking, ID allocator.
+    Creates an unique id inside the renderer, that can assigned to an object on it's creation.
+</p>
+
+<pre><code class="language-c">CREN_API uint32_t cren_create_id(CRenContext* context);
+</code></pre>
+
+<h3>Parameters</h3>
+<h4>context:</h4>
+<p>CRen's context memory address.</p>
+
+<h3>Return</h3>
+A unique id starting from 1.
+
+<div class="warning">
+    <strong>Warn:</strong> As of right now this function is not thread-safe, <strong>DON'T CALL IT FROM DIFFERENT THREADS</strong>.
+</div>

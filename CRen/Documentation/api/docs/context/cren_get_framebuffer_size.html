@@ -1,0 +1,19 @@
+<h2>cren_get_framebuffer_size</h2>
+<p><strong>File:</strong> cren_context.h</p>
+<p><strong>Type:</strong> C Function</p>
+<h3>Description</h3>
+<p>Returns the framebuffer size, that may differ from viewport's size.</p>
+
+<pre><code class="language-c">CREN_API float2 cren_get_framebuffer_size(CRenContext* context);
+</code></pre>
+
+<h3>Parameters</h3>
+<h4>context:</h4>
+<p>CRen's context memory address.</p>
+
+<h3>Return</h3>
+The last known framebuffer size
+
+<div class="todo">
+    <strong>Todo:</strong> This will be replaced in favor of viewport_size handling both scenarios (with and without customViewport).
+</div>

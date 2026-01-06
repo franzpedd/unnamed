@@ -1,0 +1,22 @@
+<h2>CRen_Platform</h2>
+<p><strong>File:</strong> cren_types.h</p>
+<p><strong>Type:</strong> C Enum</p>
+
+<h3>Description</h3>
+<p>
+    Describes all platforms the renderer can be run. Use it alongside cren_detect_platform() to retrieve current platform in runtime.
+</p>
+
+<h3>Implementation</h3>
+<pre><code class="language-c">typedef enum CRen_Platform
+{
+	CREN_PLATFORM_UNKNOWN = -2,
+	CREN_PLATFORM_UNKNOWN_APPLE = -1,
+	CREN_PLATFORM_MACOS,
+	CREN_PLATFORM_IOS,
+	CREN_PLATFORM_X11,
+	CREN_PLATFORM_LINUX,
+	CREN_PLATFORM_ANDROID,
+	CREN_PLATFORM_WINDOWS
+} CRen_Platform;
+</code></pre>

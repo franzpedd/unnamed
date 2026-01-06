@@ -6,13 +6,24 @@
 #include <stddef.h>
 #include <stdint.h>
 
+/// @brief how many frames are simultaneously rendered
+#define CREN_CONCURRENTLY_RENDERED_FRAMES 2
+
+/// @brief how many characters a path may have
+#define CREN_PATH_MAX_SIZE 128
+
+/// @brief macro for getting the size of a static array, DON'T USE ON PTR
+#define CREN_STATIC_ARRAY_SIZE(ARR) ((int)(sizeof(ARR) / sizeof(*(ARR))))
+
 /// @brief align-as per compiler
-#if defined(_MSC_VER)
+#if defined(__cplusplus) && __cplusplus >= 201103L
+    #define align_as(X) alignas(X)  // C++11 native
+#elif defined(_MSC_VER)
     #define align_as(X) __declspec(align(X))
 #elif defined(__GNUC__) || defined(__clang__)
     #define align_as(X) __attribute__((aligned(X)))
 #else
-    #define align_as(X) _Alignas(X)
+    #define align_as(X) _Alignas(X)  // C11 native
 #endif
 
 /// @brief building as DLL or static-lib, depending on context
@@ -29,14 +40,5 @@
 #else
 	#define CREN_API
 #endif
-
-/// @brief how many frames are simultaneously rendered
-#define CREN_CONCURRENTLY_RENDERED_FRAMES 2
-
-/// @brief how many characters a path may have
-#define CREN_PATH_MAX_SIZE 128
-
-/// @brief macro for getting the size of a static array, DON'T USE ON PTR
-#define CREN_STATIC_ARRAY_SIZE(ARR) ((int)(sizeof(ARR) / sizeof(*(ARR))))
 
 #endif // CREN_DEFINES_INCLDUED

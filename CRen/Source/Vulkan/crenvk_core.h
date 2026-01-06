@@ -80,13 +80,13 @@ extern "C" {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// @brief creates and populates a vulkan instance
-CREN_API void crenvk_instance_create(CRenContext* context, vkInstance* instance, const char* appName, uint32_t appVersion, CRen_Renderer api, bool validations, CRenCallback_GetVulkanRequiredInstanceExtensions callback);
+CREN_API void crenvk_instance_create(CRenContext* context, vkInstance* instance, const char* appName, uint32_t appVersion, CRen_RendererAPI api, bool validations, CRenCallback_GetVulkanRequiredInstanceExtensions callback);
 
 /// @brief free used resources by the vulkan instance
 CREN_API void crenvk_instance_destroy(vkInstance* instance);
 
 /// @brief converts the renderer api into the expected number for vulkan
-CREN_API uint32_t crenvk_encodeversion(CRen_Renderer api);
+CREN_API uint32_t crenvk_encodeversion(CRen_RendererAPI api);
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Device

@@ -1,0 +1,19 @@
+<h2>cren_camera_move</h2>
+<p><strong>File:</strong> cren_camera.h</p>
+<p><strong>Type:</strong> C Function</p>
+<h3>Description</h3>
+<p>Starts the movement towards a direction without stop.</p>
+
+<pre><code class="language-c">CREN_API void cren_camera_move(CRenCamera* camera, CRen_CameraDirection dir, bool moving);
+</code></pre>
+
+<h3>Parameters</h3>
+<h4>camera:</h4>
+<p>Camera's memory address.</p>
+
+<h4>dir:</h4>
+<p>Either one of the following: CREN_CAMERA_DIRECTION_FORWARD, CREN_CAMERA_DIRECTION_BACKWARD, CREN_CAMERA_DIRECTION_LEFT or CREN_CAMERA_DIRECTION_RIGHT</p>
+
+<h4>moving:</h4>
+<p>true to move, false to stop moving</p>
+

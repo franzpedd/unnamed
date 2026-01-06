@@ -1,0 +1,23 @@
+<h2>BufferConstant</h2>
+<p><strong>File:</strong> cren_buffer.h</p>
+<p><strong>Type:</strong> C Struct</p>
+
+<h3>Description</h3>
+<p>
+    Holds per-frame object data transmitted to shaders via PushConstants, which enables extremely fast GPU updates.
+    The buffer is limited to 128 bytes in total, with 80 bytes(64 + padding) currently allocated.
+</p>
+
+<pre><code class="language-c">typedef struct BufferConstant
+{
+    align_as(4) uint32_t id;
+    align_as(16) fmat4 model;
+} BufferConstant;
+</code></pre>
+
+<h3>Members</h3>
+<h4>id:</h4>
+<p>The identification number to track the object this buffer associates with, usually a renderable.</p>
+
+<h4>model:</h4>
+<p>The object's model matrix, the transformation matrix that defines where and how a 3D model exists in the world.</p>

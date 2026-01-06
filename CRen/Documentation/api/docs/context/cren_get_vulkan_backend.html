@@ -1,0 +1,15 @@
+<h2>cren_get_vulkan_backend</h2>
+<p><strong>File:</strong> cren_context.h</p>
+<p><strong>Type:</strong> C Function</p>
+<h3>Description</h3>
+<p>Allows the access to Vulkan objects for directly controll of the renderer.</p>
+
+<pre><code class="language-c">CREN_API void* cren_get_vulkan_backend(CRenContext* context);
+</code></pre>
+
+<h3>Parameters</h3>
+<h4>context:</h4>
+<p>CRen's context memory address.</p>
+
+<h3>Return</h3>
+An opaque memory address that can be casted to CRenVulkanBackend* in order to access it's members. (Will be changed into an opaque object in the future).

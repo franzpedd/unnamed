@@ -1,0 +1,21 @@
+<h2>cren_log_message</h2>
+<p><strong>File:</strong> cren_error.h</p>
+<p><strong>Type:</strong> C Function</p>
+<h3>Description</h3>
+<p>Writes a custom message informing of an error at a given file/line.</p>
+
+<pre><code class="language-c">CREN_API void cren_log_message(CRen_LogSeverity severity, const char* file, int line, const char* fmt, ...);
+</code></pre>
+
+<h3>Parameters</h3>
+<h4>severity:</h4>
+<p>The message's severity, check it's enum for more detail.</p>
+
+<h4>file:</h4>
+<p>The path from where the error has been issued.</p>
+
+<h4>line:</h4>
+<p>The line number the error was trown from.</p>
+
+<h4>fmt, ...:</h4>
+<p>C variable argument (varargs) system.</p>

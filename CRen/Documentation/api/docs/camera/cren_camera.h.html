@@ -1,0 +1,70 @@
+<h2>cren_camera.h</h2>
+
+<h3>Overview</h3>
+<p>The camera system provides 3D camera functionality with perspective projection, movement controls, and view matrix generation.
+The main initialization of CRen already provides a main camera, this API helps on how to create others.</p>
+
+<h3>Code implementation</h3>
+Code implementation can be found <a target="_blank" rel="noopener noreferrer" href="https://github.com/franzpedd/unnamed/blob/main/CRen/Source/cren_camera.c">here</a>
+
+<h3>Example Usage</h3>
+<pre><code class="language-c">#include "cren_camera.h"
+#include &lt;stdio.h&gt; // for printf
+
+bool camera_example(CRenContext* context) {
+    if (!context) {
+        printf("CRen context is NULL, did you forget cren_initialize()?\n");
+        return false;
+    }
+    
+    // camera parameters
+    uint32_t width = 1920;
+    uint32_t height = 1080;
+    float aspect_ratio = (float)width / (float)height;
+    CRen_Renderer api = CREN_RENDERER_API_VULKAN_1_1;
+    
+    // create camera
+    CRenCamera* camera = cren_camera_create(context, aspect_ratio, api);
+    if (!camera) {
+        printf("The camera creation has failed, check the console for any error.\n");
+        return false;
+    }
+    
+    // example on camera manipulation/operations
+    
+    // move camera up by 1 unit
+    cren_camera_translate(camera, (float3){0.0f, 1.0f, 0.0f});
+    
+    // get camera position
+    float3 position = cren_camera_get_position(camera);
+    
+    // get camera forward direction
+    float3 front = cren_camera_get_front(camera);
+
+    // must update the camera to apply our modifications
+    float timestep = 1.0f / 60.0f; // fixed timestep approx 16.67ms
+    cren_camera_update(camera, timestep); // this would be inside the main loop
+    
+    // get view matrix for shaders
+    fmat4 view_matrix = cren_camera_get_view(camera);
+    
+    // must destroy the camera after usage
+    cren_camera_destroy(camera);
+    
+    return true;
+}</code></pre>
+
+<div class="todo">
+    <strong>Missing funcs:</strong> cren_camera_set_fov; cren_camera_set_position, cren_camera_set_front.
+</div>
+
+<div class="note">
+<strong>Hidden funcs:</strong>
+    Some functions does not provide set functionability as they are controlled internally, but could be added: they are:
+    set_perspective, perspective_inverse, view and view_inverse.
+</div>
+
+<div class="warning">
+    <strong>CREN_CAMERA_TYPE_LOOK_AT:</strong> Currently the look_at camera is not properly working/tested. <br>
+</div>
+

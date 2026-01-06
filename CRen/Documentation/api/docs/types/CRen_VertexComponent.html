@@ -1,0 +1,26 @@
+<h2>CRen_VertexComponent</h2>
+<p><strong>File:</strong> cren_types.h</p>
+<p><strong>Type:</strong> C Enum</p>
+
+<h3>Description</h3>
+<p>
+    Lists all types of vertex components a mesh may have uppon it's load.
+</p>
+
+<h3>Implementation</h3>
+<pre><code class="language-c">typedef enum CRen_VertexComponent
+{
+	VERTEX_COMPONENT_POSITION = 0,
+	VERTEX_COMPONENT_NORMAL,
+	VERTEX_COMPONENT_UV_0, 
+	VERTEX_COMPONENT_COLOR_0, 
+	VERTEX_COMPONENT_JOINTS_0, 
+	VERTEX_COMPONENT_WEIGHTS_0, 
+
+	VERTEX_COMPONENTS_MAX
+} CRen_VertexComponent;
+</code></pre>
+
+<div class="todo">
+    <strong>Todo:</strong> Mesh loading is not yet implemented, but it's being worked on.
+</div>

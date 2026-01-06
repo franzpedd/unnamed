@@ -1,0 +1,18 @@
+<h2>cren_set_create_vulkan_surface_callback</h2>
+<p><strong>File:</strong> cren_context.h</p>
+<p><strong>Type:</strong> C Function</p>
+<h3>Description</h3> 
+<p>
+    This function registers a callback for surface creation. 
+    Since CRen does not manage the window itself, this must be implemented by the client's chosen windowing system (e.g., GLFW, SDL, or a platform-specific API).
+</p>
+
+<pre><code class="language-c">CREN_API void cren_set_create_vulkan_surface_callback(CRenContext* context, CRenCallback_CreateVulkanSurfaceCallback callback);
+</code></pre>
+
+<h3>Parameters</h3>
+<h4>context:</h4>
+<p>CRen's context memory address.</p>
+
+<h4>callback:</h4>
+<p>The callback function to be called.</p>

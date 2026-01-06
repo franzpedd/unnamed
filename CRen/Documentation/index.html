@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRen Renderer</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/vs2015.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/c.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/cpp.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/cmake.min.js"></script>
+
+<body>
+    <div class="container">
+        <!-- Mobile menu toggle -->
+        <button class="mobile-menu-toggle" aria-label="Toggle navigation menu">
+            <i class="fas fa-bars"></i>
+        </button>
+        
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-container">
+                    <h1>CRen</h1>
+                    <p class="version">Version 0.0.1</p>
+                </div>
+            </div>
+            <div class="sidebar-nav">
+                <ul>
+                    <li><a href="#introduction" class="nav-link active"><i class="fas fa-home"></i> Introduction</a></li>
+                    <li><a href="#installation" class="nav-link"><i class="fas fa-download"></i> Installation</a></li>
+                    <li><a href="#usage" class="nav-link"><i class="fas fa-code"></i> Usage</a></li>
+                    <li><a href="#gettingstarted" class="nav-link"><i class="fas fa-rocket"></i> Getting Started</a></li>
+                    <li><a href="#faq" class="nav-link"><i class="fas fa-question-circle"></i> FAQ</a></li>
+                    <li><a href="api/reference.html" class="nav-link"><i class="fas fa-book"></i> API Reference</a></li>
+                    <li class="nav-divider"></li>
+                    <li><a href="https://github.com/franzpedd/unnamed" target="_blank" class="nav-link external"><i class="fab fa-github"></i> GitHub</a></li>
+                    <li><a href="https://github.com/franzpedd/unnamed/issues" target="_blank" class="nav-link external"><i class="fas fa-bug"></i> Report Issue</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <main class="main-content" id="main-content">
+            <!-- Progress indicator -->
+            <div class="progress-container">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+            
+            <section id="introduction" class="section">
+                <div class="section-header">
+                    <h2>Introduction</h2>
+                </div>
+                
+                <h3>What is CRen?</h3>
+                <p>
+                    CRen is a 3D rendering engine that provides easy-to-use functions for making both 2D/3D applications, abstracting low-level rendering API calls.
+                    It's designed to be fast and reliable, open-source and free.
+                </p>
+                
+                <h3>What CRen isn't?</h3>
+                <p>
+                    CRen is not a full game engine, only a graphics framework. It currently provides rendering capabilities exclusively, without physics, AI, sound, 
+                    or networking systems, making it perfect for integration as the visual component in custom engine architectures.
+                </p>
+
+                <h3>Features</h3>
+                <ul class="features-list">
+                    <li>Written in C99, compiles in MSVC and Clang.</li>
+                    <li>Support for: Windows, Linux and Android.</li>
+                    <li>Handles multiple frames simultaneosly.</li>
+                    <li>Abstracts Vulkan but provide access if needed.</li>
+                </ul>
+
+                <div class="note">
+                    <strong>Note:</strong> This project is in early development. Features will change in future releases.
+                </div>
+            </section>
+
+            <section id="installation" class="section">
+                <div class="section-header">
+                    <h2>Installation</h2>
+                </div>
+                
+                <p>CRen is a library, follow these steps to set-it up:</p>
+
+                <div class="content-card">
+                    <h3>Prerequisites</h3>
+                    <ul class="prerequisites-list">
+                        <li>CMake 3.22.1 or higher.</li>
+                        <li>MSVC or Clang.</li>
+                        <li>Vulkan SDK.</li>
+                    </ul>
+                </div>
+
+                <div class="content-card">
+                    <h3>Building Steps</h3>
+                    <ol class="steps-list">
+                        <li>Clone the repository:
+                            <div class="code-container">
+                                <pre><code class="language-bash">git clone https://github.com/franzpedd/unnamed.git</code></pre>
+                            </div>
+                        </li>
+                        <li>Navigate to the project's build directory:
+                            <div class="code-container">
+                                <pre><code class="language-bash">cd unnamed/Build</code></pre>
+                            </div>
+                        </li>
+                        <li>Build the project with cmake
+                            <div class="code-container">
+                                <pre><code class="language-bash">cmake ..</code></pre>
+                            </div>
+                        </li>
+                    </ol>
+                </div>
+
+                <div class="note">
+                    <strong>Note:</strong> Build it with CMake flag -DBUILD_PROJECTS=OFF in order to only generate the CRen library.
+                </div>
+
+                <div class="content-card">
+                    <h3>Linking</h3>
+                    <p>Now that the project has been built, it's necessary to link the library with your project as well as reference CRen's header files to it as well.</p>
+                    
+                    <div class="todo">
+                        <strong>Todo:</strong> Show how to link CRen
+                    </div>
+                </div>
+            </section>
+
+            <section id="usage" class="section">
+                <div class="section-header">
+                    <h2>Usage</h2>
+                </div>
+                
+                <h3>1. Include cren's header file:</h3>
+                <pre><code class="language-c">#include "cren.h"</code></pre>
+                
+                <h3>2. Setup the initialization structure:</h3>
+                <pre><code class="language-c">CRenCreateInfo createInfo = { 0 };
+createInfo.appName = "Your game/engine/application name";
+createInfo.assetsPath = "Assets root directory to look for files, must also include CRen's Build/Bin/data files";
+createInfo.api = CREN_RENDERER_API_VULKAN_1_1; // can be requested 1_0, 1_1, 1_2 and 1_3
+createInfo.width = 1920; // initial renderer width, must match with window's width, can be changed latter
+createInfo.height = 1080;// initial renderer height, must match with window's height, can be changed latter
+createInfo.msaa = CREN_MSAA_X4; // Multisample algorithm, can be use any power of 2 from X1 to X64
+createInfo.validations = true; // turns on/off trace/info/warning/error messages from vulkan side.
+createInfo.vsync = false; // turns on/off vertical synchronization, which will match rendering sync with monitor sync
+createInfo.customViewport = true; // hints the renderer the game's window will be on a dedicated viewport, like an editor viewport</code></pre>
+
+                <h3>3. Initialize CRen's context:</h3>
+                <pre><code class="language-c">CRenContext* context = cren_initialize(ci); // can be checked for null for success, will also prompt console messages if any error occured</code></pre>
+
+                    <h3>4. Setup the callbacks:</h3>
+                    <pre><code class="language-c">// CRen doesn't handle the window, allowing the usage of GLFW/SDL/etc... but the renderer must recieve/send information from/to it and for that we must setup some callbacks
+// These are all callbacks available that must be set-up for a proper application, in the future this won't be necessary.
+cren_set_user_pointer(context, this); // (This is Optional, for C++ working with lambdas)
+cren_set_resize_callback(context, OnResizeCallback);
+cren_set_draw_ui_raw_data_callback(context, OnDrawUICallback);
+cren_set_ui_image_count_callback(context, OnSetUIImageCountCallback);
+cren_set_get_vulkan_instance_required_extensions_callback(context, OnGetVulkanInstanceRequiredExtensionsCallback);
+cren_set_create_vulkan_surface_callback(context, OnCreateVulkanSurfaceCallback);
+cren_set_render_callback(context, OnRenderCallback);</code></pre>
+
+                <p>You can check the Examples on how to set this up.</p>
+                <p>Now we must properly setup a main-loop in order to understand how CRen works and it's best to do that with examples.</p>
+                <div class="note">
+                    <strong>TODO:</strong> Link the example on callbacks
+                </div>
+            </section>
+
+            <section id="gettingstarted" class="section">
+                <div class="section-header">
+                    <h2>Getting Started</h2>
+                </div>
+                
+                <p>Practical examples showing how to use the API.</p>
+
+                <h3>Example: Minimal implementation</h3>
+                <pre><code class="language-c">// implementation example</code></pre>
+
+                <h3>Example: Factory of props</h3>
+                <pre><code class="language-c">// implement a factory of props</code></pre>
+            </section>
+
+            <section id="faq" class="section">
+                <div class="section-header">
+                    <h2>Frequently Asked Questions</h2>
+                </div>
+
+                <div class="faq-item">
+                    <h3>Why Vulkan, and which version?</h3>
+                    <p>
+                        Vulkan enables CRen to deliver high performance across multiple platforms. By supporting Vulkan 1.1 as the baseline, we ensure compatibility with older systems without sacrificing the API's modern rendering capabilities.
+                    </p>
+                </div>
+
+                <div class="faq-item">
+                    <h3>Why does it need callbacks?</h3>
+                    <p>
+                        CRen is windowing-system agnostic. This gives you the freedom to choose any windowing system, just as you had the freedom to choose CRen itself.
+                    </p>
+                </div>
+
+                <div class="faq-item">
+                    <h3>Will it have 'X' feature?</h3>
+                    <p>
+                        CRen is currently in early development, so many features you might expect from other solutions are still being implemented. However, with sufficient development time and community feedback, we're committed to adding the features that matter most.
+                    </p>
+                </div>
+
+                <div class="faq-item">
+                    <h3>Have a suggestion or found a bug? Need help?</h3>
+                    <p>
+                        Please open an issue on the project's 
+                        <a href="https://github.com/franzpedd/unnamed/issues/" target="_blank" class="external-link">
+                            <i class="fab fa-github"></i> GitHub
+                        </a>
+                        repository
+                    </p>
+                </div>
+                
+                <div class="todo">
+                    <strong>Todo:</strong> Link projects using CRen and API Reference
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <p>&copy; 2026 CRen Documentation. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+
+    <script>
+        // initialize highlight.js when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            // configure highlight.js
+            hljs.configure({
+                cssSelector: 'pre code',
+                languages: ['c', 'cpp', 'bash', 'cmake'],
+                ignoreUnescapedHTML: true
+            });
+            
+            // highlight all code blocks
+            hljs.highlightAll();
+            
+            // set up observer for dynamically loaded content
+            const observer = new MutationObserver(() => {
+                document.querySelectorAll('pre code:not(.hljs)').forEach(block => {
+                    hljs.highlightElement(block);
+                });
+            });
+            
+            const contentDisplay = document.querySelector('.main-content');
+            if (contentDisplay) {
+                observer.observe(contentDisplay, {
+                    childList: true,
+                    subtree: true
+                });
+            }
+            
+            // Smooth scrolling for anchor links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    const targetId = this.getAttribute('href');
+                    if (targetId === '#') return;
+                    
+                    const targetElement = document.querySelector(targetId);
+                    if (targetElement) {
+                        window.scrollTo({
+                            top: targetElement.offsetTop - 80,
+                            behavior: 'smooth'
+                        });
+                        
+                        // Close mobile menu if open
+                        if (sidebar && sidebar.classList.contains('mobile-open')) {
+                            sidebar.classList.remove('mobile-open');
+                            mobileToggle.classList.remove('open');
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

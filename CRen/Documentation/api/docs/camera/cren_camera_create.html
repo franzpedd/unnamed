@@ -1,0 +1,21 @@
+<h2>cren_camera_create</h2>
+<p><strong>File:</strong> cren_camera.h</p>
+<p><strong>Type:</strong> C Function</p>
+<h3>Description</h3>
+<p>Creates and initializes a new camera instance with specified field of view and aspect ratio.</p>
+
+<pre><code class="language-c">CREN_API CRenCamera* cren_camera_create(CRen_CameraType type, float initialAspectRatio, CRen_Renderer api);
+</code></pre>
+
+<h3>Parameters</h3>
+<h4>type:</h4>
+<p>What kind of camera is going to be created.</p>
+
+<h4>initialAspectRatio:</h4>
+<p>The division of viewport width and height, wich defines the aspect ratio</p>
+
+<h4>api:</h4> 
+<p>Wich version of the Renderer API is used (only vulkan for now but if other API is supported the mathmatics changes)</p>
+
+<h3>Return</h3>
+Returns either the camera memory address or NULL when the camera creation has failed, the console will contain information about the error if any has occured.

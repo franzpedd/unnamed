@@ -1,0 +1,36 @@
+<h2>cren_types.h</h2>
+
+<h3>Overview</h3>
+<p>
+    Defines many types used accross the API.
+</p>
+
+<h3>Code implementation</h3>
+Code implementation can be found <a target="_blank" rel="noopener noreferrer" href="https://github.com/franzpedd/unnamed/blob/main/CRen/Source/cren_types.h">here</a>
+
+<h3>Opaque Objects:</h3>
+
+<h4>Context:</h4>
+<pre><code class="language-c">typedef struct CRenContext CRenContext;</code></pre>
+<p>
+    An opaque object that manages most API resources. It's an implementation detail that the API handles automatically, users can't directly manipulate it, only through functions.
+</p>
+
+<h4>Camera:</h4>
+<pre><code class="language-c">typedef struct CRenCamera CRenCamera;</code></pre>
+<p>
+    An opaque object that serves as a unique identifier for camera references. Its purpose is to provide a consistent handle that users can employ to specify which camera they are referring to in API calls.
+</p>
+
+<h4>Texture2D:</h4>
+<pre><code class="language-c">typedef struct CRenTexture2D CRenTexture2D;</code></pre>
+<p>
+    An opaque object that serves as a unique identifier for 2D textures. Its purpose is to abstract the underlying data and provide controlled access exclusively through designated API functions.
+</p>
+
+<h4>Quad:</h4>
+<pre><code class="language-c">typedef struct CRenQuad CRenQuad;</code></pre>
+<p>
+    An opaque object that serves as a unique identifier for quads. Its purpose is to abstract the underlying data and provide controlled access exclusively through designated API functions.
+</p>
+

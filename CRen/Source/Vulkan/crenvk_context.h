@@ -38,7 +38,7 @@ CREN_API CRenVulkanBackend crenvk_initialize
 	const char* appName,
 	const char* rootPath,
 	unsigned int appVersion,
-	CRen_Renderer api,
+	CRen_RendererAPI api,
 	CRen_MSAA msaa,
 	bool vsync,
 	bool validations,
@@ -53,6 +53,9 @@ CREN_API void crenvk_update(CRenVulkanBackend* backend, float timestep, CRenCame
 
 /// @brief manage all renderpasses and call the rendering functions, callbacking them when appropriate
 CREN_API void crenvk_render(void* context, CRenVulkanBackend* backend, float timestep, const CRenCallbacks* callbacks, CRenCamera* camera, bool* hintResize);
+
+/// @brief attempts to pick an object based on screen coordinates
+CREN_API uint32_t crenvk_pick_object(void* context, CRenVulkanBackend* backend, float2 screenCoord);
 
 #ifdef __cplusplus 
 }

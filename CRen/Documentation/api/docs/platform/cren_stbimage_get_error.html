@@ -1,0 +1,11 @@
+<h2>cren_stbimage_get_error</h2>
+<p><strong>File:</strong> cren_error.h</p>
+<p><strong>Type:</strong> C Function</p>
+<h3>Description</h3>
+<p>This function is a wrapper of stbi_failure_reason so it's not needed to expose stb outside the library.</p>
+
+<pre><code class="language-c">CREN_API const char* cren_stbimage_get_error();
+</code></pre>
+
+<h3>Return</h3>
+<p>A message about the error that happened while loading last image.</p>

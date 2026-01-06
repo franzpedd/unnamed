@@ -8,7 +8,7 @@
 struct CRenCamera
 {
 	CRen_CameraType type;
-	CRen_Renderer api;
+	CRen_RendererAPI api;
 
 	// definitions
 	float fov;
@@ -51,7 +51,7 @@ static void internal_camera_update_view_matrix(CRenCamera* camera)
 	camera->viewPosition = camera->position;
 }
 
-CREN_API CRenCamera* cren_camera_create(CRen_CameraType type, float initialAspectRatio, CRen_Renderer api)
+CREN_API CRenCamera* cren_camera_create(CRen_CameraType type, float initialAspectRatio, CRen_RendererAPI api)
 {
 	CRenCamera* camera = (CRenCamera*)malloc(sizeof(CRenCamera));
 	CREN_ASSERT(camera != NULL, "Failed to allocate memory for CRenCamera");
@@ -73,7 +73,7 @@ CREN_API CRenCamera* cren_camera_create(CRen_CameraType type, float initialAspec
 	camera->position = (float3){ 0.0f, 1.0f, 0.0f };
 	camera->scale = (float3){ 1.0f, 1.0f, 1.0f };
 	camera->viewPosition = (float3){ 0.0f, 0.0f, 0.0f };
-	camera->frontPosition = (float3){ 0.0f, 0.0f, -1.0f };
+	camera->frontPosition = (float3){ 1.0f, 0.0f, 0.0f };
 
 	// calculate initial perspective
 	if (camera->api == CREN_RENDERER_API_VULKAN_1_1 || camera->api == CREN_RENDERER_API_VULKAN_1_2 || camera->api == CREN_RENDERER_API_VULKAN_1_3) {
@@ -158,6 +158,18 @@ CREN_API void cren_camera_set_aspect_ratio(CRenCamera* camera, float aspect)
 	camera->aspectRatio = aspect;
 }
 
+CREN_API float cren_camera_get_aspect_ratio(CRenCamera* camera)
+{
+	if (!camera) return 1.0f;
+	return camera->aspectRatio;
+}
+
+CREN_API float cren_camera_get_fov(CRenCamera* camera)
+{
+	if (!camera) return 1.0f;
+	return camera->fov;
+}
+
 CREN_API void cren_camera_translate(CRenCamera* camera, float3 dir)
 {
 	camera->position = float3_add(&camera->position, &dir);
@@ -208,16 +220,16 @@ CREN_API fmat4 cren_camera_get_perspective_inverse(CRenCamera* camera)
 	return camera->perspectiveInverse;
 }
 
-CREN_API bool cren_camera_can_move(CRenCamera* camera)
-{
-	if (!camera) return false;
-	return camera->shouldMove;
-}
-
-CREN_API void cren_camera_enable_move(CRenCamera* camera, bool value)
+CREN_API void cren_camera_set_lock(CRenCamera* camera, bool value)
 {
 	if (!camera) return;
 	camera->shouldMove = value;
+}
+
+CREN_API bool cren_camera_get_lock(CRenCamera* camera)
+{
+	if (!camera) return false;
+	return camera->shouldMove;
 }
 
 CREN_API void cren_camera_move(CRenCamera* camera, CRen_CameraDirection dir, bool moving)
@@ -233,14 +245,28 @@ CREN_API void cren_camera_move(CRenCamera* camera, CRen_CameraDirection dir, boo
 	}
 }
 
-CREN_API void cren_camera_pressing_speed_modifier(CRenCamera* camera, bool status)
+CREN_API bool cren_camera_get_speed_modifier(CRenCamera* camera, float* value)
+{
+	if (!camera) return false;
+	if(value) *(value) = camera->modifierSpeed;
+	return camera->modifierPressed;
+}
+
+CREN_API void cren_camera_set_speed_modifier(CRenCamera* camera, bool status, float value)
 {
 	if (!camera) return;
 	camera->modifierPressed = status;
+	camera->modifierSpeed = value;
 }
 
 CREN_API float3 cren_camera_get_position(CRenCamera* camera)
 {
 	if (!camera) return (float3){ 0.0f, 0.0f, 0.0f };
 	return camera->position;
+}
+
+CREN_API float3 cren_camera_get_front(CRenCamera* camera)
+{
+	if (!camera) return (float3) { 0.0f, 0.0f, 0.0f };
+	return camera->frontPosition;
 }

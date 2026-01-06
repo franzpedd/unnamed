@@ -1,0 +1,23 @@
+<h2>CREN_API</h2>
+<p><strong>File:</strong> cren_defines.h</p>
+<p><strong>Type:</strong> C Macro</p>
+<h3>Description</h3>
+<p>
+    Cross-platform library export/import macro for controlling symbol visibility in shared libraries (DLLs on Windows, SOs on Linux/macOS).<br>
+    If CREN_SHARED_LIBRARY is defined, it builds as shared library, If not defined it builds as static library.
+</p>
+
+<pre><code class="language-c">#ifdef CREN_SHARED_LIBRARY
+    #if defined(_MSC_VER)
+        #if defined(CREN_BUILDING_DLL)
+            #define CREN_API __declspec(dllexport)
+        #else
+            #define CREN_API __declspec(dllimport)
+        #endif
+    #else
+        #define CREN_API __attribute__((visibility("default")))
+    #endif
+#else
+    #define CREN_API
+#endif
+</code></pre>

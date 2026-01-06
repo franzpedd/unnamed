@@ -1,0 +1,21 @@
+<h2>CRen_MSAA</h2>
+<p><strong>File:</strong> cren_types.h</p>
+<p><strong>Type:</strong> C Enum</p>
+
+<h3>Description</h3>
+<p>
+    Lists all possible samples the Multi-sample algorithm can be requested uppon API startup.
+</p>
+
+<h3>Implementation</h3>
+<pre><code class="language-c">typedef enum CRen_MSAA
+{
+	CREN_MSAA_X1 = 0x00000001,
+	CREN_MSAA_X2 = 0x00000002,
+	CREN_MSAA_X4 = 0x00000004,
+	CREN_MSAA_X8 = 0x00000008,
+	CREN_MSAA_X16 = 0x00000010,
+	CREN_MSAA_X32 = 0x00000020,
+	CREN_MSAA_X64 = 0x00000040
+} CRen_MSAA;
+</code></pre>

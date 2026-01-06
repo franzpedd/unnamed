@@ -129,34 +129,20 @@ CREN_API void cren_restore(CRenContext* context)
 	context->currentlyMinimized = 0; // vulkan will pickup the change automatically
 }
 
-CREN_API uint32_t cren_create_id(CRenContext* context)
-{
-	if (!context) return 0;
-	return idgen_next(context->idgen);
-}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/// Getters/Setters
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-CREN_API bool cren_register_id(CRenContext* context, uint32_t id)
+CREN_API CRenCamera* cren_get_main_camera(CRenContext* context)
 {
-	if (!context) return false;
-	return idgen_register(context->idgen, id);
-}
-
-CREN_API bool cren_unregister_id(CRenContext* context, uint32_t id)
-{
-	if (!context) return false;
-	return idgen_unregister(context->idgen, id);
+	if (!context) return NULL;
+	return context->camera;
 }
 
 CREN_API bool cren_are_validations_enabled(CRenContext* context)
 {
 	if (!context) return false;
 	return context->createInfo.validations;
-}
-
-CREN_API CRenCamera* cren_get_main_camera(CRenContext* context)
-{
-	if (!context) return NULL;
-	return context->camera;
 }
 
 bool cren_using_vsync(CRenContext* context)
@@ -231,6 +217,40 @@ CREN_API void cren_set_framebuffer_size(CRenContext* context, const float2 size)
 	if (!context) return;
 	context->framebufferSize = size;
 	context->mustResize = true;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/// Fun
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+CREN_API uint32_t cren_pick_object(CRenContext* context, float2 screenCoord)
+{
+	if (!context) return 0;
+	uint32_t res = 0;
+	#ifdef CREN_BUILD_WITH_VULKAN
+	res = crenvk_pick_object(context, &context->backend, screenCoord);
+	#else 
+	#error "Undefined backend"
+	#endif
+	return res;
+}
+
+CREN_API uint32_t cren_create_id(CRenContext* context)
+{
+	if (!context) return 0;
+	return idgen_next(context->idgen);
+}
+
+CREN_API bool cren_register_id(CRenContext* context, uint32_t id)
+{
+	if (!context) return false;
+	return idgen_register(context->idgen, id);
+}
+
+CREN_API bool cren_unregister_id(CRenContext* context, uint32_t id)
+{
+	if (!context) return false;
+	return idgen_unregister(context->idgen, id);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

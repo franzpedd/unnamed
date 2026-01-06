@@ -1,0 +1,15 @@
+<h2>cren_get_path</h2>
+<p><strong>File:</strong> cren_error.h</p>
+<p><strong>Type:</strong> C Function</p>
+<h3>Description</h3>
+<p>Utility to retrieve the asset's correct path, since paths may differ from platform to platform.</p>
+
+<pre><code class="language-c">CREN_API void cren_get_path(const char* subpath, const char* assetsRoot, bool removeExtension, char* output, size_t outputSize);
+</code></pre>
+
+<h3>Usage</h3>
+<pre><code class="language-c">const char* root = "../data";
+char defaultVert[CREN_PATH_MAX_SIZE];
+cren_get_path("shaders/compiled/quad.vert.spv", root, 0, defaultVert, sizeof(defaultVert));
+</code></pre>
+Then defaultVert will correctly have the quad.vert.spv file.
